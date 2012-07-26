@@ -54,7 +54,6 @@ class BaseResource(object):
         return []
     
     def get_outbound_links(self, instance=None):
-        #TODO return breadcrumb links
         return []
     
     def get_templated_queries(self):
@@ -108,6 +107,10 @@ class SiteResource(BaseResource):
     def get_items(self, request):
         #TODO sort by name
         return self.site.application.values()
+    
+    def get_instance_url(self, instance):
+        if hasattr(instance, 'get_absolute_url'):
+            return instance.get_absolute_url()
 
 class ApplicationResource(BaseResource):
     list_view = ApplicationResourceView
@@ -148,6 +151,24 @@ class ApplicationResource(BaseResource):
     def get_items(self, request):
         #TODO sort by name
         return self.resource_adaptor.values()
+    
+    def get_embedded_links(self, instance=None):
+        #relationships go here
+        return []
+    
+    def get_outbound_links(self, instance=None):
+        if instance:
+            return []
+        else:
+            site_link = Link(url=self.reverse('index'), rel='site')
+            return [site_link]
+    
+    def get_instance_url(self, instance):
+        if hasattr(instance, 'get_absolute_url'):
+            return instance.get_absolute_url()
+    
+    def get_absolute_url(self):
+        return self.reverse(self.app_name)
 
 class CRUDResource(BaseResource):
     list_view = None
@@ -180,6 +201,9 @@ class CRUDResource(BaseResource):
     def get_instance_url(self, instance):
         return self.reverse(self.app_name+'_detail', pk=instance.pk)
     
+    def get_absolute_url(self):
+        return self.reverse('%s_%s_list' % (self.app_name, self.resource_name))
+    
     def generate_create_response(self, view, instance):
         next_url = self.get_instance_url(instance)
         response = http.HttpResponse(next_url, status=303)
@@ -187,7 +211,7 @@ class CRUDResource(BaseResource):
         return response
     
     def generate_delete_response(self, view):
-        next_url = self.reverse(self.app_name+'_list')
+        next_url = self.get_absolute_url()
         response = http.HttpResponse(next_url, status=303)
         response['Location'] = next_url
         return response

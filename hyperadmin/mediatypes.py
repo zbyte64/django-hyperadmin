@@ -85,5 +85,15 @@ class CollectionJSON(MediaType):
         content = json.dumps({"collection":data}, cls=DjangoJSONEncoder)
         content_type = self.get_content_type()
         return http.HttpResponse(content, content_type)
+    
+    def deserialize(self):
+        #TODO this needs more thinking
+        if hasattr(self.request, 'body'):
+            payload = self.request.body
+        else:
+            payload = self.request.raw_post_data
+        data = json.loads(payload)
+        return data
 
 BUILTIN_MEDIA_TYPES['application/vnd.Collection+JSON'] = CollectionJSON
+
