@@ -27,10 +27,7 @@ class ConditionalAccessMixin(object):
     
 class ResourceViewMixin(ConditionalAccessMixin):
     resource = None
-    
-    @property
-    def resource_site(self):
-        return self.resource.site
+    resource_site = None
     
     def get_content_type(self):
         return mimeparse.best_match(
@@ -56,10 +53,20 @@ class ResourceViewMixin(ConditionalAccessMixin):
     def get_form_class(self, instance=None):
         return None
 
+class ApplicationResourceView(ResourceViewMixin, generic.ListView):
+    def get_items(self):
+        return self.resource.get_items(self.request)
+    
+    def get(self, request, *args, **kwargs):
+        return self.resource.generate_response(self)
+
 class ModelResourceViewMixin(ResourceViewMixin, generic.edit.ModelFormMixin):
-    form = None
+    form_class = None
     model = None
     queryset = None
+    
+    def get_queryset(self):
+        return self.resource.get_queryset(self.request)
     
     def get_items(self, **kwargs):
         return self.get_queryset()
@@ -75,6 +82,7 @@ class ModelResourceViewMixin(ResourceViewMixin, generic.edit.ModelFormMixin):
         return self.resource.generate_response(self, errors=form.errors)
 
 class ModelListResourceView(ModelResourceViewMixin, generic.CreateView):
+    #TODO support pagination
     def get(self, request, *args, **kwargs):
         return self.resource.generate_response(self)
     

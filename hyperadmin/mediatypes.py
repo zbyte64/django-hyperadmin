@@ -2,6 +2,8 @@ from django.core.serializers.json import DjangoJSONEncoder
 from django.utils import simplejson as json
 from django import http
 
+from resources import BaseResource
+
 BUILTIN_MEDIA_TYPES = dict()
 
 class MediaType(object):
@@ -34,13 +36,20 @@ class CollectionJSON(MediaType):
             ]
         }
         return result
-        
+    
+    def convert_resource(self, resource):
+        return {}
+    
     def convert_instance(self, instance):
         """
         Given a model instance, generate the code that is expected by the 'items' list objects,
         and the 'template' object for Collection+JSON.
         """
-        result = self.construct_template(instance) or {}
+        #CONSIDER instance may be: ApplicationResource or CRUDResource
+        if isinstance(instance, BaseResource):
+            result = self.convert_resource(instance)
+        else:
+            result = self.construct_template(instance) or {}
         if instance:
             links = list()
             links.extend(self.view.get_embedded_links(instance))
