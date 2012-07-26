@@ -219,6 +219,36 @@ class CRUDResource(BaseResource):
         return []
 
 class ModelResource(CRUDResource):
+    #TODO support the following:
+    #raw_id_fields = ()
+    #fields = None
+    #exclude = []
+    #fieldsets = None
+    #filter_vertical = ()
+    #filter_horizontal = ()
+    #radio_fields = {}
+    #prepopulated_fields = {}
+    #formfield_overrides = {}
+    #readonly_fields = ()
+    #declared_fieldsets = None
+    
+    #save_as = False
+    #save_on_top = False
+    #paginator = Paginator
+    #inlines = []
+    
+    #list display options
+    #list_display = ('__str__',)
+    #list_display_links = ()
+    #list_filter = ()
+    #list_select_related = False
+    #list_per_page = 100
+    #list_max_show_all = 200
+    #list_editable = ()
+    #search_fields = ()
+    #date_hierarchy = None
+    #ordering = None
+    
     list_view = ModelListResourceView
     detail_view = ModelDetailResourceView
     
