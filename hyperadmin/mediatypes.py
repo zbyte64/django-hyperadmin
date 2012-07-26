@@ -26,15 +26,12 @@ class CollectionJSON(MediaType):
         if form_class is None:
             return None
         form = form_class(instance=instance)
-        result = {
-            "data":[
-                {
-                    "name": name,
-                    "value": form[name].value() if instance else field.initial,
-                    "prompt": field.label
-                } for (name, field) in form.fields.iteritems()
-            ]
-        }
+        result = {'data':list()}
+        for name, field in form.fields.iteritems():
+            entry = {"name": unicode(name),
+                     "value": form[name].value() if instance else field.initial,
+                     "prompt": unicode(field.label)}
+            result['data'].append(entry)
         return result
     
     def convert_resource(self, resource):

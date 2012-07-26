@@ -31,7 +31,7 @@ class ResourceViewMixin(ConditionalAccessMixin):
     
     def get_content_type(self):
         return mimeparse.best_match(
-            self.CONTENT_TYPES, 
+            self.resource_site.media_types.keys(), 
             self.request.META.get('HTTP_ACCEPT', '')
         )
     
