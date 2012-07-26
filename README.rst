@@ -18,8 +18,9 @@ Features
 ----
 TODO
 ----
-* ember.js frontend
+* more unit tests
 * update objects
+* ember.js frontend
 
 
 Installation
@@ -43,3 +44,7 @@ Put 'hyperadmin' into your ``INSTALLED_APPS`` section of your settings file.
 TBD
 
 
+Hypermedia APIs
+===============
+http://www.amundsen.com/hypermedia/hfactor/
+http://code.ge/media-types/collection-next-json/
