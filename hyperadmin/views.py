@@ -77,6 +77,9 @@ class ModelResourceViewMixin(ResourceViewMixin, generic.edit.ModelFormMixin):
     def get_items(self, **kwargs):
         return self.get_queryset()
     
+    def get_items_forms(self, **kwargs):
+        return [self.get_form(instance=item) for item in self.get_items()]
+    
     def get_form_class(self, instance=None):
         return generic.edit.ModelFormMixin.get_form_class(self)
     
@@ -102,14 +105,18 @@ class ModelListResourceView(ModelResourceViewMixin, generic.CreateView):
         return self.resource.generate_create_response(self, instance=self.object)
     
     def get_ln_links(self, instance=None):
-        form = self.get_form()
+        form = self.get_form(instance=instance)
         update_link = Link(url=self.request.path,
                            method='POST', #TODO should this be put?
-                           fields=form.fields,)
+                           form=form,)
         return [update_link] + super(ModelListResourceView, self).get_ln_links(instance)
 
 class ModelDetailResourceView(ModelResourceViewMixin, generic.UpdateView):
+    #TODO get_form retrieves information from mediatype
+    
     def get_items(self, **kwargs):
+        if not getattr(self, 'object', None):
+            self.object = self.get_object()
         return [self.object]
     
     def get(self, request, *args, **kwargs):
@@ -137,10 +144,10 @@ class ModelDetailResourceView(ModelResourceViewMixin, generic.UpdateView):
     def get_ln_links(self, instance=None):
         links = super(ModelDetailResourceView, self).get_li_links(instance)
         if instance:
-            form = self.get_form()
+            form = self.get_form(instance=instance)
             update_link = Link(url=self.request.path,
                                method='POST',
-                               fields=form.fields,)
+                               form=form,)
             return [update_link] + links
         return links
 

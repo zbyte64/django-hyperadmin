@@ -27,12 +27,7 @@ class CollectionJSON(MediaType):
         if form_class is None:
             return None
         form = form_class(instance=instance)
-        result = {'data':list()}
-        for name, field in form.fields.iteritems():
-            entry = self.convert_field(field, name)
-            if instance:
-                entry['value'] = form[name].value()
-            result['data'].append(entry)
+        result = {'data':self.convert_form(form)}
         return result
     
     def convert_field(self, field, name=None):
@@ -49,7 +44,7 @@ class CollectionJSON(MediaType):
         Given a model instance, generate the code that is expected by the 'items' list objects,
         and the 'template' object for Collection+JSON.
         """
-        #CONSIDER instance may be: ApplicationResource or CRUDResource
+        #instance may be: ApplicationResource or CRUDResource
         if isinstance(instance, BaseResource):
             result = self.convert_resource(instance)
         else:
@@ -62,31 +57,37 @@ class CollectionJSON(MediaType):
             result["href"] = self.view.get_instance_url(instance)
         return result
     
+    def convert_form(self, form):
+        data = list()
+        for name, field in form.fields.iteritems():
+            entry = self.convert_field(field, name)
+            if form.instance:
+                entry['value'] = form[name].value()
+            data.append(entry)
+        return data
+    
     def convert_link(self, link):
         link_r = {"href":link.url,
                   "rel":link.rel,
                   }
         if link.descriptors:
             link_r['prompt'] = link.descriptors['label']
-        if link.fields:
-            data = list()
-            for name, field in link.fields.iteritems():
-                data.append(self.convert_field(field, name))
+        if link.form:
+            link_r['data'] = self.convert_form(link.form)
         return link_r
     
     def serialize(self, instance=None, errors=None):
-        items = [self.convert_instance(item) for item in self.view.get_items()]
+        #CONSIDER a better inferface
+        if hasattr(self.view, 'get_items_forms'):
+            items = [self.convert_form(form) for form in self.view.get_items_forms()]
+        else:
+            items = [self.convert_instance(item) for item in self.view.get_items()]
         
-        #CONSIDER the following maps hfactor to this media type
+        #the following maps hfactor to this media type
         links = list()
         links.extend(self.view.get_embedded_links())
         links.extend(self.view.get_outbound_links())
         queries = self.view.get_templated_queries()
-        
-        ln_links = self.view.get_ln_links()
-        
-        #get_non_idempotent_updates
-        #get_idempotent_updates
         
         data = {
             "links": [self.convert_link(link) for link in links],
@@ -95,6 +96,11 @@ class CollectionJSON(MediaType):
             "template": self.construct_template(), #idempotent update
             #"error": {},
         }
+        
+        ln_links = self.view.get_ln_links()
+        
+        #get_non_idempotent_updates
+        #get_idempotent_updates
         
         if len(ln_links):
             data['template'] = self.convert_link(ln_links[0])
