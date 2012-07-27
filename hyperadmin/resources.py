@@ -235,6 +235,15 @@ class CRUDResource(BaseResource):
     def get_templated_queries(self):
         #search and filter goes here
         return []
+    
+    #TODO find a better name
+    def get_li_links(self, instance=None):
+        if instance:
+            delete_link = Link(url=self.get_instance_url(instance),
+                               rel='delete',
+                               method='DELETE')
+            return [delete_link]
+        return []
 
 class ModelResource(CRUDResource):
     #TODO support the following:

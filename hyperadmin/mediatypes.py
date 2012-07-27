@@ -83,6 +83,8 @@ class CollectionJSON(MediaType):
         links.extend(self.view.get_outbound_links())
         queries = self.view.get_templated_queries()
         
+        ln_links = self.view.get_ln_links()
+        
         #get_non_idempotent_updates
         #get_idempotent_updates
         
@@ -93,6 +95,9 @@ class CollectionJSON(MediaType):
             "template": self.construct_template(), #idempotent update
             #"error": {},
         }
+        
+        if len(ln_links):
+            data['template'] = self.convert_link(ln_links[0])
         
         data.update(href=self.request.build_absolute_uri(), version="1.0")
         content = json.dumps({"collection":data}, cls=DjangoJSONEncoder)

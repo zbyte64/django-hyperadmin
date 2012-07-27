@@ -1,12 +1,11 @@
-from django.core.exceptions import ImproperlyConfigured
 from django.utils.translation import ugettext as _
 from django.views import generic
-from django import forms
 from django import http
 
 import mimeparse
 
 from hyperadmin.models import log_action, ADDITION, CHANGE, DELETION
+from links import Link
 
 class ConditionalAccessMixin(object):
     etag_function = None
@@ -81,6 +80,11 @@ class ModelResourceViewMixin(ResourceViewMixin, generic.edit.ModelFormMixin):
     def get_form_class(self, instance=None):
         return generic.edit.ModelFormMixin.get_form_class(self)
     
+    def get_form(self, **kwargs):
+        form_class = self.get_form_class()
+        form = form_class(**kwargs)
+        return form
+    
     def form_valid(self, form):
         self.object = form.save()
         return self.resource.generate_response(self, instance=self.object)
@@ -96,6 +100,13 @@ class ModelListResourceView(ModelResourceViewMixin, generic.CreateView):
     def form_valid(self, form):
         self.object = form.save()
         return self.resource.generate_create_response(self, instance=self.object)
+    
+    def get_ln_links(self, instance=None):
+        form = self.get_form()
+        update_link = Link(url=self.request.path,
+                           method='POST', #TODO should this be put?
+                           fields=form.fields,)
+        return [update_link] + super(ModelListResourceView, self).get_ln_links(instance)
 
 class ModelDetailResourceView(ModelResourceViewMixin, generic.UpdateView):
     def get_items(self, **kwargs):
@@ -122,4 +133,14 @@ class ModelDetailResourceView(ModelResourceViewMixin, generic.UpdateView):
             self.object.delete()
         
         return self.resource.generate_delete_response(self)
+    
+    def get_ln_links(self, instance=None):
+        links = super(ModelDetailResourceView, self).get_li_links(instance)
+        if instance:
+            form = self.get_form()
+            update_link = Link(url=self.request.path,
+                               method='POST',
+                               fields=form.fields,)
+            return [update_link] + links
+        return links
 
