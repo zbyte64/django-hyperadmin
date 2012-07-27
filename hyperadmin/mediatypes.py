@@ -17,7 +17,7 @@ class MediaType(object):
     def serialize(self, instance=None, errors=None):
         raise NotImplementedError
     
-    def deserialize(self):
+    def deserialize(self, instance=None, form_class=None):
         raise NotImplementedError
 
 class CollectionJSON(MediaType):
@@ -76,6 +76,12 @@ class CollectionJSON(MediaType):
             link_r['data'] = self.convert_form(link.form)
         return link_r
     
+    def convert_errors(self, errors):
+        error_r = {'title':'An error occurred',
+                   'code':'00',
+                   'message':str(errors),}
+        return error_r
+    
     def serialize(self, instance=None, errors=None):
         #CONSIDER a better inferface
         if hasattr(self.view, 'get_items_forms'):
@@ -96,6 +102,8 @@ class CollectionJSON(MediaType):
             "template": self.construct_template(), #idempotent update
             #"error": {},
         }
+        if errors:
+            data['error'] = self.convert_errors(errors)
         
         ln_links = self.view.get_ln_links()
         
@@ -110,14 +118,17 @@ class CollectionJSON(MediaType):
         content_type = self.get_content_type()
         return http.HttpResponse(content, content_type)
     
-    def deserialize(self):
+    def deserialize(self, instance=None, form_class=None):
         #TODO this needs more thinking
         if hasattr(self.request, 'body'):
             payload = self.request.body
         else:
             payload = self.request.raw_post_data
-        data = json.loads(payload)
-        return data
+        data = json.loads(payload)['data']
+        if form_class is None:
+            form_class = self.view.get_form_class()
+        form = form_class(instance=instance, data=data, files=self.request.FILES)
+        return form
 
 BUILTIN_MEDIA_TYPES['application/vnd.Collection+JSON'] = CollectionJSON
 

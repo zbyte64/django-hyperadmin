@@ -1,5 +1,4 @@
 from django.utils import unittest
-from django.contrib.contenttypes.models import ContentType
 from django.contrib.auth.models import User
 from django.test.client import RequestFactory, FakePayload
 from django.utils import simplejson as json
@@ -24,7 +23,7 @@ class ResourceTestCase(unittest.TestCase):
         self.site = ResourceSite()
         self.site.register_builtin_media_types()
         
-        self.user = User(username='superuser', is_staff=True, is_active=True, is_superuser=True)
+        self.user = User.objects.get_or_create(username='superuser', is_staff=True, is_active=True, is_superuser=True)[0]
         self.resource = self.register_resource()
         self.factory = SuperUserRequestFactory(user=self.user, HTTP_ACCEPT='application/vnd.Collection+JSON')
         
@@ -41,8 +40,8 @@ class ResourceTestCase(unittest.TestCase):
 
 class ModelResourceTestCase(ResourceTestCase):
     def register_resource(self):
-        self.site.register(ContentType, ModelResource)
-        return self.site.registry[ContentType]
+        self.site.register(User, ModelResource)
+        return self.site.registry[User]
     
     def test_get_list(self):
         view_kwargs = self.resource.get_view_kwargs()
@@ -54,7 +53,7 @@ class ModelResourceTestCase(ResourceTestCase):
         #assert False, response.content
     
     def test_get_detail(self):
-        instance = ContentType.objects.all()[0]
+        instance = self.user
         view_kwargs = self.resource.get_view_kwargs()
         view = self.resource.detail_view.as_view(**view_kwargs)
         request = self.factory.get('/')
@@ -63,20 +62,37 @@ class ModelResourceTestCase(ResourceTestCase):
         
         #assert False, response.content
     
-    def test_post_detail(self):
-        return
+    def test_post_list(self):
         view_kwargs = self.resource.get_view_kwargs()
         view = self.resource.list_view.as_view(**view_kwargs)
-        #request = self.factory.post('/', **{'wsgi.input':FakePayload(payload), 'CONTENT_LENGTH':len(payload)})
-        request = self.factory.get('/')
+        update_data = {
+            'username': 'normaluser',
+            'email': 'z@z.com',
+        }
+        payload = json.dumps({'data':update_data})
+        request = self.factory.post('/', **{'wsgi.input':FakePayload(payload), 'CONTENT_LENGTH':len(payload)})
         response = view(request)
         data = json.loads(response.content)
         
-        assert False, response.content
+        #assert False, response.content
+    
+    def test_post_detail(self):
+        instance = self.user
+        view_kwargs = self.resource.get_view_kwargs()
+        view = self.resource.detail_view.as_view(**view_kwargs)
+        update_data = {
+            'email': 'z@z.com',
+        }
+        payload = json.dumps({'data':update_data})
+        request = self.factory.post('/', **{'wsgi.input':FakePayload(payload), 'CONTENT_LENGTH':len(payload)})
+        response = view(request, pk=instance.pk)
+        data = json.loads(response.content)
+        
+        #assert False, response.content
 
 class SiteResourceTestCase(ResourceTestCase):
     def register_resource(self):
-        self.site.register(ContentType, ModelResource)
+        self.site.register(User, ModelResource)
         return self.site.site_resource
     
     def test_get_list(self):
@@ -86,11 +102,11 @@ class SiteResourceTestCase(ResourceTestCase):
         response = view(request)
         data = json.loads(response.content)
         
-        self.assertEqual(data['collection']['items'][0]['href'], "contenttypes/")
+        self.assertEqual(data['collection']['items'][0]['href'], "auth/")
 
 class ApplicationResourceTestCase(ResourceTestCase):
     def register_resource(self):
-        self.site.register(ContentType, ModelResource)
+        self.site.register(User, ModelResource)
         return self.site.applications.values()[0]
     
     def test_get_list(self):
@@ -100,5 +116,5 @@ class ApplicationResourceTestCase(ResourceTestCase):
         response = view(request)
         data = json.loads(response.content)
         
-        self.assertEqual(data['collection']['items'][0]['href'], "contenttypes/contenttype/")
+        self.assertEqual(data['collection']['items'][0]['href'], "auth/user/")
 

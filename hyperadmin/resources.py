@@ -58,12 +58,16 @@ class BaseResource(object):
     def get_form_class(self, instance=None):
         return self.form_class
     
-    def generate_response(self, view, instance=None, errors=None):
+    def get_media_type(self, view):
         content_type = view.get_content_type()
         media_type_cls = self.site.media_types.get(content_type, None)
         if media_type_cls is None:
-            pass
-        media_type = media_type_cls(view)
+            #TODO raise the proper exception
+            assert False, 'Unrecognized content type'
+        return media_type_cls(view)
+    
+    def generate_response(self, view, instance=None, errors=None):
+        media_type = self.get_media_type(view)
         return media_type.serialize(instance=instance, errors=errors)
 
 class SiteResource(BaseResource):
@@ -198,11 +202,24 @@ class CRUDResource(BaseResource):
     def get_absolute_url(self):
         return self.reverse('%s_%s_list' % (self.app_name, self.resource_name))
     
-    def generate_create_response(self, view, instance):
-        next_url = self.get_instance_url(instance)
-        response = http.HttpResponse(next_url, status=303)
-        response['Location'] = next_url
-        return response
+    def generate_create_response(self, view, form_class):
+        instance = None
+        media_type = self.get_media_type(view)
+        form = media_type.deserialize(form_class=form_class)
+        if form.is_valid():
+            instance = form.save()
+            next_url = self.get_instance_url(instance)
+            response = http.HttpResponse(next_url, status=303)
+            response['Location'] = next_url
+            return response
+        return self.generate_response(view, instance=instance, errors=form.errors)
+    
+    def generate_update_response(self, view, instance, form_class):
+        media_type = self.get_media_type(view)
+        form = media_type.deserialize(instance=instance, form_class=form_class)
+        if form.is_valid():
+            instance = form.save()
+        return self.generate_response(view, instance=instance, errors=form.errors)
     
     def generate_delete_response(self, view):
         next_url = self.get_absolute_url()

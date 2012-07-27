@@ -92,7 +92,7 @@ class CollectionJsonTestCase(unittest.TestCase):
     
     def test_model_instance_deserialize(self):
         items = [ContentType.objects.all()[0]]
-        payload = '{}'
+        payload = '''{"data":{}}'''
         view = MockResourceView(items)
         view.request = view.factory.post('/', **{'wsgi.input':FakePayload(payload), 'CONTENT_LENGTH':len(payload)})
         adaptor = CollectionJSON(view)

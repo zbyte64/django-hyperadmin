@@ -88,21 +88,15 @@ class ModelResourceViewMixin(ResourceViewMixin, generic.edit.ModelFormMixin):
         form = form_class(**kwargs)
         return form
     
-    def form_valid(self, form):
-        self.object = form.save()
-        return self.resource.generate_response(self, instance=self.object)
-    
-    def form_invalid(self, form):
-        return self.resource.generate_response(self, errors=form.errors)
+    #form_valid & form_invalid should not be used
 
 class ModelListResourceView(ModelResourceViewMixin, generic.CreateView):
     #TODO support pagination
     def get(self, request, *args, **kwargs):
         return self.resource.generate_response(self)
     
-    def form_valid(self, form):
-        self.object = form.save()
-        return self.resource.generate_create_response(self, instance=self.object)
+    def post(self, request, *args, **kwargs):
+        return self.resource.generate_create_response(self, form_class=self.get_form_class())
     
     def get_ln_links(self, instance=None):
         form = self.get_form(instance=instance)
@@ -125,11 +119,11 @@ class ModelDetailResourceView(ModelResourceViewMixin, generic.UpdateView):
     
     def post(self, request, *args, **kwargs):
         # Workaround browsers not being able to send a DELETE method.
-        if request.POST.get('DELETE', None) == "DELETE":
-            request.method = 'DELETE'
-            return self.delete(request, *args, **kwargs)
-        #TODO: return self.resource.generate_response(self, instance=self.object)
-        return super(ModelDetailResourceView, self).post(request, *args, **kwargs)
+        #if request.POST.get('DELETE', None) == "DELETE":
+        #    request.method = 'DELETE'
+        #    return self.delete(request, *args, **kwargs)
+        self.object = self.get_object()
+        return self.resource.generate_update_response(self, instance=self.object, form_class=self.get_form_class())
     
     def delete(self, request, *args, **kwargs):
         self.object = self.get_object()
