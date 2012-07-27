@@ -45,7 +45,7 @@ class ResourceViewMixin(ConditionalAccessMixin):
         return []
     
     def get_instance_url(self, instance):
-        return None
+        return self.resource.get_instance_url(instance)
     
     def get_items(self):
         return []
@@ -94,11 +94,16 @@ class ModelDetailResourceView(ModelResourceViewMixin, generic.UpdateView):
     def get_items(self, **kwargs):
         return [self.object]
     
+    def get(self, request, *args, **kwargs):
+        self.object = self.get_object()
+        return self.resource.generate_response(self)
+    
     def post(self, request, *args, **kwargs):
         # Workaround browsers not being able to send a DELETE method.
         if request.POST.get('DELETE', None) == "DELETE":
             request.method = 'DELETE'
             return self.delete(request, *args, **kwargs)
+        #TODO: return self.resource.generate_response(self, instance=self.object)
         return super(ModelDetailResourceView, self).post(request, *args, **kwargs)
     
     def delete(self, request, *args, **kwargs):

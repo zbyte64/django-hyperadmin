@@ -1,6 +1,5 @@
 from django import http
 from django.conf.urls.defaults import patterns, url, include
-from django.core.urlresolvers import get_urlconf, get_resolver, reverse
 from django.utils.functional import update_wrapper
 
 from views import ModelListResourceView, ModelDetailResourceView, ApplicationResourceView
@@ -14,8 +13,6 @@ class TemplatedLink(Link):
     pass
 
 class BaseResource(object):
-    form_class = None
-    
     def __init__(self, resource_adaptor, site):
         self.resource_adaptor = resource_adaptor
         self.site = site
@@ -36,19 +33,14 @@ class BaseResource(object):
     urls = property(urls)
     
     def reverse(self, name, *args, **kwargs):
-        #TODO...
-        urlconf = get_urlconf()
-        resolver = get_resolver(urlconf)
-        app_list = resolver.app_dict['admin']
-        return reverse('%s:%s' % (self.site.name, name), args=args, kwargs=kwargs, current_app=self.app_name)
+        return self.site.reverse(name, *args, **kwargs)
     
     def as_view(self, view, cacheable=False):
         return self.site.as_view(view, cacheable)
     
     def get_view_kwargs(self):
         return {'resource':self,
-                'resource_site':self.site,
-                'form_class':self.form_class,}
+                'resource_site':self.site,}
     
     def get_embedded_links(self, instance=None):
         return []
@@ -71,7 +63,7 @@ class BaseResource(object):
         if media_type_cls is None:
             pass
         media_type = media_type_cls(view)
-        return media_type.serialize(view, instance=instance, errors=errors)
+        return media_type.serialize(instance=instance, errors=errors)
 
 class SiteResource(BaseResource):
     list_view = ApplicationResourceView
@@ -106,7 +98,7 @@ class SiteResource(BaseResource):
     
     def get_items(self, request):
         #TODO sort by name
-        return self.site.application.values()
+        return self.site.applications.values()
     
     def get_instance_url(self, instance):
         if hasattr(instance, 'get_absolute_url'):
@@ -134,7 +126,7 @@ class ApplicationResource(BaseResource):
         
         urlpatterns = self.get_extra_urls()
         urlpatterns += patterns('',
-            url(r'^$' % self.app_name,
+            url(r'^$',
                 wrap(self.list_view.as_view(**init)),
                 name=self.app_name),
         )
@@ -173,6 +165,7 @@ class ApplicationResource(BaseResource):
 class CRUDResource(BaseResource):
     list_view = None
     detail_view = None
+    form_class = None
     
     def get_resource_name(self):
         raise NotImplementedError
@@ -291,6 +284,7 @@ class ModelResource(CRUDResource):
     def get_view_kwargs(self):
         kwargs = super(ModelResource, self).get_view_kwargs()
         kwargs['model'] = self.resource_adaptor
+        kwargs['form_class'] = self.form_class
         return kwargs
     
     def get_queryset(self, request):

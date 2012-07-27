@@ -1,5 +1,6 @@
 from django.views.decorators.cache import never_cache
 from django.conf.urls.defaults import patterns
+from django.core.urlresolvers import reverse
 
 from resources import SiteResource, ApplicationResource
 
@@ -9,9 +10,11 @@ class ResourceSite(object):
     site_resource_class = SiteResource
     application_resource_class = ApplicationResource
     
-    def __init__(self):
+    def __init__(self, name='hyperadmin'):
+        self.name = name
         self.media_types = dict()
         self.applications = dict()
+        self.registry = dict()
         self.site_resource = self.site_resource_class(self)
     
     def register(self, model_or_iterable, admin_class, **options):
@@ -19,11 +22,13 @@ class ResourceSite(object):
             for model in model_or_iterable:
                 self.register(model, admin_class, **options)
             return
-        resource = admin_class(model_or_iterable, self)
+        model = model_or_iterable
+        resource = admin_class(model, self)
         app_name = resource.app_name
         if app_name not in self.applications:
             self.applications[app_name] = self.application_resource_class(app_name, self)
         self.applications[app_name].register_resource(resource)
+        self.registry[model] = resource
     
     def register_media_type(self, media_type, media_type_handler):
         self.media_types[media_type] = media_type_handler
@@ -37,7 +42,7 @@ class ResourceSite(object):
         return patterns('',)
     
     def urls(self):
-        return self.get_urls(), None, None
+        return self.get_urls(), None, self.name
     urls = property(urls)
     
     def get_view_kwargs(self):
@@ -52,6 +57,9 @@ class ResourceSite(object):
         from mediatypes import BUILTIN_MEDIA_TYPES
         for key, value in BUILTIN_MEDIA_TYPES.iteritems():
             self.register_media_type(key, value)
+    
+    def reverse(self, name, *args, **kwargs):
+        return reverse('%s:%s' % (self.site.name, name), args=args, kwargs=kwargs, current_app=self.app_name)
 
 
 site = ResourceSite()

@@ -28,6 +28,9 @@ class MockResourceView(ResourceViewMixin):
             class Meta:
                 model = ContentType
         return GenForm
+    
+    def get_instance_url(self, instance):
+        return None
 
 class CollectionJsonTestCase(unittest.TestCase):
     def test_queryset_serialize(self):
