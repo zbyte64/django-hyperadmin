@@ -22,17 +22,24 @@ class MediaType(object):
 
 class CollectionJSON(MediaType):
     def construct_template(self, instance=None):
+        #TODO view should return LN/LI links
         form_class = self.view.get_form_class(instance=instance)
         if form_class is None:
             return None
         form = form_class(instance=instance)
         result = {'data':list()}
         for name, field in form.fields.iteritems():
-            entry = {"name": unicode(name),
-                     "value": form[name].value() if instance else field.initial,
-                     "prompt": unicode(field.label)}
+            entry = self.convert_field(field, name)
+            if instance:
+                entry['value'] = form[name].value()
             result['data'].append(entry)
         return result
+    
+    def convert_field(self, field, name=None):
+        entry = {"name": unicode(name),
+                 "value": field.initial,
+                 "prompt": unicode(field.label)}
+        return entry
     
     def convert_resource(self, resource):
         return {}
@@ -56,10 +63,16 @@ class CollectionJSON(MediaType):
         return result
     
     def convert_link(self, link):
-        return link
-    
-    def convert_template_query(self, query):
-        return query
+        link_r = {"href":link.url,
+                  "rel":link.rel,
+                  }
+        if link.descriptors:
+            link_r['prompt'] = link.descriptors['label']
+        if link.fields:
+            data = list()
+            for name, field in link.fields.iteritems():
+                data.append(self.convert_field(field, name))
+        return link_r
     
     def serialize(self, instance=None, errors=None):
         items = [self.convert_instance(item) for item in self.view.get_items()]
@@ -76,7 +89,7 @@ class CollectionJSON(MediaType):
         data = {
             "links": [self.convert_link(link) for link in links],
             "items": items,
-            "queries": [self.convert_template_query(query) for query in queries],
+            "queries": [self.convert_link(query) for query in queries],
             "template": self.construct_template(), #idempotent update
             #"error": {},
         }

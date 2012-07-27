@@ -3,14 +3,7 @@ from django.conf.urls.defaults import patterns, url, include
 from django.utils.functional import update_wrapper
 
 from views import ModelListResourceView, ModelDetailResourceView, ApplicationResourceView
-
-class Link(object):
-    def __init__(self, **kwargs):
-        for key, value in kwargs.iteritems():
-            setattr(self, key, value)
-
-class TemplatedLink(Link):
-    pass
+from links import Link
 
 class BaseResource(object):
     def __init__(self, resource_adaptor, site):
@@ -49,6 +42,14 @@ class BaseResource(object):
         return []
     
     def get_templated_queries(self):
+        return []
+    
+    #TODO find a better name
+    def get_ln_links(self, instance=None):
+        return []
+    
+    #TODO find a better name
+    def get_li_links(self, instance=None):
         return []
     
     def get_instance_url(self, instance):
@@ -228,7 +229,7 @@ class CRUDResource(BaseResource):
         else:
             site_link = Link(url=self.reverse('index'), rel='site')
             app_link = Link(url=self.reverse(self.app_name), rel='application')
-            resource_list = Link(url=self.reverse(self.app_name+'_list'), rel='resource-listing')
+            resource_list = Link(url=self.get_absolute_url(), rel='resource-listing')
             return [site_link, app_link, resource_list]
     
     def get_templated_queries(self):

@@ -7,7 +7,6 @@ from django import http
 import mimeparse
 
 from hyperadmin.models import log_action, ADDITION, CHANGE, DELETION
-from hyperadmin.models import RelList
 
 class ConditionalAccessMixin(object):
     etag_function = None
@@ -36,13 +35,21 @@ class ResourceViewMixin(ConditionalAccessMixin):
         )
     
     def get_embedded_links(self, instance=None):
-        return []
+        return self.resource.get_embedded_links(instance)
     
     def get_outbound_links(self, instance=None):
-        return []
+        return self.resource.get_outbound_links(instance)
     
-    def get_templated_queries(self, instance=None):
-        return []
+    def get_templated_queries(self):
+        return self.resource.get_templated_queries()
+    
+    #TODO find a better name
+    def get_ln_links(self, instance=None):
+        return self.resource.get_ln_links(instance)
+    
+    #TODO find a better name
+    def get_li_links(self, instance=None):
+        return self.resource.get_li_links(instance)
     
     def get_instance_url(self, instance):
         return self.resource.get_instance_url(instance)

@@ -31,6 +31,21 @@ class MockResourceView(ResourceViewMixin):
     
     def get_instance_url(self, instance):
         return None
+    
+    def get_embedded_links(self, instance=None):
+        return []
+    
+    def get_outbound_links(self, instance=None):
+        return []
+    
+    def get_templated_queries(self):
+        return []
+    
+    def get_ln_links(self, instance=None):
+        return []
+    
+    def get_li_links(self, instance=None):
+        return []
 
 class CollectionJsonTestCase(unittest.TestCase):
     def test_queryset_serialize(self):
