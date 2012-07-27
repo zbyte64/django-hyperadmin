@@ -115,7 +115,7 @@ class ModelDetailResourceView(ModelResourceViewMixin, generic.UpdateView):
     
     def get(self, request, *args, **kwargs):
         self.object = self.get_object()
-        return self.resource.generate_response(self)
+        return self.resource.generate_response(self, instance=self.object)
     
     def post(self, request, *args, **kwargs):
         # Workaround browsers not being able to send a DELETE method.
@@ -136,7 +136,8 @@ class ModelDetailResourceView(ModelResourceViewMixin, generic.UpdateView):
         return self.resource.generate_delete_response(self)
     
     def get_ln_links(self, instance=None):
-        links = super(ModelDetailResourceView, self).get_li_links(instance)
+        links = super(ModelDetailResourceView, self).get_ln_links(instance)
+        assert instance
         if instance:
             form = self.get_form(instance=instance)
             update_link = Link(url=self.request.path,

@@ -21,15 +21,6 @@ class MediaType(object):
         raise NotImplementedError
 
 class CollectionJSON(MediaType):
-    def construct_template(self, instance=None):
-        #TODO view should return LN/LI links
-        form_class = self.view.get_form_class(instance=instance)
-        if form_class is None:
-            return None
-        form = form_class(instance=instance)
-        result = {'data':self.convert_form(form)}
-        return result
-    
     def convert_field(self, field, name=None):
         entry = {"name": unicode(name),
                  "value": field.initial,
@@ -39,22 +30,20 @@ class CollectionJSON(MediaType):
     def convert_resource(self, resource):
         return {}
     
+    def links_for_instance(self, instance):
+        result = dict()
+        links = list()
+        links.extend(self.view.get_embedded_links(instance))
+        links.extend(self.view.get_outbound_links(instance))
+        result["links"] = [self.convert_link(link) for link in links]
+        result["href"] = self.view.get_instance_url(instance)
+        return result
+    
     def convert_instance(self, instance):
-        """
-        Given a model instance, generate the code that is expected by the 'items' list objects,
-        and the 'template' object for Collection+JSON.
-        """
         #instance may be: ApplicationResource or CRUDResource
+        result = self.links_for_instance(instance)
         if isinstance(instance, BaseResource):
-            result = self.convert_resource(instance)
-        else:
-            result = self.construct_template(instance) or {}
-        if instance:
-            links = list()
-            links.extend(self.view.get_embedded_links(instance))
-            links.extend(self.view.get_outbound_links(instance))
-            result["links"] = [self.convert_link(link) for link in links]
-            result["href"] = self.view.get_instance_url(instance)
+            result.update(self.convert_resource(instance))
         return result
     
     def convert_form(self, form):
@@ -65,6 +54,11 @@ class CollectionJSON(MediaType):
                 entry['value'] = form[name].value()
             data.append(entry)
         return data
+    
+    def convert_item_form(self, form):
+        item_r = self.links_for_instance(form.instance)
+        item_r['data'] = self.convert_form(form)
+        return item_r
     
     def convert_link(self, link):
         link_r = {"href":link.url,
@@ -85,7 +79,7 @@ class CollectionJSON(MediaType):
     def serialize(self, instance=None, errors=None):
         #CONSIDER a better inferface
         if hasattr(self.view, 'get_items_forms'):
-            items = [self.convert_form(form) for form in self.view.get_items_forms()]
+            items = [self.convert_item_form(form) for form in self.view.get_items_forms()]
         else:
             items = [self.convert_instance(item) for item in self.view.get_items()]
         
@@ -99,17 +93,14 @@ class CollectionJSON(MediaType):
             "links": [self.convert_link(link) for link in links],
             "items": items,
             "queries": [self.convert_link(query) for query in queries],
-            "template": self.construct_template(), #idempotent update
-            #"error": {},
         }
+        
         if errors:
             data['error'] = self.convert_errors(errors)
         
-        ln_links = self.view.get_ln_links()
-        
+        ln_links = self.view.get_ln_links(instance=instance)
         #get_non_idempotent_updates
         #get_idempotent_updates
-        
         if len(ln_links):
             data['template'] = self.convert_link(ln_links[0])
         
@@ -129,4 +120,43 @@ class CollectionJSON(MediaType):
         return form
 
 BUILTIN_MEDIA_TYPES['application/vnd.Collection+JSON'] = CollectionJSON
+
+class CollectionNextJSON(CollectionJSON):
+    def convert_field(self, field, name=None):
+        entry = super(CollectionNextJSON, self).convert_field(field, name)
+        entry['required'] = field.required
+        #TODO: entry['type'] = '' #html5 type
+        #TODO:
+        if field.options:
+            options = list()
+            for value, prompt in field.options:
+                options.append({"value":value,
+                                "prompt":prompt})
+            entry['list'] = {'options':options}
+        '''
+        entry['list'] = {
+            'multiple':True,
+            'options': [{"value":"", "prompt":""}]
+        }
+        '''
+        return entry
+    
+    def convert_errors(self, errors):
+        messages = list()
+        for key, error in errors.iteritems():
+            message = {'name':key,
+                       'message':unicode(error)}
+            messages.append(message)
+        error_r = {'code':'00',
+                   'messages':messages,}
+        return error_r
+    
+    def convert_link(self, link):
+        link_r = super(CollectionNextJSON, self).convert_link(link)
+        #TODO link_r["method"]
+        link_r["method"] = {"options": [{"value":link.method}]}
+        #TODO link_r["enctype"]
+        return link_r
+
+BUILTIN_MEDIA_TYPES['application/vnd.Collection.next+JSON'] = CollectionNextJSON
 

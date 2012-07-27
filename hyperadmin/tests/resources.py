@@ -49,6 +49,10 @@ class ModelResourceTestCase(ResourceTestCase):
         request = self.factory.get('/')
         response = view(request)
         data = json.loads(response.content)
+        data = data['collection']
+        
+        self.assertTrue('template' in data)
+        self.assertTrue('items' in data)
         
         #assert False, response.content
     
@@ -59,6 +63,11 @@ class ModelResourceTestCase(ResourceTestCase):
         request = self.factory.get('/')
         response = view(request, pk=instance.pk)
         data = json.loads(response.content)
+        data = data['collection']
+        
+        self.assertTrue('template' in data)
+        self.assertTrue('items' in data)
+        self.assertEqual(len(data['items']), 1)
         
         #assert False, response.content
     
@@ -73,6 +82,11 @@ class ModelResourceTestCase(ResourceTestCase):
         request = self.factory.post('/', **{'wsgi.input':FakePayload(payload), 'CONTENT_LENGTH':len(payload)})
         response = view(request)
         data = json.loads(response.content)
+        data = data['collection']
+        
+        self.assertTrue('template' in data)
+        self.assertTrue('error' in data)
+        self.assertTrue('items' in data)
         
         #assert False, response.content
     
@@ -87,6 +101,12 @@ class ModelResourceTestCase(ResourceTestCase):
         request = self.factory.post('/', **{'wsgi.input':FakePayload(payload), 'CONTENT_LENGTH':len(payload)})
         response = view(request, pk=instance.pk)
         data = json.loads(response.content)
+        data = data['collection']
+        
+        self.assertTrue('template' in data, str(view))
+        self.assertTrue('error' in data)
+        self.assertTrue('items' in data)
+        self.assertEqual(len(data['items']), 1)
         
         #assert False, response.content
 
