@@ -17,7 +17,7 @@ class MediaType(object):
     def serialize(self, instance=None, errors=None):
         raise NotImplementedError
     
-    def deserialize(self, instance=None, form_class=None):
+    def deserialize(self, form_class, instance=None):
         raise NotImplementedError
 
 class CollectionJSON(MediaType):
@@ -118,15 +118,13 @@ class CollectionJSON(MediaType):
         content_type = self.get_content_type()
         return http.HttpResponse(content, content_type)
     
-    def deserialize(self, instance=None, form_class=None):
+    def deserialize(self, form_class, instance=None):
         #TODO this needs more thinking
         if hasattr(self.request, 'body'):
             payload = self.request.body
         else:
             payload = self.request.raw_post_data
         data = json.loads(payload)['data']
-        if form_class is None:
-            form_class = self.view.get_form_class()
         form = form_class(instance=instance, data=data, files=self.request.FILES)
         return form
 
