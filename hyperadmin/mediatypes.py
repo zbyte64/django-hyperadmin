@@ -127,7 +127,7 @@ class CollectionNextJSON(CollectionJSON):
         entry['required'] = field.required
         #TODO: entry['type'] = '' #html5 type
         #TODO:
-        if field.options:
+        if hasattr(field, 'options') and field.options:
             options = list()
             for value, prompt in field.options:
                 options.append({"value":value,
