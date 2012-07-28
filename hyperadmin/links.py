@@ -1,5 +1,5 @@
 class Link(object):
-    def __init__(self, url, method='GET', form=None, descriptors=None, rel=None, cu_headers=None, cr_headers=None):
+    def __init__(self, url, method='GET', form=None, classes=[], descriptors=None, rel=None, cu_headers=None, cr_headers=None):
         '''
         fields = dictionary of django fields describing the accepted data
         descriptors = dictionary of data describing the link
@@ -8,6 +8,7 @@ class Link(object):
         self.url = url
         self.method = str(method).upper() #CM
         self.form = form
+        self.classes = classes
         self.descriptors = descriptors
         self.rel = rel #CL
         self.cu_headers = cu_headers

@@ -1,6 +1,8 @@
 from django import http
 from django.conf.urls.defaults import patterns, url, include
 from django.utils.functional import update_wrapper
+from django.utils.datastructures import SortedDict
+from django.core.paginator import Paginator
 
 #from views import ModelListResourceView, ModelDetailResourceView, ApplicationResourceView
 import views
@@ -169,6 +171,9 @@ class ApplicationResource(BaseResource):
         return self.reverse(self.app_name)
 
 class CRUDResource(BaseResource):
+    #TODO support the following:
+    actions = []
+    
     list_view = None
     detail_view = None
     form_class = None
@@ -262,43 +267,61 @@ class CRUDResource(BaseResource):
                                method='DELETE')
             return [delete_link]
         return []
+    
+    def get_actions(self, request):
+        actions = self.site.get_actions(request)
+        for func in self.actions:
+            if isinstance(func, basestring):
+                #TODO register as new func in urls, create link for it
+                func = getattr(self, func)
+            assert callable(func)
+            name = func.__name__
+            description = getattr(func, 'short_description', name.replace('_', ' '))
+            #sorteddictionary
+            actions[name] = (func, name, description)
+        return actions
+    
+    def get_action(self, request, action):
+        actions = self.get_actions(request)
+        return actions[action]
 
 class ModelResource(CRUDResource):
     #TODO support the following:
     #raw_id_fields = ()
-    #fields = None
-    #exclude = []
+    fields = None
+    exclude = []
     #fieldsets = None
     #filter_vertical = ()
     #filter_horizontal = ()
     #radio_fields = {}
     #prepopulated_fields = {}
-    #formfield_overrides = {}
+    formfield_overrides = {}
     #readonly_fields = ()
     #declared_fieldsets = None
     
     #save_as = False
     #save_on_top = False
-    #paginator = Paginator
+    paginator = Paginator
     inlines = []
     
     #list display options
-    #list_display = ('__str__',)
-    #list_display_links = ()
-    #list_filter = ()
-    #list_select_related = False
-    #list_per_page = 100
-    #list_max_show_all = 200
-    #list_editable = ()
-    #search_fields = ()
-    #date_hierarchy = None
-    #ordering = None
+    list_display = ('__str__',)
+    list_display_links = ()
+    list_filter = ()
+    list_select_related = False
+    list_per_page = 100
+    list_max_show_all = 200
+    list_editable = ()
+    search_fields = ()
+    date_hierarchy = None
+    ordering = None
     
     list_view = views.ModelListResourceView
     detail_view = views.ModelDetailResourceView
     
     def __init__(self, *args, **kwargs):
         super(ModelResource, self).__init__(*args, **kwargs)
+        self.model = self.resource_adaptor
         self.inline_instances = list()
         for inline_cls in self.inlines:
             self.inline_instances.append(inline_cls(self))
@@ -329,6 +352,30 @@ class ModelResource(CRUDResource):
         kwargs['model'] = self.resource_adaptor
         kwargs['form_class'] = self.form_class
         return kwargs
+    
+    def get_changelist(self, request):
+        from django.contrib.admin.views.main  import ChangeList
+        list_display = self.list_display
+        list_display_links = self.list_display_links
+        cl = ChangeList(request, self.resource_adaptor, list_display,
+                list_display_links, self.list_filter, self.date_hierarchy,
+                self.search_fields, self.list_select_related,
+                self.list_per_page, self.list_max_show_all, self.list_editable,
+                self)
+        #cl.result_list
+        return cl
+    
+    def get_paginator(self, request, queryset, per_page, orphans=0, allow_empty_first_page=True):
+        return self.paginator(queryset, per_page, orphans, allow_empty_first_page)
+    
+    def lookup_allowed(self, lookup, value):
+        return True #TODO
+    
+    def get_ordering(self, request):
+        """
+        Hook for specifying field ordering.
+        """
+        return self.ordering or ()  # otherwise we might try to *None, which is bad ;)
     
     def get_queryset(self, request):
         queryset = self.resource_adaptor.objects.all()
@@ -367,6 +414,17 @@ class ModelResource(CRUDResource):
             return self.has_change_permission(request, obj)
         return request.user.has_perm(
             self.opts.app_label + '.' + self.opts.get_delete_permission())
+    
+    def get_form_class(self):
+        if self.form_class:
+            return self.form_class
+        class AdminForm(forms.ModelForm):
+            class Meta:
+                model = self.model
+                exclude = self.exclude
+                #TODO formfield overides
+                #TODO fields
+        return AdminForm
     
     def get_embedded_links(self, instance=None):
         links = super(ModelResource, self).get_embedded_links(instance=instance)

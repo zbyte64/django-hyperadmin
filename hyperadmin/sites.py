@@ -1,6 +1,7 @@
 from django.views.decorators.cache import never_cache
 from django.conf.urls.defaults import patterns
 from django.core.urlresolvers import reverse
+from django.utils.datastructures import SortedDict
 
 from resources import SiteResource, ApplicationResource
 
@@ -60,6 +61,9 @@ class ResourceSite(object):
     
     def reverse(self, name, *args, **kwargs):
         return reverse('%s:%s' % (self.site.name, name), args=args, kwargs=kwargs, current_app=self.app_name)
+    
+    def get_actions(self, request):
+        return SortedDict()
 
 
 site = ResourceSite()
