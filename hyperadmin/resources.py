@@ -3,6 +3,7 @@ from django.conf.urls.defaults import patterns, url, include
 from django.utils.functional import update_wrapper
 from django.utils.datastructures import SortedDict
 from django.core.paginator import Paginator
+from django import forms
 
 #from views import ModelListResourceView, ModelDetailResourceView, ApplicationResourceView
 import views
@@ -65,16 +66,18 @@ class BaseResource(object):
         content_type = view.get_content_type()
         media_type_cls = self.site.media_types.get(content_type, None)
         if media_type_cls is None:
-            #TODO raise the proper exception
-            assert False, 'Unrecognized content type'
+            raise ValueError('Unrecognized content type')
         return media_type_cls(view)
     
     def generate_response(self, view, instance=None, errors=None):
-        media_type = self.get_media_type(view)
+        try:
+            media_type = self.get_media_type(view)
+        except ValueError:
+            raise #TODO raise Bad request...
         return media_type.serialize(instance=instance, errors=errors)
 
 class SiteResource(BaseResource):
-    list_view = views.ApplicationResourceView
+    list_view = views.SiteResourceView
     
     def __init__(self, site):
         self.site = site
@@ -210,7 +213,10 @@ class CRUDResource(BaseResource):
     
     def generate_create_response(self, view, form_class):
         instance = None
-        media_type = self.get_media_type(view)
+        try:
+            media_type = self.get_media_type(view)
+        except ValueError:
+            raise #TODO raise Bad request
         form = media_type.deserialize(form_class=form_class)
         if form.is_valid():
             instance = form.save()
@@ -221,7 +227,10 @@ class CRUDResource(BaseResource):
         return self.generate_response(view, instance=instance, errors=form.errors)
     
     def generate_update_response(self, view, instance, form_class):
-        media_type = self.get_media_type(view)
+        try:
+            media_type = self.get_media_type(view)
+        except ValueError:
+            raise #TODO raise Bad request
         form = media_type.deserialize(instance=instance, form_class=form_class)
         if form.is_valid():
             instance = form.save()

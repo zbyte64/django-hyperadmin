@@ -204,6 +204,14 @@ class SiteResourceTestCase(ResourceTestCase):
         self.site.register(User, ModelResource)
         return self.site.site_resource
     
+    def test_index(self):
+        factory = SuperUserRequestFactory(user=self.user)
+        view_kwargs = self.resource.get_view_kwargs()
+        view = self.resource.list_view.as_view(**view_kwargs)
+        request = factory.get('/')
+        response = view(request)
+        
+    
     def test_get_list(self):
         view_kwargs = self.resource.get_view_kwargs()
         view = self.resource.list_view.as_view(**view_kwargs)
