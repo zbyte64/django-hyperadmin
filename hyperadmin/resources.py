@@ -2,7 +2,8 @@ from django import http
 from django.conf.urls.defaults import patterns, url, include
 from django.utils.functional import update_wrapper
 
-from views import ModelListResourceView, ModelDetailResourceView, ApplicationResourceView
+#from views import ModelListResourceView, ModelDetailResourceView, ApplicationResourceView
+import views
 from links import Link
 
 class BaseResource(object):
@@ -71,7 +72,7 @@ class BaseResource(object):
         return media_type.serialize(instance=instance, errors=errors)
 
 class SiteResource(BaseResource):
-    list_view = ApplicationResourceView
+    list_view = views.ApplicationResourceView
     
     def __init__(self, site):
         self.site = site
@@ -110,7 +111,7 @@ class SiteResource(BaseResource):
             return instance.get_absolute_url()
 
 class ApplicationResource(BaseResource):
-    list_view = ApplicationResourceView
+    list_view = views.ApplicationResourceView
     
     def __init__(self, app_name, site):
         self._app_name = app_name
@@ -293,8 +294,8 @@ class ModelResource(CRUDResource):
     #date_hierarchy = None
     #ordering = None
     
-    list_view = ModelListResourceView
-    detail_view = ModelDetailResourceView
+    list_view = views.ModelListResourceView
+    detail_view = views.ModelDetailResourceView
     
     def __init__(self, *args, **kwargs):
         super(ModelResource, self).__init__(*args, **kwargs)
@@ -315,13 +316,6 @@ class ModelResource(CRUDResource):
     resource_name = property(get_resource_name)
     
     def get_urls(self):
-        def wrap(view, cacheable=False):
-            def wrapper(*args, **kwargs):
-                return self.as_view(view, cacheable)(*args, **kwargs)
-            return update_wrapper(wrapper, view)
-        
-        init = self.get_view_kwargs()
-        
         urlpatterns = super(ModelResource, self).get_urls()
         for inline in self.inline_instances:
             urlpatterns += patterns('',
@@ -354,7 +348,7 @@ class ModelResource(CRUDResource):
 
     def has_change_permission(self, request, obj=None):
         opts = self.opts
-        if opts.auto_created:
+        if opts.auto_created and hasattr(self, 'parent_model'):
             # The model was auto-created as intermediary for a
             # ManyToMany-relationship, find the target model
             for field in opts.fields:
@@ -373,18 +367,39 @@ class ModelResource(CRUDResource):
             return self.has_change_permission(request, obj)
         return request.user.has_perm(
             self.opts.app_label + '.' + self.opts.get_delete_permission())
+    
+    def get_embedded_links(self, instance=None):
+        links = super(ModelResource, self).get_embedded_links(instance=instance)
+        inline_links = list()
+        if instance:
+            for inline in self.inline_instances:
+                url = self.reverse('%s_%s_%s_list' % (self.app_name, self.resource_name, inline.rel_name), pk=instance.pk)
+                link = Link(url=url,
+                            rel='inline-%s' % inline.rel_name,)
+                inline_links.append(link)
+        return links + inline_links
 
 class InlineModelResource(ModelResource):
+    list_view = views.InlineModelListResourceView
+    detail_view = views.InlineModelDetailResourceView
+    
     model = None
-    #TODO going to need some custom views
+    fk_name = None
+    rel_name = None
     
     def __init__(self, parent_resource):
         self.resource_adaptor = self.model
         self.site = parent_resource.site
-        self.prarent_resource = parent_resource
-        self.rel_name = None #TODO
+        self.parent_resource = parent_resource
+        
+        from django.db.models.fields.related import RelatedObject
+        from django.forms.models import _get_foreign_key
+        self.fk = _get_foreign_key(self.parent_resource.resource_adaptor, self.model, self.fk_name, can_fail=False)
+        if self.rel_name is None:
+            self.rel_name = RelatedObject(self.fk.rel.to, self.model, self.fk).get_accessor_name()
+        self.inline_instances = []
     
-    def get_queryset(self, instance, request):
+    def get_queryset(self, request, instance):
         queryset = self.resource_adaptor.objects.all()
         queryset.filter(**{self.rel_name:instance})
         if not self.has_change_permission(request):
@@ -410,4 +425,15 @@ class InlineModelResource(ModelResource):
                 name='%s_%s_%s_detail' % (self.parent_resource.app_name, self.parent_resource.resource_name, self.rel_name)),
         )
         return urlpatterns
+    
+    def get_instance_url(self, instance):
+        return None #TODO
+        pk = getattr(instance, self.rel_name).pk
+        return self.reverse('%s_%s_%s_detail' % (self.parent_resource.app_name, self.parent_resource.resource_name, self.rel_name), inline_pk=instance.pk, pk=pk)
+    
+    def get_absolute_url(self, instance=None):
+        if not instance:
+            return self.parent_resource.get_absolute_url()
+        return None
+
     

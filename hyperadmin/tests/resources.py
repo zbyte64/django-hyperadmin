@@ -1,9 +1,9 @@
 from django.utils import unittest
-from django.contrib.auth.models import User
+from django.contrib.auth.models import User, Group
 from django.test.client import RequestFactory, FakePayload
 from django.utils import simplejson as json
 
-from hyperadmin.resources import ModelResource
+from hyperadmin.resources import ModelResource, InlineModelResource
 from hyperadmin.sites import ResourceSite
 
 from common import GenericURLResolver
@@ -91,6 +91,95 @@ class ModelResourceTestCase(ResourceTestCase):
         #assert False, response.content
     
     def test_post_detail(self):
+        instance = self.user
+        view_kwargs = self.resource.get_view_kwargs()
+        view = self.resource.detail_view.as_view(**view_kwargs)
+        update_data = {
+            'email': 'z@z.com',
+        }
+        payload = json.dumps({'data':update_data})
+        request = self.factory.post('/', **{'wsgi.input':FakePayload(payload), 'CONTENT_LENGTH':len(payload)})
+        response = view(request, pk=instance.pk)
+        data = json.loads(response.content)
+        data = data['collection']
+        
+        self.assertTrue('template' in data, str(view))
+        self.assertTrue('error' in data)
+        self.assertTrue('items' in data)
+        self.assertEqual(len(data['items']), 1)
+        
+        #assert False, response.content
+
+class GroupsInline(InlineModelResource):
+    model = User.groups.through
+    rel_name = 'user' #TODO this should not be needed
+
+class UserResource(ModelResource):
+    inlines = [GroupsInline]
+
+class InlineModelResourceTestCase(ResourceTestCase):
+    def register_resource(self):
+        self.site.register(User, UserResource)
+        return self.site.registry[User].inline_instances[0]
+    
+    def test_get_list(self):
+        group = Group.objects.get_or_create(name='testgroup')[0]
+        self.user.groups.add(group)
+        
+        view_kwargs = self.resource.get_view_kwargs()
+        view = self.resource.list_view.as_view(**view_kwargs)
+        request = self.factory.get('/')
+        response = view(request, pk=self.user.pk)
+        data = json.loads(response.content)
+        data = data['collection']
+        
+        self.assertTrue('template' in data)
+        self.assertTrue('items' in data)
+        self.assertEqual(len(data['items']), 1)
+        
+        #assert False, response.content
+    
+    #TODO
+    def test_get_detail(self):
+        return
+        instance = self.user
+        view_kwargs = self.resource.get_view_kwargs()
+        view = self.resource.detail_view.as_view(**view_kwargs)
+        request = self.factory.get('/')
+        response = view(request, pk=instance.pk)
+        data = json.loads(response.content)
+        data = data['collection']
+        
+        self.assertTrue('template' in data)
+        self.assertTrue('items' in data)
+        self.assertEqual(len(data['items']), 1)
+        
+        #assert False, response.content
+    
+    #TODO
+    def test_post_list(self):
+        return
+        view_kwargs = self.resource.get_view_kwargs()
+        view = self.resource.list_view.as_view(**view_kwargs)
+        update_data = {
+            'username': 'normaluser',
+            'email': 'z@z.com',
+        }
+        payload = json.dumps({'data':update_data})
+        request = self.factory.post('/', **{'wsgi.input':FakePayload(payload), 'CONTENT_LENGTH':len(payload)})
+        response = view(request)
+        data = json.loads(response.content)
+        data = data['collection']
+        
+        self.assertTrue('template' in data)
+        self.assertTrue('error' in data)
+        self.assertTrue('items' in data)
+        
+        #assert False, response.content
+    
+    #TODO
+    def test_post_detail(self):
+        return
         instance = self.user
         view_kwargs = self.resource.get_view_kwargs()
         view = self.resource.detail_view.as_view(**view_kwargs)

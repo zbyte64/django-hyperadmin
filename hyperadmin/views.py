@@ -146,3 +146,20 @@ class ModelDetailResourceView(ModelResourceViewMixin, generic.UpdateView):
             return [update_link] + links
         return links
 
+class InlineModelMixin(object):
+    def get_parent(self):
+        queryset = self.resource.parent_resource.get_queryset(self.request)
+        parent = queryset.get(pk=self.kwargs['pk'])
+        return parent
+    
+    def get_queryset(self):
+        return self.resource.get_queryset(self.request, instance=self.get_parent())
+
+class InlineModelListResourceView(InlineModelMixin, ModelListResourceView):
+    pass
+
+class InlineModelDetailResourceView(InlineModelMixin, ModelDetailResourceView):
+    def get_object(self):
+        queryset = self.get_queryset()
+        return queryset.objects.get(pk=self.kwargs['inline_pk'])
+
