@@ -58,9 +58,11 @@ Unknowns
 * inlines
 * fieldsets
 * display hints?
+* custom controls; some fields may need to specify custom front-end logic so there needs to be away to register new controls in the frontend
 
-Inlines: Make it a sub resource. Inline information & templates are slurped in at the top resource but adding another inline would be an ajax call.
+Inlines: Make it a sub resource. Inline information & templates are slurped in at the top resource but adding another inline would be an ajax call. May add new field type "schema" which nests in a subtemplate.
 
+Idea: transactional resource creation (documents only).
 
 TODO
 ----

@@ -192,12 +192,12 @@ class CRUDResource(BaseResource):
                 name='%s_%s_list' % (self.app_name, self.resource_name)),
             url(r'^(?P<pk>.+)/$',
                 wrap(self.detail_view.as_view(**init)),
-                name=self.app_name+'_detail'),
+                name='%s_%s_detail' % (self.app_name, self.resource_name)),
         )
         return urlpatterns
     
     def get_instance_url(self, instance):
-        return self.reverse(self.app_name+'_detail', pk=instance.pk)
+        return self.reverse('%s_%s_detail' % (self.app_name, self.resource_name), pk=instance.pk)
     
     def get_absolute_url(self):
         return self.reverse('%s_%s_list' % (self.app_name, self.resource_name))
@@ -279,7 +279,7 @@ class ModelResource(CRUDResource):
     #save_as = False
     #save_on_top = False
     #paginator = Paginator
-    #inlines = []
+    inlines = []
     
     #list display options
     #list_display = ('__str__',)
@@ -296,6 +296,12 @@ class ModelResource(CRUDResource):
     list_view = ModelListResourceView
     detail_view = ModelDetailResourceView
     
+    def __init__(self, *args, **kwargs):
+        super(ModelResource, self).__init__(*args, **kwargs)
+        self.inline_instances = list()
+        for inline_cls in self.inlines:
+            self.inline_instances.append(inline_cls(self))
+    
     @property
     def opts(self):
         return self.resource_adaptor._meta
@@ -307,6 +313,22 @@ class ModelResource(CRUDResource):
     def get_resource_name(self):
         return self.opts.module_name
     resource_name = property(get_resource_name)
+    
+    def get_urls(self):
+        def wrap(view, cacheable=False):
+            def wrapper(*args, **kwargs):
+                return self.as_view(view, cacheable)(*args, **kwargs)
+            return update_wrapper(wrapper, view)
+        
+        init = self.get_view_kwargs()
+        
+        urlpatterns = super(ModelResource, self).get_urls()
+        for inline in self.inline_instances:
+            urlpatterns += patterns('',
+                url(r'^(?P<pk>.+)/%s/$' % inline.rel_name,
+                    include(inline.urls)),
+            )
+        return urlpatterns
     
     def get_view_kwargs(self):
         kwargs = super(ModelResource, self).get_view_kwargs()
@@ -352,4 +374,40 @@ class ModelResource(CRUDResource):
         return request.user.has_perm(
             self.opts.app_label + '.' + self.opts.get_delete_permission())
 
-
+class InlineModelResource(ModelResource):
+    model = None
+    #TODO going to need some custom views
+    
+    def __init__(self, parent_resource):
+        self.resource_adaptor = self.model
+        self.site = parent_resource.site
+        self.prarent_resource = parent_resource
+        self.rel_name = None #TODO
+    
+    def get_queryset(self, instance, request):
+        queryset = self.resource_adaptor.objects.all()
+        queryset.filter(**{self.rel_name:instance})
+        if not self.has_change_permission(request):
+            queryset = queryset.none()
+        return queryset
+    
+    def get_urls(self):
+        def wrap(view, cacheable=False):
+            def wrapper(*args, **kwargs):
+                return self.as_view(view, cacheable)(*args, **kwargs)
+            return update_wrapper(wrapper, view)
+        
+        init = self.get_view_kwargs()
+        
+        # Admin-site-wide views.
+        urlpatterns = self.get_extra_urls()
+        urlpatterns += patterns('',
+            url(r'^$',
+                wrap(self.list_view.as_view(**init)),
+                name='%s_%s_%s_list' % (self.parent_resource.app_name, self.parent_resource.resource_name, self.rel_name)),
+            url(r'^(?P<inline_pk>.+)/$',
+                wrap(self.detail_view.as_view(**init)),
+                name='%s_%s_%s_detail' % (self.parent_resource.app_name, self.parent_resource.resource_name, self.rel_name)),
+        )
+        return urlpatterns
+    
