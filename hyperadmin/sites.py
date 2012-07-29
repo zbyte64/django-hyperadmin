@@ -64,6 +64,46 @@ class ResourceSite(object):
     
     def get_actions(self, request):
         return SortedDict()
+    
+    def generate_model_resource_from_admin_model(self, admin_model):
+        from resources import ModelResource
+        class GeneratedModelResource(ModelResource):
+            #raw_id_fields = ()
+            fields = admin_model.fields
+            exclude = admin_model.exclude
+            #fieldsets = None
+            #filter_vertical = ()
+            #filter_horizontal = ()
+            #radio_fields = {}
+            #prepopulated_fields = {}
+            #formfield_overrides = {}
+            #readonly_fields = ()
+            #declared_fieldsets = None
+            
+            #save_as = False
+            #save_on_top = False
+            paginator = admin_model.paginator
+            #inlines = []
+            
+            #list display options
+            list_display = admin_model.list_display
+            #list_display_links = ()
+            list_filter = admin_model.list_filter
+            list_select_related = admin_model.list_select_related
+            list_per_page = admin_model.list_per_page
+            list_max_show_all = getattr(admin_model, 'list_max_show_all', 200)
+            list_editable = admin_model.list_editable
+            search_fields = admin_model.search_fields
+            date_hierarchy = admin_model.date_hierarchy
+            ordering = admin_model.ordering
+        return GeneratedModelResource
+    
+    def install_models_from_site(self, site):
+        for model, admin_model in site._registry.iteritems():
+            if model in self.registry:
+                continue
+            admin_class = self.generate_model_resource_from_admin_model(admin_model)
+            self.register(model, admin_class)
 
 
 site = ResourceSite()

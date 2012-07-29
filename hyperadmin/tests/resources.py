@@ -1,12 +1,12 @@
 from django.utils import unittest
 from django.contrib.auth.models import User, Group
-from django.test.client import RequestFactory, FakePayload
+from django.test.client import FakePayload
 from django.utils import simplejson as json
 
 from hyperadmin.resources import ModelResource, InlineModelResource
 from hyperadmin.sites import ResourceSite
 
-from common import GenericURLResolver
+from common import GenericURLResolver, SuperUserRequestFactory
 
 class GroupsInline(InlineModelResource):
     model = User.groups.through
@@ -18,16 +18,6 @@ class UserResource(ModelResource):
     list_filter = ['is_active', 'is_staff', 'is_superuser']
     date_hierarchy = 'date_joined'
     search_fields = ['email', 'username']
-
-class SuperUserRequestFactory(RequestFactory):
-    def __init__(self, **kwargs):
-        self.user = kwargs.pop('user', None)
-        super(SuperUserRequestFactory, self).__init__(**kwargs)
-    
-    def request(self, **request):
-        ret = super(SuperUserRequestFactory, self).request(**request)
-        ret.user = self.user
-        return ret
 
 class ResourceTestCase(unittest.TestCase):
     def setUp(self):

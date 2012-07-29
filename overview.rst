@@ -17,7 +17,7 @@ And the following to urls.py::
 
     import hyperadmin
     hyperadmin.autodiscover() #TODO this does nothing
-    hyperadmin.install_admin_models_from_site(admin.site) #TODO this does not exist, find a better name
+    hyperadmin.site.install_models_from_site(admin.site)
 
 
 Builtin Resources
@@ -58,8 +58,8 @@ Registering a model with hyperadmin::
 
 Each resource has it's own url patterns and links the urls through hypermedia links. There will be a going back and forth between the frontend needs and defining extra metadata in an extended version of the collections media type. Hyperadmin facilitates this by allowing for custom mediatypes to be defined. The ember.js client should treat each view as uniformally as possible as all the contextual data should be contained in the API.
 
-Admin Actions
-=============
+TODO: Admin Actions
+-------------------
 
 Admin actions are functions that return a link object. 
 If the action is a string then it is assumed to be the function of the resource. The string is mapped as a url and a link object is automatically generated for it. The ``ActionResourceView`` returns a response with the main form being the link object and the post going to the function of the admin.
@@ -94,11 +94,12 @@ TODO
 * permissions
 * html5 media type for previewing available objects
 * backward compat installer
+* admin actions
 
 
 
-Backporting
-===========
+TODO: Backporting
+=================
 
 Converting admin models from within::
 
@@ -113,8 +114,8 @@ This admin model would be built ontop the standard admin model but would inject 
 ~ 2 days to integrate
 
 
-Client
-======
+TODO: Client
+============
 
 resource <=> hfactor <=> media type <=> |browser| <=> media type layer <=> template engine / js form handler / css
 
