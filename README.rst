@@ -46,5 +46,7 @@ TBD
 
 Hypermedia APIs
 ===============
+
 http://www.amundsen.com/hypermedia/hfactor/
+
 http://code.ge/media-types/collection-next-json/

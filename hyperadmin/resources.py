@@ -5,7 +5,8 @@ from django.utils.datastructures import SortedDict
 from django.core.paginator import Paginator
 from django import forms
 
-#from views import ModelListResourceView, ModelDetailResourceView, ApplicationResourceView
+import inspect
+
 import views
 from links import Link
 
@@ -364,15 +365,39 @@ class ModelResource(CRUDResource):
     
     def get_changelist(self, request):
         from django.contrib.admin.views.main  import ChangeList
-        list_display = self.list_display
-        list_display_links = self.list_display_links
-        cl = ChangeList(request, self.resource_adaptor, list_display,
-                list_display_links, self.list_filter, self.date_hierarchy,
-                self.search_fields, self.list_select_related,
-                self.list_per_page, self.list_max_show_all, self.list_editable,
-                self)
-        #cl.result_list
-        return cl
+        class MockAdminModel(object):
+            ordering = self.ordering
+            
+            def queryset(_, request):
+                return self.get_queryset(request)
+            
+            def get_paginator(_, request, queryset, per_page, orphans=0, allow_empty_first_page=True):
+                return self.get_paginator(request, queryset, per_page, orphans, allow_empty_first_page)
+            
+            def get_ordering(_, request):
+                return self.get_ordering(request)
+        
+        
+        admin_model = MockAdminModel()
+    
+        changelist_cls = ChangeList
+        kwargs = {'request':request,
+                  'model':self.resource_adaptor,
+                  'list_display':self.list_display,
+                  'list_display_links':self.list_display_links,
+                  'list_filter':self.list_filter,
+                  'date_hierarchy':self.date_hierarchy,
+                  'search_fields':self.search_fields,
+                  'list_select_related':self.list_select_related,
+                  'list_per_page':self.list_per_page,
+                  'list_max_show_all':self.list_max_show_all,
+                  'list_editable':self.list_editable,
+                  'model_admin':admin_model,}
+        argspec = inspect.getargspec(changelist_cls.__init__)
+        for key in kwargs.keys():
+            if key not in argspec.args:
+                del kwargs[key]
+        return changelist_cls(**kwargs)
     
     def get_paginator(self, request, queryset, per_page, orphans=0, allow_empty_first_page=True):
         return self.paginator(queryset, per_page, orphans, allow_empty_first_page)

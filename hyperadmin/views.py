@@ -104,12 +104,70 @@ class ModelResourceViewMixin(ResourceViewMixin, generic.edit.ModelFormMixin):
     #form_valid & form_invalid should not be used
 
 class ModelListResourceView(ModelResourceViewMixin, generic.CreateView):
-    #TODO support pagination
+    def get_changelist(self):
+        if not hasattr(self, '_changelist'):
+            self._changelist = self.resource.get_changelist(self.request)
+        return self._changelist
+    
+    def get_queryset(self):
+        return self.get_changelist().result_list
+    
     def get(self, request, *args, **kwargs):
         return self.resource.generate_response(self)
     
     def post(self, request, *args, **kwargs):
         return self.resource.generate_create_response(self, form_class=self.get_form_class())
+    
+    def get_templated_queries(self):
+        links = super(ModelListResourceView, self).get_templated_queries()
+        links += self.get_changelist_links()
+        return links
+    
+    def get_changelist_links(self):
+        links = self.get_changelist_sort_links()
+        links += self.get_changelist_filter_links()
+        #links += self.get_pagination_links()
+        #links.append(self.get_search_link())
+        return links
+    
+    def get_changelist_sort_links(self):
+        links = list()
+        changelist = self.get_changelist()
+        from django.contrib.admin.templatetags.admin_list import result_headers
+        for header in result_headers(changelist):
+            if header.get("sortable", False):
+                prompt = unicode(header["text"])
+                classes = ["sortby"]
+                if "url" in header:
+                    links.append(Link(url=header["url"], prompt=prompt, classes=classes+["primary"], rel="sortby"))
+                else:
+                    if header["ascending"]:
+                        classes.append("ascending")
+                    if header["sorted"]:
+                        classes.append("sorted")
+                    links.append(Link(url=header["url_primary"], prompt=prompt, classes=classes+["primary"], rel="sortby"))
+                    links.append(Link(url=header["url_remove"], prompt=prompt, classes=classes+["remove"], rel="sortby"))
+                    links.append(Link(url=header["url_toggle"], prompt=prompt, classes=classes+["toggle"], rel="sortby"))
+        return links
+    
+    def get_changelist_filter_links(self):
+        links = list()
+        changelist = self.get_changelist()
+        for spec in changelist.filter_specs:
+            choices = spec.choices(changelist)
+            for choice in choices:
+                classes = ["filter"]
+                if choice['selected']:
+                    classes.append("selected")
+                prompt = u"%s: %s" % (spec.title, choice['display'])
+                links.append(Link(url=choice['query_string'], prompt=prompt, classes=classes, rel="filter"))
+        return links
+    
+    def get_search_link(self):
+        pass
+    
+    def get_pagination_links(self):
+        pass
     
     def get_ln_links(self, instance=None):
         form = self.get_form(instance=instance)
@@ -160,6 +218,9 @@ class ModelDetailResourceView(ModelResourceViewMixin, generic.UpdateView):
         return links
 
 class InlineModelMixin(object):
+    def get_changelist_links(self):
+        return []
+    
     def get_parent(self):
         queryset = self.resource.parent_resource.get_queryset(self.request)
         parent = queryset.get(pk=self.kwargs['pk'])

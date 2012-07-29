@@ -63,8 +63,10 @@ class CollectionJSON(MediaType):
     def convert_link(self, link):
         link_r = {"href":link.url,
                   "rel":link.rel,
+                  "prompt":link.prompt,
+                  "classes":link.classes,
                   }
-        if link.descriptors:
+        if link.descriptors and "label" in link.descriptors:
             link_r['prompt'] = link.descriptors['label']
         if link.form:
             link_r['data'] = self.convert_form(link.form)

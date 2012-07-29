@@ -8,6 +8,17 @@ from hyperadmin.sites import ResourceSite
 
 from common import GenericURLResolver
 
+class GroupsInline(InlineModelResource):
+    model = User.groups.through
+    rel_name = 'user' #TODO this should not be needed
+
+class UserResource(ModelResource):
+    inlines = [GroupsInline]
+    list_display = ['username', 'email']
+    list_filter = ['is_active', 'is_staff', 'is_superuser']
+    date_hierarchy = 'date_joined'
+    search_fields = ['email', 'username']
+
 class SuperUserRequestFactory(RequestFactory):
     def __init__(self, **kwargs):
         self.user = kwargs.pop('user', None)
@@ -40,7 +51,7 @@ class ResourceTestCase(unittest.TestCase):
 
 class ModelResourceTestCase(ResourceTestCase):
     def register_resource(self):
-        self.site.register(User, ModelResource)
+        self.site.register(User, UserResource)
         return self.site.registry[User]
     
     def test_get_list(self):
@@ -53,6 +64,7 @@ class ModelResourceTestCase(ResourceTestCase):
         
         self.assertTrue('template' in data)
         self.assertTrue('items' in data)
+        self.assertTrue('queries' in data)
         
         #assert False, response.content
     
@@ -109,13 +121,6 @@ class ModelResourceTestCase(ResourceTestCase):
         self.assertEqual(len(data['items']), 1)
         
         #assert False, response.content
-
-class GroupsInline(InlineModelResource):
-    model = User.groups.through
-    rel_name = 'user' #TODO this should not be needed
-
-class UserResource(ModelResource):
-    inlines = [GroupsInline]
 
 class InlineModelResourceTestCase(ResourceTestCase):
     def register_resource(self):

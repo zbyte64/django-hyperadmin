@@ -84,14 +84,14 @@ Idea: transactional resource creation (documents only).
 TODO
 ----
 
-* list display
-* list filters
-* search
-* pagination
-* date hierarchy
-* ordering
+* changelist
+** list display
+** search
+** pagination
+** date hierarchy
 * form manipulations (exclude, markup, readonly)
 * logging
+* permissions
 
 
 
@@ -110,5 +110,10 @@ Converting admin models from within::
 This admin model would be built ontop the standard admin model but would inject extra context to load up the ember.js interface. Additionally it registers the model with the hyperadmin.
 ~ 2 days to integrate
 
+
+Client
+======
+
+resource <=> hfactor <=> media type <=> |browser| <=> media type layer <=> template engine / js form handler / css
 
 
