@@ -87,7 +87,6 @@ TODO
 * changelist
 ** list display
 ** search
-** pagination
 ** date hierarchy
 * form manipulations (exclude, markup, readonly)
 * logging

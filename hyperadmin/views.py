@@ -126,7 +126,7 @@ class ModelListResourceView(ModelResourceViewMixin, generic.CreateView):
     def get_changelist_links(self):
         links = self.get_changelist_sort_links()
         links += self.get_changelist_filter_links()
-        #links += self.get_pagination_links()
+        links += self.get_pagination_links()
         #links.append(self.get_search_link())
         return links
     
@@ -167,7 +167,21 @@ class ModelListResourceView(ModelResourceViewMixin, generic.CreateView):
         pass
     
     def get_pagination_links(self):
-        pass
+        links = list()
+        changelist = self.get_changelist()
+        paginator, page_num = changelist.paginator, changelist.page_num
+        from django.contrib.admin.templatetags.admin_list import pagination
+        from django.contrib.admin.views.main import PAGE_VAR
+        ctx = pagination(changelist)
+        classes = ["pagination"]
+        for page in ctx["page_range"]:
+            if page == '.':
+                continue
+            url = changelist.get_query_string({PAGE_VAR: page})
+            links.append(Link(url=url, prompt=u"page %s" % page, classes=classes, rel="pagination"))
+        if ctx["show_all_url"]:
+            links.append(Link(url=ctx["show_all_url"], prompt="show all", classes=classes, rel="pagination"))
+        return links
     
     def get_ln_links(self, instance=None):
         form = self.get_form(instance=instance)
