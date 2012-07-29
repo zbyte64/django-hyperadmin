@@ -1,0 +1,68 @@
+{% extend "hyperadmin/html5/base.html" %}
+
+{% block content %}
+{% block embedded_links %}
+{% if embedded_links %}
+<h2>Embedded Links</h2>
+<div id="embedded_links">
+{% include "hyperadmin/html5/links.html" with links=embedded_links %}
+</div>
+{% endif %}
+{% endblock %}
+
+{% block outbound_links %}
+{% if outbound_links %}
+<h2>Outbound Links</h2>
+<div id="outbound_links">
+{% include "hyperadmin/html5/links.html" with links=outbound_links %}
+</div>
+{% endif %}
+{% endblock %}
+
+{% block templated_queries %}
+{% if templated_queries %}
+<h2>Templated Queries</h2>
+<div id=templated_queries">
+{% include "hyperadmin/html5/links.html" with links=templated_queries %}
+</div>
+{% endif %}
+{% endblock %}
+
+{% block non_idempotent_updates %}
+{% if non_idempotent_updates %}
+<h2>Non-Idempotent Updates</h2>
+<div id="non_idempotent_updates">
+{% include "hyperadmin/html5/links.html" with links=non_idempotent_updates %}
+</div>
+{% endif %}
+{% endblock %}
+
+{% block idempotent_updates %}
+{% if idempotent_updates %}
+<h2>Idempotent Updates</h2>
+<div id="idempotent_updates">
+{% include "hyperadmin/html5/links.html" with links=idempotent_updates %}
+</div>
+{% endif %}
+{% endblock %}
+
+{# begin non-standard hypermedia #}
+{% block errors %}
+<div id="errors">
+{{errors}}
+</div>
+{% endblock errors %}
+{% block items %}
+<h2>Items</h2>
+<div id="items">
+{% include "hyperadmin/html5/items.html" %}
+</div>
+{% endblock items %}
+{% block instance %}
+<div id="instance">
+{{instance}}
+</div>
+{% endblock instance %}
+
+{% endblock content %}
+

@@ -16,7 +16,8 @@ Add to root url patterns::
 And the following to urls.py::
 
     import hyperadmin
-    hyperadmin.autodiscover()
+    hyperadmin.autodiscover() #TODO this does nothing
+    hyperadmin.install_admin_models_from_site(admin.site) #TODO this does not exist, find a better name
 
 
 Builtin Resources
@@ -91,6 +92,8 @@ TODO
 * form manipulations (exclude, markup, readonly)
 * logging
 * permissions
+* html5 media type for previewing available objects
+* backward compat installer
 
 
 
