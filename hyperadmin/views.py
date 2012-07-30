@@ -256,5 +256,5 @@ class InlineModelListResourceView(InlineModelMixin, ModelListResourceView):
 class InlineModelDetailResourceView(InlineModelMixin, ModelDetailResourceView):
     def get_object(self):
         queryset = self.get_queryset()
-        return queryset.objects.get(pk=self.kwargs['inline_pk'])
+        return queryset.get(pk=self.kwargs['inline_pk'])
 

@@ -541,9 +541,10 @@ class InlineModelResource(ModelResource):
         return urlpatterns
     
     def get_instance_url(self, instance):
-        return None #TODO
-        pk = getattr(instance, self.rel_name).pk
-        return self.reverse('%s_%s_%s_detail' % (self.parent_resource.app_name, self.parent_resource.resource_name, self.rel_name), inline_pk=instance.pk, pk=pk)
+        url = self.parent_resource.get_instance_url(instance)
+        pk = getattr(instance, self.fk.name).pk
+        return '%s%s/%s/' % (url, self.rel_name, pk)
+        #return self.reverse('%s_%s_%s_detail' % (self.parent_resource.app_name, self.parent_resource.resource_name, self.rel_name), inline_pk=instance.pk, pk=pk)
     
     def get_absolute_url(self, instance=None):
         if not instance:
