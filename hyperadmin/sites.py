@@ -67,6 +67,7 @@ class ResourceSite(object):
     
     def generate_model_resource_from_admin_model(self, admin_model):
         from resources import ModelResource
+        from django import forms
         class GeneratedModelResource(ModelResource):
             #raw_id_fields = ()
             fields = admin_model.fields
@@ -96,6 +97,11 @@ class ResourceSite(object):
             search_fields = admin_model.search_fields
             date_hierarchy = admin_model.date_hierarchy
             ordering = admin_model.ordering
+            form_class = getattr(admin_model, 'form_class', None)
+        
+        if admin_model.form != forms.ModelForm:
+            GeneratedModelResource.form_class = admin_model.form
+        
         return GeneratedModelResource
     
     def install_models_from_site(self, site):
