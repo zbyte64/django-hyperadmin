@@ -60,7 +60,7 @@ class ResourceSite(object):
             self.register_media_type(key, value)
     
     def reverse(self, name, *args, **kwargs):
-        return reverse('%s:%s' % (self.site.name, name), args=args, kwargs=kwargs, current_app=self.app_name)
+        return reverse('%s:%s' % (self.name, name), args=args, kwargs=kwargs)#, current_app=self.app_name)
     
     def get_actions(self, request):
         return SortedDict()

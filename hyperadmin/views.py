@@ -187,7 +187,9 @@ class ModelListResourceView(ModelResourceViewMixin, generic.CreateView):
         form = self.get_form(instance=instance)
         update_link = Link(url=self.request.path,
                            method='POST', #TODO should this be put?
-                           form=form,)
+                           form=form,
+                           prompt='create',
+                           rel='create',)
         return [update_link] + super(ModelListResourceView, self).get_ln_links(instance)
 
 class ModelDetailResourceView(ModelResourceViewMixin, generic.UpdateView):
@@ -227,7 +229,9 @@ class ModelDetailResourceView(ModelResourceViewMixin, generic.UpdateView):
             form = self.get_form(instance=instance)
             update_link = Link(url=self.request.path,
                                method='POST',
-                               form=form,)
+                               form=form,
+                               prompt='update',
+                               rel='update',)
             return [update_link] + links
         return links
 

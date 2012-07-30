@@ -15,7 +15,7 @@ class Html5MediaType(MediaType):
         return entry
     
     def convert_resource(self, resource):
-        return {}
+        return {'prompt':unicode(resource)}
     
     def links_for_instance(self, instance):
         result = dict()
@@ -43,6 +43,7 @@ class Html5MediaType(MediaType):
     def convert_item_form(self, form):
         item_r = self.links_for_instance(form.instance)
         item_r['data'] = self.convert_form(form)
+        item_r['prompt'] = unicode(form.instance)
         return item_r
     '''
     def convert_link(self, link):

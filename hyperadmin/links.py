@@ -27,5 +27,8 @@ class Link(object):
             return 'LO'
             return 'LE'
         return 'L?'
+    
+    def class_attr(self):
+        return u' '.join(self.classes)
 
 

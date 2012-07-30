@@ -164,7 +164,7 @@ class ApplicationResource(BaseResource):
         if instance:
             return []
         else:
-            site_link = Link(url=self.reverse('index'), rel='site')
+            site_link = Link(url=self.reverse('index'), rel='breadcrumb', prompt='root')
             return [site_link]
     
     def get_instance_url(self, instance):
@@ -173,6 +173,9 @@ class ApplicationResource(BaseResource):
     
     def get_absolute_url(self):
         return self.reverse(self.app_name)
+    
+    def __unicode__(self):
+        return u'App Resource: %s' % self.app_name
 
 class CRUDResource(BaseResource):
     #TODO support the following:
@@ -260,9 +263,9 @@ class CRUDResource(BaseResource):
         if instance:
             return []
         else:
-            site_link = Link(url=self.reverse('index'), rel='site')
-            app_link = Link(url=self.reverse(self.app_name), rel='application')
-            resource_list = Link(url=self.get_absolute_url(), rel='resource-listing')
+            site_link = Link(url=self.reverse('index'), rel='breadcrumb', prompt='root')
+            app_link = Link(url=self.reverse(self.app_name), rel='breadcrumb', prompt=self.app_name)
+            resource_list = Link(url=self.get_absolute_url(), rel='breadcrumb', prompt=self.resource_name)
             return [site_link, app_link, resource_list]
     
     def get_templated_queries(self):
@@ -274,6 +277,7 @@ class CRUDResource(BaseResource):
         if instance:
             delete_link = Link(url=self.get_instance_url(instance),
                                rel='delete',
+                               prompt='delete',
                                method='DELETE')
             return [delete_link]
         return []
@@ -294,6 +298,9 @@ class CRUDResource(BaseResource):
     def get_action(self, request, action):
         actions = self.get_actions(request)
         return actions[action]
+    
+    def __unicode__(self):
+        return u'CRUD Resource: %s/%s' % (self.app_name, self.resource_name)
 
 class ModelResource(CRUDResource):
     #TODO support the following:
@@ -376,6 +383,9 @@ class ModelResource(CRUDResource):
             
             def get_ordering(_, request):
                 return self.get_ordering(request)
+            
+            def lookup_allowed(_, lookup, value):
+                return self.lookup_allowed(lookup, value)
         
         
         admin_model = MockAdminModel()

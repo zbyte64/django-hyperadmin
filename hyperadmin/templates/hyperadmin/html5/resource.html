@@ -1,4 +1,4 @@
-{% extend "hyperadmin/html5/base.html" %}
+{% extends "hyperadmin/html5/base.html" %}
 
 {% block content %}
 {% block embedded_links %}
@@ -23,7 +23,7 @@
 {% if templated_queries %}
 <h2>Templated Queries</h2>
 <div id=templated_queries">
-{% include "hyperadmin/html5/links.html" with links=templated_queries %}
+{% include "hyperadmin/html5/templated_queries.html" with links=templated_queries %}
 </div>
 {% endif %}
 {% endblock %}
@@ -48,9 +48,12 @@
 
 {# begin non-standard hypermedia #}
 {% block errors %}
+{% if errors %}
+<h2>Errors</2>
 <div id="errors">
 {{errors}}
 </div>
+{% endif %}
 {% endblock errors %}
 {% block items %}
 <h2>Items</h2>
@@ -59,9 +62,12 @@
 </div>
 {% endblock items %}
 {% block instance %}
+{% if instance %}
+<h2>Instance</h2>
 <div id="instance">
 {{instance}}
 </div>
+{% endif %}
 {% endblock instance %}
 
 {% endblock content %}

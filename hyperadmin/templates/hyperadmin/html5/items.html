@@ -1,4 +1,27 @@
 
 {% for item in items %}
-<div>{{item}}</div>
+<div class="item">
+{% block outbound_links %}
+{% if item.outbound_links %}
+<h3>Outbound Links</h3>
+<div class="outbound_links">
+{% include "hyperadmin/html5/links.html" with links=item.outbound_links %}
+</div>
+{% endif %}
+{% endblock %}
+{% if item.embedded_links %}
+<h3>Embedded Links</h3>
+<div class="embedded_links">
+{% include "hyperadmin/html5/links.html" with links=item.embedded_links %}
+</div>
+{% endif %}
+<div class="self_link">
+    <a href="{{item.href}}" rel="item">{% if item.prompt %}{{item.prompt}}{% else %}{{ item }}{% endif %}</a>
+</div>
+<div class="data">
+{% for row in item.data %}
+    <em>{{row.prompt}}</em>: <span class="{{row.name}}">{{row.value}}</span> <br/>
+{% endfor %}
+</div>
+</div>
 {% endfor %}
