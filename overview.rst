@@ -1,23 +1,37 @@
-=================
-Django-Hyperadmin
-=================
+.. image:: https://secure.travis-ci.org/zbyte64/django-hyperadmin.png?branch=master
+   :target: http://travis-ci.org/zbyte64/django-hyperadmin
 
-Roadmap/Brainstorm
+
+Introduction
+============
+
+django-hyperadmin is an Admin interface for resources in Django that are powered by Hypermedia REST APIs.
+
+This is ALPHA
+
+--------
+Features
+--------
+* Supported Media Formats:
+ * application/vnd.Collection+JSON
+ * application/vnd.Collection.next+JSON
+ * application/text-html - for browsing
+* Build API Resources like building and Admin Model
 
 Installation
 ============
 
 Put 'hyperadmin' into your ``INSTALLED_APPS`` section of your settings file.
 
-Add to root url patterns::
-
-    url(r'^hyper-admin/', include(hyperadmin.site.urls)),
-
 And the following to urls.py::
 
     import hyperadmin
     hyperadmin.autodiscover() #TODO this does nothing
     hyperadmin.site.install_models_from_site(admin.site)
+
+Add to root url patterns::
+
+    url(r'^hyper-admin/', include(hyperadmin.site.urls)),
 
 
 Builtin Resources
@@ -86,14 +100,14 @@ TODO
 ----
 
 * changelist
-** list display
-** search
-** date hierarchy
-* form manipulations (exclude, markup, readonly)
+ * list display
+ * search
+ * date hierarchy
+* form manipulations
+ * readonly
+ * markup
 * logging
 * permissions
-* html5 media type for previewing available objects
-* backward compat installer
 * admin actions
 
 
@@ -120,3 +134,10 @@ TODO: Client
 resource <=> hfactor <=> media type <=> |browser| <=> media type layer <=> template engine / js form handler / css
 
 
+
+Hypermedia APIs
+===============
+
+http://www.amundsen.com/hypermedia/hfactor/
+
+http://code.ge/media-types/collection-next-json/
