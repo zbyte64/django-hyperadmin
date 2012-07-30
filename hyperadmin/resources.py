@@ -302,6 +302,27 @@ class CRUDResource(BaseResource):
     def __unicode__(self):
         return u'CRUD Resource: %s/%s' % (self.app_name, self.resource_name)
 
+class MockAdminModel(object):
+    def __init__(self, resource, model_admin=None):
+        self.resource = resource
+        if model_admin is None:
+            from django.contrib.admin.options import ModelAdmin
+            model_admin = ModelAdmin(resource.resource_adaptor, resource.site)
+        self.model_admin = model_admin
+    
+    def __getattr__(self, attr):
+        dct = object.__getattribute__(self, '__dict__')
+        if attr in dct:
+            return object.__getattribute__(self, attr)
+        model_admin = object.__getattribute__(self, 'model_admin')
+        resource = object.__getattribute__(self, 'resource')
+        if hasattr(resource, attr):
+            return getattr(resource, attr)
+        return getattr(model_admin, attr)
+    
+    def queryset(self, request):
+        return self.resource.get_queryset(request)
+
 class ModelResource(CRUDResource):
     #TODO support the following:
     #raw_id_fields = ()
@@ -372,24 +393,9 @@ class ModelResource(CRUDResource):
     
     def get_changelist(self, request):
         from django.contrib.admin.views.main  import ChangeList
-        class MockAdminModel(object):
-            ordering = self.ordering
-            
-            def queryset(_, request):
-                return self.get_queryset(request)
-            
-            def get_paginator(_, request, queryset, per_page, orphans=0, allow_empty_first_page=True):
-                return self.get_paginator(request, queryset, per_page, orphans, allow_empty_first_page)
-            
-            def get_ordering(_, request):
-                return self.get_ordering(request)
-            
-            def lookup_allowed(_, lookup, value):
-                return self.lookup_allowed(lookup, value)
         
+        admin_model = MockAdminModel(self)
         
-        admin_model = MockAdminModel()
-    
         changelist_cls = ChangeList
         kwargs = {'request':request,
                   'model':self.resource_adaptor,
