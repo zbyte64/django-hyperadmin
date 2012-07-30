@@ -9,14 +9,15 @@ django-hyperadmin is an Admin interface for resources in Django that are powered
 
 This is ALPHA
 
---------
 Features
 --------
+* ModelResource works like AdminModel
 * Supported Media Formats:
  * application/vnd.Collection+JSON
  * application/vnd.Collection.next+JSON
  * application/text-html - for browsing
-* Build API Resources like building and Admin Model
+* Architecture allows for more media formats
+* Internal resource representation based on hfactor and forms
 
 Installation
 ============
@@ -27,7 +28,7 @@ And the following to urls.py::
 
     import hyperadmin
     hyperadmin.autodiscover() #TODO this does nothing
-    hyperadmin.site.install_models_from_site(admin.site)
+    hyperadmin.site.install_models_from_site(admin.site) #ports admin models to hyperadmin
 
 Add to root url patterns::
 
@@ -141,3 +142,4 @@ Hypermedia APIs
 http://www.amundsen.com/hypermedia/hfactor/
 
 http://code.ge/media-types/collection-next-json/
+
