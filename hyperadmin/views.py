@@ -159,7 +159,10 @@ class ModelListResourceView(ModelResourceViewMixin, generic.CreateView):
                 classes = ["filter"]
                 if choice['selected']:
                     classes.append("selected")
-                prompt = u"%s: %s" % (spec.title(), choice['display'])
+                title = spec.title
+                if callable(title):
+                    title = title()
+                prompt = u"%s: %s" % (title, choice['display'])
                 links.append(Link(url=choice['query_string'], prompt=prompt, classes=classes, rel="filter"))
         return links
     
