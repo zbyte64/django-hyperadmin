@@ -20,9 +20,10 @@ class ResourceSite(object):
     
     def register(self, model_or_iterable, admin_class, **options):
         if isinstance(model_or_iterable, collections.Iterable):
+            resources = list()
             for model in model_or_iterable:
-                self.register(model, admin_class, **options)
-            return
+                resources.append(self.register(model, admin_class, **options))
+            return resources
         model = model_or_iterable
         resource = admin_class(model, self)
         app_name = resource.app_name
@@ -30,6 +31,7 @@ class ResourceSite(object):
             self.applications[app_name] = self.application_resource_class(app_name, self)
         self.applications[app_name].register_resource(resource)
         self.registry[model] = resource
+        return resource
     
     def register_media_type(self, media_type, media_type_handler):
         self.media_types[media_type] = media_type_handler
@@ -105,11 +107,21 @@ class ResourceSite(object):
         return GeneratedModelResource
     
     def install_models_from_site(self, site):
+        from resources import InlineModelResource
         for model, admin_model in site._registry.iteritems():
             if model in self.registry:
                 continue
             admin_class = self.generate_model_resource_from_admin_model(admin_model)
-            self.register(model, admin_class)
+            resource = self.register(model, admin_class)
+            for inline_cls in admin_model.inlines:
+                class GeneratedInlineModelResource(InlineModelResource):
+                    model = inline_cls.model
+                    fields = inline_cls.fields
+                    exclude = inline_cls.exclude
+                try:
+                    resource.register_inline(GeneratedInlineModelResource)
+                except:
+                    pass #too much customization for us to handle!
 
 
 site = ResourceSite()

@@ -203,7 +203,7 @@ class CRUDResource(BaseResource):
             url(r'^$',
                 wrap(self.list_view.as_view(**init)),
                 name='%s_%s_list' % (self.app_name, self.resource_name)),
-            url(r'^(?P<pk>.+)/$',
+            url(r'^(?P<pk>\w+)/$',
                 wrap(self.detail_view.as_view(**init)),
                 name='%s_%s_detail' % (self.app_name, self.resource_name)),
         )
@@ -362,7 +362,10 @@ class ModelResource(CRUDResource):
         self.model = self.resource_adaptor
         self.inline_instances = list()
         for inline_cls in self.inlines:
-            self.inline_instances.append(inline_cls(self))
+            self.register_inline(inline_cls)
+    
+    def register_inline(self, inline_cls):
+        self.inline_instances.append(inline_cls(self))
     
     @property
     def opts(self):
@@ -380,8 +383,8 @@ class ModelResource(CRUDResource):
         urlpatterns = super(ModelResource, self).get_urls()
         for inline in self.inline_instances:
             urlpatterns += patterns('',
-                url(r'^(?P<pk>.+)/%s/$' % inline.rel_name,
-                    include(inline.urls)),
+                url(r'^(?P<pk>\w+)/%s/' % inline.rel_name,
+                    include(inline.urls),),
             )
         return urlpatterns
     
@@ -481,8 +484,11 @@ class ModelResource(CRUDResource):
         inline_links = list()
         if instance:
             for inline in self.inline_instances:
-                url = self.reverse('%s_%s_%s_list' % (self.app_name, self.resource_name, inline.rel_name), pk=instance.pk)
+                #TODO why doesn't this resolve?
+                #url = self.reverse('%s_%s_%s_list' % (self.app_name, self.resource_name, inline.rel_name), pk=instance.pk)
+                url = self.get_instance_url(instance) + inline.rel_name + '/'
                 link = Link(url=url,
+                            prompt='inlines: %s' % inline.rel_name,
                             rel='inline-%s' % inline.rel_name,)
                 inline_links.append(link)
         return links + inline_links
@@ -502,14 +508,14 @@ class InlineModelResource(ModelResource):
         
         from django.db.models.fields.related import RelatedObject
         from django.forms.models import _get_foreign_key
-        self.fk = _get_foreign_key(self.parent_resource.resource_adaptor, self.model, self.fk_name, can_fail=False)
+        self.fk = _get_foreign_key(self.parent_resource.resource_adaptor, self.model, self.fk_name)
         if self.rel_name is None:
             self.rel_name = RelatedObject(self.fk.rel.to, self.model, self.fk).get_accessor_name()
         self.inline_instances = []
     
     def get_queryset(self, request, instance):
         queryset = self.resource_adaptor.objects.all()
-        queryset.filter(**{self.rel_name:instance})
+        queryset.filter(**{self.fk.name:instance})
         if not self.has_change_permission(request):
             queryset = queryset.none()
         return queryset
@@ -528,7 +534,7 @@ class InlineModelResource(ModelResource):
             url(r'^$',
                 wrap(self.list_view.as_view(**init)),
                 name='%s_%s_%s_list' % (self.parent_resource.app_name, self.parent_resource.resource_name, self.rel_name)),
-            url(r'^(?P<inline_pk>.+)/$',
+            url(r'^(?P<inline_pk>\w+)/$',
                 wrap(self.detail_view.as_view(**init)),
                 name='%s_%s_%s_detail' % (self.parent_resource.app_name, self.parent_resource.resource_name, self.rel_name)),
         )
