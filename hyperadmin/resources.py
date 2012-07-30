@@ -515,7 +515,7 @@ class InlineModelResource(ModelResource):
     
     def get_queryset(self, request, instance):
         queryset = self.resource_adaptor.objects.all()
-        queryset.filter(**{self.fk.name:instance})
+        queryset = queryset.filter(**{self.fk.name:instance})
         if not self.has_change_permission(request):
             queryset = queryset.none()
         return queryset
