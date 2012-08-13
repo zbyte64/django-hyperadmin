@@ -1,4 +1,15 @@
+from django.test.client import RequestFactory
 from django.core.urlresolvers import RegexURLResolver
+
+class SuperUserRequestFactory(RequestFactory):
+    def __init__(self, **kwargs):
+        self.user = kwargs.pop('user', None)
+        super(SuperUserRequestFactory, self).__init__(**kwargs)
+    
+    def request(self, **request):
+        ret = super(SuperUserRequestFactory, self).request(**request)
+        ret.user = self.user
+        return ret
 
 class GenericURLResolver(RegexURLResolver):
     def __init__(self, regex, url_patterns, default_kwargs=None, app_name=None, namespace=None):

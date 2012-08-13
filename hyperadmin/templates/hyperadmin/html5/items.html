@@ -1,0 +1,39 @@
+<em>Count</em>: <span class="count">{{items|length}}</span><br/>
+{% for item in items %}
+<div class="item">
+
+<div class="self_link">
+    <h3><a href="{{item.href}}" rel="item">{% if item.prompt %}{{item.prompt}}{% else %}{{ item }}{% endif %}</a></h3>
+</div>
+
+{% block data %}
+{% if item.data %}
+<h4>Data</h4>
+<div class="data">
+{% for row in item.data %}
+    <em>{{row.prompt}}</em>: <span class="{{row.name}}">{{row.value}}</span> <br/>
+{% endfor %}
+</div>
+{% endif %}
+{% endblock %}
+
+{% block outbound_links %}
+{% if item.outbound_links %}
+<h4>Outbound Links</h4>
+<div class="outbound_links">
+{% include "hyperadmin/html5/links.html" with links=item.outbound_links %}
+</div>
+{% endif %}
+{% endblock %}
+
+{% block embedded_links %}
+{% if item.embedded_links %}
+<h4>Embedded Links</h4>
+<div class="embedded_links">
+{% include "hyperadmin/html5/links.html" with links=item.embedded_links %}
+</div>
+{% endif %}
+{% endblock %}
+
+</div>
+{% endfor %}
