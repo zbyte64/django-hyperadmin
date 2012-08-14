@@ -6,7 +6,8 @@ from django.utils.datastructures import SortedDict
 from django.core.paginator import Paginator
 from django import forms
 
-import views
+from hyperadmin import views
+
 from resources import CRUDResource
 from links import Link
 

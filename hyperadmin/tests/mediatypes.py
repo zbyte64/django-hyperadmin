@@ -5,7 +5,7 @@ from django.test.client import RequestFactory, FakePayload
 from django.utils import simplejson as json
 
 from hyperadmin.mediatypes.collectionjson import CollectionJSON, CollectionNextJSON
-from hyperadmin.resources.views import ResourceViewMixin
+from hyperadmin.views import ResourceViewMixin
 from hyperadmin.resources import SiteResource, ApplicationResource
 from hyperadmin.sites import site
 

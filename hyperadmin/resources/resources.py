@@ -2,7 +2,7 @@ from django import http
 from django.conf.urls.defaults import patterns, url, include
 from django.utils.functional import update_wrapper
 
-import views
+from hyperadmin import views
 from links import Link
 
 class BaseResource(object):

@@ -3,7 +3,7 @@ from django.views import generic
 from django import http
 
 from hyperadmin.models import log_action, DELETION
-from hyperadmin.links import Link
+from hyperadmin.resources.links import Link
 
 from common import ResourceViewMixin
 
