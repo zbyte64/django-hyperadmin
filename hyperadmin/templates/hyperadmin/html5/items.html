@@ -1,6 +1,6 @@
 <em>Count</em>: <span class="count">{{items|length}}</span><br/>
 {% for item in items %}
-<div class="item">
+<div class="hypermediaitem item">
 
 <div class="self_link">
     <h3><a href="{{item.href}}" rel="item">{% if item.prompt %}{{item.prompt}}{% else %}{{ item }}{% endif %}</a></h3>

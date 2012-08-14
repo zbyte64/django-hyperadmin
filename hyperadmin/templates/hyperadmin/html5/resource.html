@@ -1,6 +1,7 @@
 {% extends "hyperadmin/html5/base.html" %}
 
 {% block content %}
+<div class="hypermediaresource">
 {% block embedded_links %}
 {% if embedded_links %}
 <h2>Embedded Links</h2>
@@ -46,11 +47,10 @@
 {% endif %}
 {% endblock %}
 
-{# begin non-standard hypermedia #}
 {% block errors %}
 {% if errors %}
 <h2>Errors</2>
-<div id="errors">
+<div id="errors" class="errors">
 {{errors}}
 </div>
 {% endif %}
@@ -69,6 +69,6 @@
 </div>
 {% endif %}
 {% endblock instance %}
-
+</div>
 {% endblock content %}
 

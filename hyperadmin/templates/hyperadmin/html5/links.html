@@ -1,6 +1,6 @@
 {% for link in links %}
 {% with link.get_link_factor as link_factor %}
-<div>
+<div class="hypermedialink {{link_factor}}">
 {% if link.form %}
 <form method="{{link.method}}" action="{{link.url}}" class="{{link.class_attr}}" rel="{{link.rel}}" enctype="multipart/form-data">
 {% if link_factor == "LI" or link_factor == "LN" %}

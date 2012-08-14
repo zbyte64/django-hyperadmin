@@ -45,30 +45,7 @@ class Html5MediaType(MediaType):
         item_r['data'] = self.convert_form(form)
         item_r['prompt'] = unicode(form.instance)
         return item_r
-    '''
-    def convert_link(self, link):
-        link_r = {"href":link.url,
-                  "rel":link.rel,
-                  "prompt":link.prompt,
-                  "classes":link.classes,
-                  }
-        if link.descriptors and "label" in link.descriptors:
-            link_r['prompt'] = link.descriptors['label']
-        if link.form:
-            link_r['data'] = self.convert_form(link.form)
-        link_r["method"] = {"options": [{"value":link.method}]}
-        return link_r
     
-    def convert_errors(self, errors):
-        messages = list()
-        for key, error in errors.iteritems():
-            message = {'name':key,
-                       'message':unicode(error)}
-            messages.append(message)
-        error_r = {'code':'00',
-                   'messages':messages,}
-        return error_r
-    '''
     def serialize(self, instance=None, errors=None):
         context = {'instance':instance,
                    'errors':errors}
