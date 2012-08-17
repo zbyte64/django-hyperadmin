@@ -218,6 +218,13 @@ class CRUDResource(BaseResource):
     def get_absolute_url(self):
         return self.reverse('%s_%s_list' % (self.app_name, self.resource_name))
     
+    def form_valid(self, form):
+        instance = form.save()
+        next_url = self.get_instance_url(instance)
+        response = http.HttpResponse(next_url, status=303)
+        response['Location'] = next_url
+        return response
+    
     def generate_create_response(self, view, form_class):
         instance = None
         try:
@@ -226,11 +233,7 @@ class CRUDResource(BaseResource):
             raise #TODO raise Bad request
         form = media_type.deserialize(form_class=form_class)
         if form.is_valid():
-            instance = form.save()
-            next_url = self.get_instance_url(instance)
-            response = http.HttpResponse(next_url, status=303)
-            response['Location'] = next_url
-            return response
+            return self.form_valid(form)
         return self.generate_response(view, instance=instance, errors=form.errors)
     
     def generate_update_response(self, view, instance, form_class):
@@ -240,7 +243,7 @@ class CRUDResource(BaseResource):
             raise #TODO raise Bad request
         form = media_type.deserialize(instance=instance, form_class=form_class)
         if form.is_valid():
-            instance = form.save()
+            return self.form_valid(form)
         return self.generate_response(view, instance=instance, errors=form.errors)
     
     def generate_delete_response(self, view):

@@ -66,11 +66,14 @@ class Html5MediaType(MediaType):
         return response
     
     def deserialize(self, form_class, instance=None):
-        form = form_class(instance=instance, data=self.request.POST, files=self.request.FILES)
+        kwargs = self.view.get_form_kwargs()
+        kwargs.update({'instance':instance,
+                       'data':self.request.POST,
+                       'files':self.request.FILES,})
+        form = form_class(**kwargs)
         return form
 
 BUILTIN_MEDIA_TYPES['application/text-html'] = Html5MediaType
 BUILTIN_MEDIA_TYPES['application/x-www-form-urlencoded'] = Html5MediaType
 BUILTIN_MEDIA_TYPES['multipart/form-data'] = Html5MediaType
-
 

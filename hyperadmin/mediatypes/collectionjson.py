@@ -103,7 +103,11 @@ class CollectionJSON(MediaType):
         else:
             payload = self.request.raw_post_data
         data = json.loads(payload)['data']
-        form = form_class(instance=instance, data=data, files=self.request.FILES)
+        kwargs = self.view.get_form_kwargs()
+        kwargs.update({'instance':instance,
+                       'data':data,
+                       'files':self.request.FILES,})
+        form = form_class(**kwargs)
         return form
 
 BUILTIN_MEDIA_TYPES['application/vnd.Collection+JSON'] = CollectionJSON

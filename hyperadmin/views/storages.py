@@ -29,10 +29,16 @@ class StorageResourceViewMixin(ResourceViewMixin, generic.edit.FormMixin):
         return self.get_links_and_items()[1]
     
     def get_items_forms(self, **kwargs):
-        return [self.get_form(instance=item) for item in self.get_items()]
+        return [self.get_form(**self.get_form_kwargs(instance=item)) for item in self.get_items()]
     
     def get_form_class(self, instance=None):
         return self.resource.get_form_class()
+    
+    def get_form_kwargs(self, **defaults):
+        kwargs = dict(defaults)
+        kwargs.update(ResourceViewMixin.get_form_kwargs(self))
+        kwargs['storage'] = self.resource.resource_adaptor
+        return kwargs
     
     def get_form(self, **kwargs):
         form_class = self.get_form_class()
@@ -43,8 +49,7 @@ class StorageResourceViewMixin(ResourceViewMixin, generic.edit.FormMixin):
         if hasattr(self.resource.resource_adaptor, 'get_upload_link'):
             return self.resource.resource_adaptor.get_upload_link(instance=instance)
         else:
-            kwargs = self.get_form_kwargs()
-            kwargs['instance'] = instance
+            kwargs = self.get_form_kwargs(instance=instance)
             form = self.get_form(**kwargs)
             link_params = {'url':self.request.path,
                            'method':'POST',
@@ -65,7 +70,7 @@ class StorageListResourceView(StorageResourceViewMixin, generic.View): #generic.
         return self.resource.generate_create_response(self, form_class=self.get_form_class())
     
     def get_ln_links(self, instance=None):
-        form = self.get_form(instance=instance)
+        form = self.get_form(**self.get_form_kwargs(instance=instance))
         update_link = self.get_upload_link(instance=instance)
         return [update_link] + super(StorageListResourceView, self).get_ln_links(instance)
     

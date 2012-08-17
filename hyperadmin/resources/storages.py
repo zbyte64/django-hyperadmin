@@ -17,16 +17,18 @@ class UploadForm(forms.Form):
     
     def __init__(self, **kwargs):
         self.instance = kwargs.pop('instance', None)
+        self.storage = kwargs.pop('storage')
         super(UploadForm, self).__init__(**kwargs)
         if self.instance:
             self.initial['name'] = self.instance.name
             self.initial['overwrite'] = True
     
-    def save(self, storage):
+    def save(self, commit=True):
         if self.cleaned_data.get('overwrite', False): #TODO would be better if storage accepted an argument to overwrite
-            if storage.exists(self.cleaned_data['name']):
-                storage.delete(self.cleaned_data['name'])
-        return storage.save(self.cleaned_data['name'], self.cleaned_data['upload'])
+            if self.storage.exists(self.cleaned_data['name']):
+                self.storage.delete(self.cleaned_data['name'])
+        name = self.storage.save(self.cleaned_data['name'], self.cleaned_data['upload'])
+        return BoundFile(self.storage, name)
 
 #CONSIDER: post needs to be multipart
 

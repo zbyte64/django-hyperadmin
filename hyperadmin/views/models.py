@@ -24,6 +24,9 @@ class ModelResourceViewMixin(ResourceViewMixin, generic.edit.ModelFormMixin):
     def get_form_class(self, instance=None):
         return generic.edit.ModelFormMixin.get_form_class(self)
     
+    def get_form_kwargs(self):
+        return {}
+    
     def get_form(self, **kwargs):
         form_class = self.get_form_class()
         form = form_class(**kwargs)
