@@ -25,7 +25,7 @@ class ResourceSite(object):
                 resources.append(self.register(model, admin_class, **options))
             return resources
         model = model_or_iterable
-        resource = admin_class(model, self)
+        resource = admin_class(resource_adaptor=model, site=self, **options)
         app_name = resource.app_name
         if app_name not in self.applications:
             self.applications[app_name] = self.application_resource_class(app_name, self)
@@ -122,6 +122,18 @@ class ResourceSite(object):
                     resource.register_inline(GeneratedInlineModelResource)
                 except:
                     pass #too much customization for us to handle!
+    
+    def install_storage_resources(self):
+        from resources import StorageResource
+        from django.core.files.storage import default_storage as media_storage
+        try:
+            from django.contrib.staticfiles.storage import staticfiles_storage as static_storage
+        except ImportError:
+            from django.conf import settings
+            from django.core.files.storage import get_storage_class
+            static_storage = get_storage_class(settings.STATICFILES_STORAGE)()
+        self.register(media_storage, StorageResource, resource_name='media')
+        self.register(static_storage, StorageResource, resource_name='static')
 
 
 site = ResourceSite()

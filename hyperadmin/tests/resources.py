@@ -2,6 +2,7 @@ from django.utils import unittest
 from django.contrib.auth.models import User, Group
 from django.test.client import FakePayload
 from django.utils import simplejson as json
+from django.core.files.base import ContentFile
 
 from hyperadmin.resources import ModelResource, InlineModelResource
 from hyperadmin.sites import ResourceSite
@@ -229,4 +230,43 @@ class ApplicationResourceTestCase(ResourceTestCase):
         data = json.loads(response.content)
         
         self.assertEqual(data['collection']['items'][0]['href'], "auth/user/")
+
+class StorageResourceTestCase(ResourceTestCase):
+    def register_resource(self):
+        from django.conf import settings
+        import os, shutil
+        for directory in (settings.MEDIA_ROOT, settings.STATIC_ROOT):
+            try:
+                shutil.rmtree(directory, ignore_errors=True)
+                os.makedirs(directory)
+            except:
+                pass
+        self.site.install_storage_resources()
+        return self.site.applications['storages'].resource_adaptor['media']
+    
+    def test_get_list(self):
+        self.resource.resource_adaptor.save('test.txt', ContentFile('foobar'))
+        
+        view_kwargs = self.resource.get_view_kwargs()
+        view = self.resource.list_view.as_view(**view_kwargs)
+        request = self.factory.get('/')
+        response = view(request)
+        data = json.loads(response.content)
+        self.assertEqual(len(data['collection']['items']), 1)
+    
+    def test_get_detail(self):
+        self.resource.resource_adaptor.save('test.txt', ContentFile('foobar'))
+        
+        view_kwargs = self.resource.get_view_kwargs()
+        view = self.resource.detail_view.as_view(**view_kwargs)
+        request = self.factory.get('/')
+        response = view(request, path='test.txt')
+        data = json.loads(response.content)
+        data = data['collection']
+        
+        self.assertTrue('template' in data)
+        self.assertTrue('items' in data)
+        self.assertEqual(len(data['items']), 1)
+        
+        self.assertEqual(data['items'][0]['href'], 'storages/media/test.txt/')
 
