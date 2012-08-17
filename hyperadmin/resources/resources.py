@@ -58,8 +58,15 @@ class BaseResource(object):
     def get_form_class(self, instance=None):
         return self.form_class
     
-    def get_media_type(self, view):
-        content_type = view.get_content_type()
+    def get_request_media_type(self, view):
+        content_type = view.get_request_type()
+        media_type_cls = self.site.media_types.get(content_type, None)
+        if media_type_cls is None:
+            raise ValueError('Unrecognized content type')
+        return media_type_cls(view)
+    
+    def get_response_media_type(self, view):
+        content_type = view.get_response_type()
         media_type_cls = self.site.media_types.get(content_type, None)
         if media_type_cls is None:
             raise ValueError('Unrecognized content type')
@@ -67,10 +74,11 @@ class BaseResource(object):
     
     def generate_response(self, view, instance=None, errors=None):
         try:
-            media_type = self.get_media_type(view)
+            media_type = self.get_response_media_type(view)
         except ValueError:
             raise #TODO raise Bad request...
-        return media_type.serialize(instance=instance, errors=errors)
+        content_type = view.get_response_type()
+        return media_type.serialize(content_type=content_type, instance=instance, errors=errors)
 
 class SiteResource(BaseResource):
     list_view = views.SiteResourceView
@@ -213,7 +221,7 @@ class CRUDResource(BaseResource):
     def generate_create_response(self, view, form_class):
         instance = None
         try:
-            media_type = self.get_media_type(view)
+            media_type = self.get_request_media_type(view)
         except ValueError:
             raise #TODO raise Bad request
         form = media_type.deserialize(form_class=form_class)
@@ -227,7 +235,7 @@ class CRUDResource(BaseResource):
     
     def generate_update_response(self, view, instance, form_class):
         try:
-            media_type = self.get_media_type(view)
+            media_type = self.get_request_media_type(view)
         except ValueError:
             raise #TODO raise Bad request
         form = media_type.deserialize(instance=instance, form_class=form_class)

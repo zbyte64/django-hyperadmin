@@ -52,7 +52,7 @@ class CollectionJsonTestCase(unittest.TestCase):
         items = ContentType.objects.all()
         view = MockResourceView(items)
         adaptor = CollectionJSON(view)
-        response = adaptor.serialize()
+        response = adaptor.serialize(content_type='application/vnd.Collection.next+JSON')
         data = json.loads(response.content)
         json_items = data['collection']['items']
         self.assertEqual(len(json_items), len(items))
@@ -61,7 +61,7 @@ class CollectionJsonTestCase(unittest.TestCase):
         items = [ContentType.objects.all()[0]]
         view = MockResourceView(items)
         adaptor = CollectionJSON(view)
-        response = adaptor.serialize(instance=items[0])
+        response = adaptor.serialize(instance=items[0], content_type='application/vnd.Collection.next+JSON')
         data = json.loads(response.content)
         json_items = data['collection']['items']
         self.assertEqual(len(json_items), 1)
@@ -71,7 +71,7 @@ class CollectionJsonTestCase(unittest.TestCase):
         items = [site_resource]
         view = MockResourceView(items)
         adaptor = CollectionJSON(view)
-        response = adaptor.serialize()
+        response = adaptor.serialize(content_type='application/vnd.Collection.next+JSON')
         data = json.loads(response.content)
         json_items = data['collection']['items']
         #assert False, str(json_items)
@@ -81,7 +81,7 @@ class CollectionJsonTestCase(unittest.TestCase):
         items = [app_resource]
         view = MockResourceView(items)
         adaptor = CollectionJSON(view)
-        response = adaptor.serialize()
+        response = adaptor.serialize(content_type='application/vnd.Collection.next+JSON')
         data = json.loads(response.content)
         json_items = data['collection']['items']
         #assert False, str(json_items)

@@ -64,7 +64,7 @@ class CollectionJSON(MediaType):
                    'message':str(errors),}
         return error_r
     
-    def serialize(self, instance=None, errors=None):
+    def serialize(self, content_type, instance=None, errors=None):
         #CONSIDER a better inferface
         if hasattr(self.view, 'get_items_forms'):
             items = [self.convert_item_form(form) for form in self.view.get_items_forms()]
@@ -94,7 +94,6 @@ class CollectionJSON(MediaType):
         
         data.update(href=self.request.build_absolute_uri(), version="1.0")
         content = json.dumps({"collection":data}, cls=DjangoJSONEncoder)
-        content_type = self.get_content_type()
         return http.HttpResponse(content, content_type)
     
     def deserialize(self, form_class, instance=None):

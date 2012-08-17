@@ -269,4 +269,44 @@ class StorageResourceTestCase(ResourceTestCase):
         self.assertEqual(len(data['items']), 1)
         
         self.assertEqual(data['items'][0]['href'], 'storages/media/test.txt/')
+    
+    def test_post_list(self):
+        view_kwargs = self.resource.get_view_kwargs()
+        view = self.resource.list_view.as_view(**view_kwargs)
+        update_data = {
+            'name': 'normaluser',
+            'upload': 'z@z.com',
+        }
+        payload = json.dumps({'data':update_data})
+        request = self.factory.post('/', **{'wsgi.input':FakePayload(payload), 'CONTENT_LENGTH':len(payload)})
+        response = view(request)
+        data = json.loads(response.content)
+        data = data['collection']
+        
+        self.assertTrue('template' in data)
+        self.assertTrue('error' in data)
+        self.assertTrue('items' in data)
+        
+        #assert False, response.content
+    
+    def test_post_detail(self):
+        self.resource.resource_adaptor.save('test.txt', ContentFile('foobar'))
+        
+        view_kwargs = self.resource.get_view_kwargs()
+        view = self.resource.detail_view.as_view(**view_kwargs)
+        update_data = {
+            'name': 'normaluser',
+        }
+        payload = json.dumps({'data':update_data})
+        request = self.factory.post('/', **{'wsgi.input':FakePayload(payload), 'CONTENT_LENGTH':len(payload)})
+        response = view(request, path='test.txt')
+        data = json.loads(response.content)
+        data = data['collection']
+        
+        self.assertTrue('template' in data, str(view))
+        self.assertTrue('error' in data)
+        self.assertTrue('items' in data)
+        self.assertEqual(len(data['items']), 1)
+        
+        #assert False, response.content
 
