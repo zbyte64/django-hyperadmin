@@ -46,7 +46,7 @@ SiteResource
 API Endpoints
 
 * "/" lists resources known in the system. Additionally provides an html fallback to load up the ember.js interface.
-* "/authentication/" ; PUT/POST to authenticate, DELETE to logout, GET for useful info and login forms. Uses django sessions by default.
+* "/_authentication/" ; PUT/POST to authenticate, DELETE to logout, GET for useful info and login forms. Uses django sessions by default.
 
 ApplicationResource
 -------------------

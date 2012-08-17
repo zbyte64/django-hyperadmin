@@ -82,6 +82,7 @@ class BaseResource(object):
 
 class SiteResource(BaseResource):
     list_view = views.SiteResourceView
+    login_view = views.AuthenticationResourceView
     
     def __init__(self, site):
         self.site = site
@@ -104,6 +105,9 @@ class SiteResource(BaseResource):
             url(r'^$',
                 wrap(self.list_view.as_view(**init)),
                 name='index'),
+            url(r'^_authentication/$',
+                wrap(self.login_view.as_view(**init)),
+                name='authentication'),
         )
         for key, app in self.site.applications.iteritems():
             urlpatterns += patterns('',
