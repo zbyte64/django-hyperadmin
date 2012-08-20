@@ -31,6 +31,9 @@ class BaseResource(object):
     def as_view(self, view, cacheable=False):
         return self.site.as_view(view, cacheable)
     
+    def as_nonauthenticated_view(self, view, cacheable=False):
+        return self.site.as_nonauthenticated_view(view, cacheable)
+    
     def get_view_kwargs(self):
         return {'resource':self,
                 'resource_site':self.site,}
@@ -97,6 +100,11 @@ class SiteResource(BaseResource):
                 return self.as_view(view, cacheable)(*args, **kwargs)
             return update_wrapper(wrapper, view)
         
+        def anon_wrap(view, cacheable=False):
+            def wrapper(*args, **kwargs):
+                return self.as_nonauthenticated_view(view, cacheable)(*args, **kwargs)
+            return update_wrapper(wrapper, view)
+        
         init = self.get_view_kwargs()
         
         # Admin-site-wide views.
@@ -106,7 +114,7 @@ class SiteResource(BaseResource):
                 wrap(self.list_view.as_view(**init)),
                 name='index'),
             url(r'^_authentication/$',
-                wrap(self.login_view.as_view(**init)),
+                anon_wrap(self.login_view.as_view(**init)),
                 name='authentication'),
         )
         for key, app in self.site.applications.iteritems():

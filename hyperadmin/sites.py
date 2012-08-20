@@ -2,6 +2,8 @@ from django.views.decorators.cache import never_cache
 from django.conf.urls.defaults import patterns
 from django.core.urlresolvers import reverse
 from django.utils.datastructures import SortedDict
+from django.utils.functional import update_wrapper
+from django.http import HttpResponse
 
 from resources import SiteResource, ApplicationResource
 
@@ -52,6 +54,24 @@ class ResourceSite(object):
         return {'resource_site':self,}
     
     def as_view(self, view, cacheable=False):
+        if not cacheable:
+            view = never_cache(view)
+        
+        def permission_check(view):
+            def wrapper(request, *args, **kwargs):
+                response = self.api_permission_check(request)
+                if response:
+                    return response
+                return view(request, *args, **kwargs)
+            return update_wrapper(wrapper, view)
+        
+        return permission_check(view)
+    
+    def api_permission_check(self, request):
+        if not request.is_staff:
+            return HttpResponse('Unauthorized', status=401)
+    
+    def as_nonauthenticated_view(self, view, cacheable=False):
         if not cacheable:
             view = never_cache(view)
         return view
