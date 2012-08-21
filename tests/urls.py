@@ -6,8 +6,10 @@ from django.contrib import admin
 admin.autodiscover()
 
 import hyperadmin
+from hyperadmin.clients import EmberJSClient
 hyperadmin.autodiscover()
 hyperadmin.site.install_models_from_site(admin.site)
+admin_client = EmberJSClient(api_endpoint='/hyper-admin/')
 
 urlpatterns = patterns('',
     # Examples:
@@ -20,7 +22,10 @@ urlpatterns = patterns('',
     # Uncomment the next line to enable the admin:
     url(r'^admin/', include(admin.site.urls)),
     url(r'^hyper-admin/', include(hyperadmin.site.urls)),
+    url(r'^emberjs-admin/', include(admin_client.urls)),
 )
+
+
 
 if settings.DEBUG:
     urlpatterns += patterns('django.views',

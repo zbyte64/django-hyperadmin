@@ -2,7 +2,8 @@ from django.conf.urls.defaults import patterns, url
 from django.views.generic import TemplateView
 
 class Client(object):
-    def __init__(self, name='hyper-client', app_name='client'):
+    def __init__(self, api_endpoint, name='hyper-client', app_name='client'):
+        self.api_endpoint = api_endpoint
         self.name = name
         self.app_name = app_name
     
@@ -21,7 +22,9 @@ class TemplateClient(Client):
         pass #TODO
     
     def get_context(self):
-        return {'media':self.get_media()}
+        return {'media':self.get_media(),
+                'api_endpoint':self.api_endpoint,
+                'client':self,}
     
     def get_urls(self):
         urlpatterns = patterns('',

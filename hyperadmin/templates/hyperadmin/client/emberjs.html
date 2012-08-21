@@ -1,4 +1,4 @@
-<!doctype html>
+{% load hyperadmin_utils %}<!doctype html>
 <!--[if lt IE 7 ]> <html lang="en" class="ie6"> <![endif]--> <!--[if IE 7 ]>    <html lang="en" class="ie7"> <![endif]--> <!--[if IE 8 ]>    <html lang="en" class="ie8"> <![endif]--> <!--[if IE 9 ]>    <html lang="en" class="ie9"> <![endif]-->
 <!--[if (gt IE 9)|!(IE)]><!--> <html lang="en"> <!--<![endif]-->
 <head>
@@ -21,10 +21,28 @@
 </head>
 <body>
   <script type="text/x-handlebars">
+  {% raw %}
     {{#view App.MyView}}
       <h1>Hello world!</h1>
     {{/view}}
+  {% endraw %}
   </script>
+  
+  <script type="text/x-handlebars" data-template-name="display-form">
+  {% raw %}
+    {{#for row in rows}}
+        <input type="" value="{{ row.value }}" name="{{ row.name}}">
+    {{/for}}
+  {% endraw %}
+  </script>
+  
+  <script type="text/x-handlebars" data-template-name="display-link">
+  {% raw %}
+    <a class="{{link.classes}}" href="{{link.href}}" rel="{{link.rel}}">{{link.prompt}}</a>
+  {% endraw %}
+  </script>
+  
+  {{api_endpoint}}
 
   <!-- The missing protocol means that it will match the current protocol, either http or https. If running locally, we use the local jQuery. -->
   <script src="//ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>
