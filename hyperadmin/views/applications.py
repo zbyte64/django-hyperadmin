@@ -17,7 +17,7 @@ class SiteResourceView(ApplicationResourceView, generic.TemplateView):
     
     def get(self, request, *args, **kwargs):
         try:
-            self.resource.get_media_type(self)
+            self.resource.get_response_media_type(self)
         except ValueError, e:
             return generic.TemplateView.get(self, request, *args, **kwargs)
         return ApplicationResourceView.get(self, request, *args, **kwargs)

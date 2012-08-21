@@ -24,6 +24,9 @@ class ModelResourceViewMixin(ResourceViewMixin, generic.edit.ModelFormMixin):
     def get_form_class(self, instance=None):
         return generic.edit.ModelFormMixin.get_form_class(self)
     
+    def get_form_kwargs(self):
+        return {}
+    
     def get_form(self, **kwargs):
         form_class = self.get_form_class()
         form = form_class(**kwargs)
@@ -116,12 +119,12 @@ class ModelListResourceView(ModelResourceViewMixin, generic.CreateView):
     
     def get_ln_links(self, instance=None):
         form = self.get_form(instance=instance)
-        update_link = Link(url=self.request.path,
+        create_link = Link(url=self.request.path,
                            method='POST', #TODO should this be put?
                            form=form,
                            prompt='create',
                            rel='create',)
-        return [update_link] + super(ModelListResourceView, self).get_ln_links(instance)
+        return [create_link] + super(ModelListResourceView, self).get_ln_links(instance)
 
 class ModelDetailResourceView(ModelResourceViewMixin, generic.UpdateView):
     #TODO get_form retrieves information from mediatype

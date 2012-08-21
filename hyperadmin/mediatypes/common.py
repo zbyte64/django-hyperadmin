@@ -5,10 +5,7 @@ class MediaType(object):
         self.view = view
         self.request = view.request
     
-    def get_content_type(self):
-        return self.view.get_content_type()
-    
-    def serialize(self, instance=None, errors=None):
+    def serialize(self, content_type, instance=None, errors=None):
         raise NotImplementedError
     
     def deserialize(self, form_class, instance=None):

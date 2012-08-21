@@ -12,6 +12,7 @@ This is ALPHA
 Features
 --------
 * ModelResource works like AdminModel
+* StorageResource for RESTful media uploads
 * Supported Media Formats:
  * application/vnd.Collection+JSON
  * application/vnd.Collection.next+JSON
@@ -29,6 +30,7 @@ And the following to urls.py::
     import hyperadmin
     hyperadmin.autodiscover() #TODO this does nothing
     hyperadmin.site.install_models_from_site(admin.site) #ports admin models to hyperadmin
+    hyperadmin.site.install_storage_resources() #enables the storage resource for media and static
 
 Add to root url patterns::
 
@@ -44,7 +46,7 @@ SiteResource
 API Endpoints
 
 * "/" lists resources known in the system. Additionally provides an html fallback to load up the ember.js interface.
-* "/authentication/" ; PUT/POST to authenticate, DELETE to logout, GET for useful info and login forms. Uses django sessions by default.
+* "/_authentication/" ; PUT/POST to authenticate, DELETE to logout, GET for useful info and login forms. Uses django sessions by default.
 
 ApplicationResource
 -------------------
@@ -53,6 +55,17 @@ API Endpoints
 
 * "/<appname>/" lists resources belonging to the app
 * "/<appname>/<module>/" mount point of crud resource
+
+StorageResource
+---------------
+
+API Endpoints
+
+* "/storages/media/" lists directories and files
+* "/storages/media/?path=<path>" lists directories and files belonging to a certain path
+* "/storages/media/<path>/" endpoint for updating a particular file
+* "/storages/static/"
+* "/storages/static/<path>/"
 
 Registering models
 ==================

@@ -9,6 +9,7 @@ import hyperadmin
 from hyperadmin.clients import EmberJSClient
 hyperadmin.autodiscover()
 hyperadmin.site.install_models_from_site(admin.site)
+hyperadmin.site.install_storage_resources()
 admin_client = EmberJSClient(api_endpoint='/hyper-admin/')
 
 urlpatterns = patterns('',
