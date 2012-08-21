@@ -4,6 +4,7 @@ from django.core.urlresolvers import reverse
 from django.utils.datastructures import SortedDict
 from django.utils.functional import update_wrapper
 from django.http import HttpResponse
+from django.utils.encoding import iri_to_uri
 
 from resources import SiteResource, ApplicationResource
 
@@ -68,8 +69,11 @@ class ResourceSite(object):
         return permission_check(view)
     
     def api_permission_check(self, request):
-        if not request.is_staff:
-            return HttpResponse('Unauthorized', status=401)
+        if not request.user.is_staff:
+            redirect_to = self.reverse('authentication')
+            response = HttpResponse('Unauthorized', status=401)
+            response['Location'] = iri_to_uri(redirect_to)
+            return response
     
     def as_nonauthenticated_view(self, view, cacheable=False):
         if not cacheable:

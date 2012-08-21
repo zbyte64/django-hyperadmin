@@ -14,14 +14,22 @@ class Client(object):
         return self.get_urls(), self.app_name, self.name
     urls = property(urls)
 
+class TemplateClientView(TemplateView):
+    client = None
+    
+    def get_context_data(self, **kwargs):
+        context = super(TemplateClientView, self).get_context_data(**kwargs)
+        context.update(self.client.get_context_data())
+        return context
+
 class TemplateClient(Client):
     template_name = None
-    template_view = TemplateView
+    template_view = TemplateClientView
     
     def get_media(self):
         pass #TODO
     
-    def get_context(self):
+    def get_context_data(self):
         return {'media':self.get_media(),
                 'api_endpoint':self.api_endpoint,
                 'client':self,}
@@ -29,7 +37,7 @@ class TemplateClient(Client):
     def get_urls(self):
         urlpatterns = patterns('',
             url(r'^$',
-                self.template_view.as_view(template_name=self.template_name),
+                self.template_view.as_view(template_name=self.template_name, client=self),
                 name='index'),
         )
         return urlpatterns
