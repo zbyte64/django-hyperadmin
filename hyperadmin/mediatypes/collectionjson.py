@@ -36,7 +36,7 @@ class CollectionJSON(MediaType):
         data = list()
         for name, field in form.fields.iteritems():
             entry = self.convert_field(field, name)
-            if form.instance:
+            if getattr(form, 'instance', None):
                 entry['value'] = form[name].value()
             data.append(entry)
         return data
