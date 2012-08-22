@@ -8,6 +8,10 @@ from hyperadmin import views
 from resources import CRUDResource #TODO singleton resource
 
 class AuthenticationResourceForm(AuthenticationForm):
+    def __init__(self, **kwargs):
+        self.instance = kwargs.pop('instance', None)
+        super(AuthenticationResourceForm, self).__init__(**kwargs)
+    
     def save(self, commit=True):
         assert self.request
         user = self.get_user()
