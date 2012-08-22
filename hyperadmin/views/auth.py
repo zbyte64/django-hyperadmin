@@ -2,6 +2,8 @@ from django.views import generic
 from django.contrib.auth.forms import AuthenticationForm
 from django.contrib.auth import logout, login
 
+from hyperadmin.resources.links import Link
+
 from common import ResourceViewMixin
 
 class AuthenticationResourceForm(AuthenticationForm):
@@ -21,6 +23,11 @@ class AuthenticationResourceView(ResourceViewMixin, generic.View):
     def get_form_class(self):
         return self.form_class
     
+    def get_form(self, **kwargs):
+        form_class = self.get_form_class()
+        form = form_class(**kwargs)
+        return form
+    
     def get_items(self):
         return [self.request.user]
     
@@ -38,4 +45,22 @@ class AuthenticationResourceView(ResourceViewMixin, generic.View):
     def delete(self, request, *args, **kwargs):
         logout(request)
         return self.resource.generate_delete_response(self)
+    
+    def get_ln_links(self, instance=None):
+        links = super(AuthenticationResourceView, self).get_ln_links(instance)
+        if self.request.is_authenticated():
+            logout_link = Link(url=self.request.path,
+                               method='DELETE',
+                               prompt='logout',
+                               rel='delete',)
+            links.append(logout_link)
+        else:
+            form = self.get_form()#instance=instance)
+            login_link = Link(url=self.request.path,
+                              method='POST', #TODO should this be put?
+                              form=form,
+                              prompt='authenticate',
+                              rel='create',)
+            links.append(login_link)
+        return links
 
