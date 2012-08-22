@@ -85,10 +85,13 @@ class BaseResource(object):
 
 class SiteResource(BaseResource):
     list_view = views.SiteResourceView
-    login_view = views.AuthenticationResourceView
     
-    def __init__(self, site):
+    def __init__(self, site, auth_resource=None):
         self.site = site
+        if auth_resource is None:
+            from auth import AuthResource
+            auth_resource = AuthResource
+        self.auth_resource = auth_resource(site=site)
     
     def get_app_name(self):
         return self.site.name
@@ -100,11 +103,6 @@ class SiteResource(BaseResource):
                 return self.as_view(view, cacheable)(*args, **kwargs)
             return update_wrapper(wrapper, view)
         
-        def anon_wrap(view, cacheable=False):
-            def wrapper(*args, **kwargs):
-                return self.as_nonauthenticated_view(view, cacheable)(*args, **kwargs)
-            return update_wrapper(wrapper, view)
-        
         init = self.get_view_kwargs()
         
         # Admin-site-wide views.
@@ -113,9 +111,8 @@ class SiteResource(BaseResource):
             url(r'^$',
                 wrap(self.list_view.as_view(**init)),
                 name='index'),
-            url(r'^_authentication/$',
-                anon_wrap(self.login_view.as_view(**init)),
-                name='authentication'),
+            url(r'^_authentication/',
+                include(self.auth_resource.urls)),
         )
         for key, app in self.site.applications.iteritems():
             urlpatterns += patterns('',

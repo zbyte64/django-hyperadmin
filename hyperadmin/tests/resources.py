@@ -319,3 +319,24 @@ class StorageResourceTestCase(ResourceTestCase):
         #assert False, response.content
         '''
 
+class AuthenticationResourceTestCase(ResourceTestCase):
+    def register_resource(self):
+        return self.site.site_resource.auth_resource
+    
+    def test_get_detail(self):
+        view_kwargs = self.resource.get_view_kwargs()
+        view = self.resource.detail_view.as_view(**view_kwargs)
+        request = self.factory.get('/')
+        response = view(request)
+        data = json.loads(response.content)
+    
+    def test_logout(self):
+        view_kwargs = self.resource.get_view_kwargs()
+        view = self.resource.detail_view.as_view(**view_kwargs)
+        request = self.factory.delete('/')
+        response = view(request)
+        #assert False, response.content
+        #data = json.loads(response.content)
+        
+        #assert False, str(data)
+

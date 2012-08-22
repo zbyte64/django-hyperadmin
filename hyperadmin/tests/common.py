@@ -1,6 +1,10 @@
 from django.test.client import RequestFactory
 from django.core.urlresolvers import RegexURLResolver
 
+class MockSession(dict):
+    def flush(self):
+        pass
+
 class SuperUserRequestFactory(RequestFactory):
     def __init__(self, **kwargs):
         self.user = kwargs.pop('user', None)
@@ -9,6 +13,7 @@ class SuperUserRequestFactory(RequestFactory):
     def request(self, **request):
         ret = super(SuperUserRequestFactory, self).request(**request)
         ret.user = self.user
+        ret.session = MockSession()
         return ret
 
 class GenericURLResolver(RegexURLResolver):
