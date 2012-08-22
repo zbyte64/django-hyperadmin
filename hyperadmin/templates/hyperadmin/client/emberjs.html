@@ -24,6 +24,7 @@
     {{view App.BreadcrumbsView}}
     {{view App.QueriesView}}
     {{view App.ItemsView}}
+    {{view App.ErrorView}}
     {{view App.TemplateView}}
   </script>
   
@@ -43,6 +44,12 @@
       {{else}}
         {{view App.LinkView}}
       {{/if }}
+    {{/each}}
+  </script>
+  
+  <script type="text/x-handlebars" data-template-name="error">
+    {{#each collection.error.messages}}
+        <div><span>{{name}}</span>{{{message}}}</div>
     {{/each}}
   </script>
   

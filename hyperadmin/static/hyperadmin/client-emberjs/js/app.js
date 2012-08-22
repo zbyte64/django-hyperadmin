@@ -100,6 +100,10 @@ App.QueriesView = App.AdminView.extend({
   templateName: 'queries'
 })
 
+App.ErrorView = App.AdminView.extend({
+  templateName: 'error'
+})
+
 App.ItemsView = App.AdminView.extend({
   templateName: 'items'
 })
