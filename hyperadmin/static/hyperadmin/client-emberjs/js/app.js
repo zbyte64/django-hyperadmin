@@ -26,7 +26,33 @@ App.requestDefaults = {
     },
     success: App.handleResponse,
     error: App.handleResponseError,
-    dataType: "json"
+    dataType: "json",
+    beforeSend: function(jqXHR, settings) {
+        jQuery(document).ajaxSend(function(event, xhr, settings) {
+            function getCookie(name) {
+                var cookieValue = null;
+                if (document.cookie && document.cookie != '') {
+                    var cookies = document.cookie.split(';');
+                    for (var i = 0; i < cookies.length; i++) {
+                        var cookie = jQuery.trim(cookies[i]);
+                        // Does this cookie string begin with the name we want?
+                        if (cookie.substring(0, name.length + 1) == (name + '=')) {
+                            cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                            break;
+                        }
+                    }
+                }
+                return cookieValue;
+            }
+            function safeMethod(method) {
+                return (/^(GET|HEAD|OPTIONS|TRACE)$/.test(method));
+            }
+            
+            if (!safeMethod(settings.type) && !settings.crossDomain) {
+                xhr.setRequestHeader("X-CSRFToken", getCookie('csrftoken'));
+            }
+        });
+    }
 }
 
 App.followLink = function(url) {
@@ -42,14 +68,17 @@ App.init_application = function() {
 
 App.AdminView = Em.View.extend({
     followLink: function(event) {
-        console.log([event, this])
-        App.followLink($(this).attr('href'))
+        var view = event.view
+        var url = view.bindingContext.href
+        App.followLink(url)
     },
     submitForm: function(event) {
+        var view = event.view
+        var $form = view.$().find('form');
         var settings = $.extend({}, App.requestDefaults, {
-            url: $(this).attr('target'),
-            type: $(this).attr('method') || 'POST',
-            data: $(this).serialize()
+            url: $form.attr('target'),
+            type: $form.attr('method') || 'POST',
+            data: $form.serialize()
         })
         $.ajax(settings)
     }

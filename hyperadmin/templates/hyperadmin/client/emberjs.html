@@ -47,16 +47,16 @@
   </script>
   
   <script type="text/x-handlebars" data-template-name="link">
-    <a {{action "followLink"}} {{bindAttr class="classes"}} {{bindAttr href="href"}} {{bindAttr rel="rel"}}>{{prompt}}</a>
+    <a {{action "followLink"}} {{bindAttr class="classes"}} {{bindAttr href="href"}} {{bindAttr rel="rel"}}>{{prompt}}-{{href}}</a>
   </script>
   
   <script type="text/x-handlebars" data-template-name="form">
-    <form {{action "submitForm"}} {{bindAttr method="method.options.0.value"}} {{bindAttr target="href"}} {{bindAttr rel="rel"}}>
+    <form {{bindAttr method="method.options.0.value"}} {{bindAttr target="href"}} {{bindAttr rel="rel"}}>
     <div>
     {{#each data}}
-    <input type="text" {{bindAttr name="name"}} {{bindAttr value="value"}}/>
+    <label>{{prompt}}</label><input type="text" {{bindAttr name="name"}} {{bindAttr value="value"}}/>
     {{/each}}
-    <input type="submit" {{bindAttr value="prompt"}}/>
+    <button {{action "submitForm"}} type="button">{{prompt}}</button>
     </div>
     </form>
   </script>
@@ -64,7 +64,7 @@
   <script type="text/x-handlebars" data-template-name="items">
     {{#each collection.items}}
         <div>
-            <a {{action "followLink"}} {{bindAttr href="href"}}>{{href}}</a>
+            {{view App.LinkView prompt=href}}
             <div>
             {{#each data}}
                 <em>{{prompt}}</em>:{{value}}<br/>
