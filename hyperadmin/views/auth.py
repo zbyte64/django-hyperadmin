@@ -48,7 +48,7 @@ class AuthenticationResourceView(ResourceViewMixin, generic.View):
     
     def get_ln_links(self, instance=None):
         links = super(AuthenticationResourceView, self).get_ln_links(instance)
-        if self.request.is_authenticated():
+        if self.request.user.is_authenticated():
             logout_link = Link(url=self.request.path,
                                method='DELETE',
                                prompt='logout',
