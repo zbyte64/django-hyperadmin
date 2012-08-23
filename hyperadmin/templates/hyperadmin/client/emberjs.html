@@ -29,7 +29,7 @@
   </script>
   
   <script type="text/x-handlebars" data-template-name="breadcrumbs">
-    {{#each collection.links}}
+    {{#each App.resourceController.collection.links}}
       {{#if rel}}
         {{view App.BreadcrumbView}}
       {{/if }}
@@ -37,7 +37,7 @@
   </script>
   
   <script type="text/x-handlebars" data-template-name="queries">
-    {{#each collection.queries}}
+    {{#each App.resourceController.collection.queries}}
       {{#if data}}
         <span>{{prompt}}</span>
         {{view App.FormView}}
@@ -48,28 +48,28 @@
   </script>
   
   <script type="text/x-handlebars" data-template-name="error">
-    {{#each collection.error.messages}}
+    {{#each App.resourceController.collection.error.messages}}
         <div><span>{{name}}</span>{{{message}}}</div>
     {{/each}}
   </script>
   
   <script type="text/x-handlebars" data-template-name="link">
-    <a {{action "followLink"}} {{bindAttr class="classes"}} {{bindAttr href="href"}} {{bindAttr rel="rel"}}>{{prompt}}-{{href}}</a>
+    <a {{action followLink}} {{bindAttr class="classes"}} {{bindAttr href="emberUrl"}} {{bindAttr rel="rel"}}>{{prompt}}-{{href}}</a>
   </script>
   
   <script type="text/x-handlebars" data-template-name="form">
-    <form {{bindAttr method="method.options.0.value"}} {{bindAttr target="href"}} {{bindAttr rel="rel"}}>
+    <form {{bindAttr method="method.options.0.value"}} {{bindAttr target="url"}} {{bindAttr rel="rel"}}>
     <div>
     {{#each data}}
     <label>{{prompt}}</label><input type="text" {{bindAttr name="name"}} {{bindAttr value="value"}}/>
     {{/each}}
-    <button {{action "submitForm"}} type="button">{{prompt}}</button>
+    <button {{action submitForm}} type="button">{{prompt}}</button>
     </div>
     </form>
   </script>
   
   <script type="text/x-handlebars" data-template-name="items">
-    {{#each collection.items}}
+    {{#each App.resourceController.collection.items}}
         <div>
             {{view App.LinkView prompt=href}}
             <div>
@@ -87,33 +87,27 @@
   </script>
   
   <script type="text/x-handlebars" data-template-name="template">
-    {{#with collection.template}}
+    {{#with App.resourceController.collection.template}}
       {{view App.FormView}}
     {{/with}}
+  </script>
+  
+  <script type="text/x-handlebars" data-template-name="main" >
+    Main View
+    {{outlet}}
   </script>
   {% endraw %}
 </head>
 <body data-api-endpoint="{{api_endpoint}}">
   <div id="container">
-  <script type="text/x-handlebars">
-  {% raw %}
-    {{#view App.LoadingView}}
-      <h1>Loading Client</h1>
-    {{/view}}
-  {% endraw %}
-  </script>
+  &nbsp;
   </div>
   
   <!-- The missing protocol means that it will match the current protocol, either http or https. If running locally, we use the local jQuery. -->
   <script src="//ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>
   <script>window.jQuery || document.write('<script src="js/libs/jquery-1.7.2.min.js"><\/script>')</script>
   <script src="{{STATIC_URL}}hyperadmin/client-emberjs/js/libs/handlebars-1.0.0.beta.6.js"></script>
-  <script src="{{STATIC_URL}}hyperadmin/client-emberjs/js/libs/ember-1.0.pre.min.js"></script>
+  <script src="{{STATIC_URL}}hyperadmin/client-emberjs/js/libs/ember-1.0.pre.js"></script>
   <script src="{{STATIC_URL}}hyperadmin/client-emberjs/js/app.js"></script>
-  <script>
-    window.jQuery(document).ready(function() {
-        App.init_application();
-    })
-  </script>
 </body>
 </html>
