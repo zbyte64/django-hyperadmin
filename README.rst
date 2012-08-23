@@ -17,6 +17,9 @@ Features
  * application/vnd.Collection+JSON
  * application/vnd.Collection.next+JSON
  * application/text-html - for browsing
+ * application/json - plain json serialization
+ * text/javascript - for jsonp
+ * TODO: xml
 * Architecture allows for more media formats
 * Internal resource representation based on hfactor and forms
 
