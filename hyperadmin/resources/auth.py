@@ -6,14 +6,19 @@ from django.contrib.auth import login
 from hyperadmin import views
 
 from resources import CRUDResource #TODO singleton resource
+from links import Link
 
 class AuthenticationResourceForm(AuthenticationForm):
     def __init__(self, **kwargs):
         self.instance = kwargs.pop('instance', None)
         super(AuthenticationResourceForm, self).__init__(**kwargs)
     
+    def check_for_test_cookie(self):
+        return
+    
     def save(self, commit=True):
         assert self.request
+       
         user = self.get_user()
         login(self.request, user)
         return user
@@ -64,5 +69,11 @@ class AuthResource(CRUDResource):
         return self.reverse('authentication')
     
     def get_outbound_links(self, instance=None):
-        return []
+        if instance:
+            return []
+        else:
+            site_link = Link(url=self.reverse('index'), rel='breadcrumb', prompt='root')
+            #app_link = Link(url=self.reverse(self.app_name), rel='breadcrumb', prompt=self.app_name)
+            #resource_list = Link(url=self.get_absolute_url(), rel='breadcrumb', prompt=self.resource_name)
+            return [site_link]#, app_link, resource_list]
 

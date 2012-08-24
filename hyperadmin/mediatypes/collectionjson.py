@@ -92,7 +92,7 @@ class CollectionJSON(MediaType):
         if len(ln_links):
             data['template'] = self.convert_link(ln_links[0])
         
-        data.update(href=self.request.build_absolute_uri(), version="1.0")
+        data.update(href=self.request.get_full_path(), version="1.0")
         content = json.dumps({"collection":data}, cls=DjangoJSONEncoder)
         return http.HttpResponse(content, content_type)
     

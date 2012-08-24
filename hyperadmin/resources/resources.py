@@ -122,7 +122,7 @@ class SiteResource(BaseResource):
     
     def get_items(self, request):
         #TODO sort by name
-        return self.site.applications.values()
+        return self.site.applications.values() + [self.auth_resource]
     
     def get_instance_url(self, instance):
         if hasattr(instance, 'get_absolute_url'):

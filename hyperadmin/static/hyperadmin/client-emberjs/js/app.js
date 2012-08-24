@@ -2,10 +2,7 @@ var App = Em.Application.create({});
 
 App.ApplicationController = Ember.Controller.extend();
 
-App.ApplicationView = Ember.View.extend({
-    templateName: 'main'
-});
-
+//here we define our data objects
 App.Link = Em.Object.extend({
   url: function() {
     var url = this.get('href');
@@ -13,10 +10,18 @@ App.Link = Em.Object.extend({
         url = App.resourceController.collection.get('url') + url
     }
     return url
-  }.property('href').cacheable(),
+  }.property('href'),
+  apiUrl: function() {
+    var apiUrl = this.get('url')
+    var base_url = App.resourceController.get('apiUrl')
+    if (apiUrl.indexOf(base_url) == 0) {
+        apiUrl = apiUrl.substr(base_url.length)
+    }
+    return apiUrl
+  }.property('href'),
   emberUrl: function() {
-    return '#'+this.get('url');
-  }.property('href').cacheable()
+    return '#'+this.get('apiUrl');
+  }.property('href')
 })
 App.Query = App.Link.extend({})
 App.Item = App.Link.extend({
@@ -25,7 +30,10 @@ App.Item = App.Link.extend({
 App.Template = App.Link.extend({})
 App.Error = Em.Object.extend({})
 
+//define a controller for managing these data objects
+//views bind to this and are automatically updated when the controller issues update actions
 App.resourceController = Em.ObjectController.create({
+    apiUrl: null,
     collection: Em.ObjectController.create({ //bind data to this
         version: null,
         href: null,
@@ -108,6 +116,18 @@ App.resourceController = Em.ObjectController.create({
     }
 });
 
+App.updateResourcePath = function() {
+    //updates the location to match our current resource controller state
+    var url = App.resourceController.collection.get('href')
+    var base_url = App.resourceController.get('apiUrl')
+    if (url.indexOf(base_url) == 0) {
+        url = url.substr(base_url.length)
+    }
+    App.router.location.setURL(url)
+}
+
+//when href changes, call our observer function to update the path
+App.resourceController.collection.addObserver('href', App, 'updateResourcePath')
 
 App.Router = Em.Router.extend({
   location: 'hash',
@@ -126,6 +146,20 @@ App.Router = Em.Router.extend({
         var view = event.view
         var form = view.$().find('form');
         App.resourceController.submitForm(form)
+      },
+      deserialize: function(router, params) {
+        //since there are no states, this only gets called once and that is to interpret the initial #url
+        //console.log('deserialize', router, params)
+        var hash = router.location.location.hash
+        var url = App.resourceController.get('apiUrl')
+        if (hash) {
+            url = url + hash.substr(1);
+        }
+        //console.log('deserialized', url)
+        App.resourceController.followLink(url)
+        //location.setURL(path);
+        //params = {resource_url: url}
+        //return params
       }
     })
   })
@@ -135,6 +169,7 @@ App.handleResponseError = function(jqXHR, textStatus, errorThrown) {
     if (jqXHR.status == 401) {
         var login_url = jqXHR.getResponseHeader("Location")
         if (login_url) {
+            //TODO preserve previous url so we are redirected on login success
             App.resourceController.followLink(login_url)
         } else {
             console.log([jqXHR, textStatus, errorThrown])
@@ -151,7 +186,7 @@ App.requestDefaults = {
     success: App.resourceController.handleResponse,
     error: App.handleResponseError,
     dataType: "json",
-    beforeSend: function(jqXHR, settings) {
+    beforeSend: function(jqXHR, settings) { //inject csrf token
         jQuery(document).ajaxSend(function(event, xhr, settings) {
             function getCookie(name) {
                 var cookieValue = null;
@@ -178,6 +213,11 @@ App.requestDefaults = {
         });
     }
 }
+
+//emberjs first loads ApplicationView
+App.ApplicationView = Em.View.extend({
+  templateName: 'main'
+});
 
 App.AdminView = Em.View.extend({})
 
@@ -223,11 +263,9 @@ App.FormView = App.AdminView.extend({
   classNames: ['form']
 })
 
-App.AplicationView = App.ResourceView;
-
 $(function() {
-  App.initialize();
   var url = $('body').attr('data-api-endpoint')
-  App.resourceController.followLink(url)
+  App.resourceController.set('apiUrl', url)
+  App.initialize();
 });
 
