@@ -54,7 +54,7 @@
   </script>
   
   <script type="text/x-handlebars" data-template-name="link">
-    <a {{action followLink}} {{bindAttr class="classes"}} {{bindAttr href="emberUrl"}} {{bindAttr rel="rel"}}>{{prompt}}-{{href}}</a>
+    <a {{action followLink}} {{bindAttr class="classes"}} {{bindAttr href="emberUrl"}} {{bindAttr rel="rel"}}>{{prompt}}</a>
   </script>
   
   <script type="text/x-handlebars" data-template-name="form">
@@ -71,7 +71,7 @@
   <script type="text/x-handlebars" data-template-name="items">
     {{#each App.resourceController.collection.items}}
         <div>
-            {{view App.LinkView prompt=href}}
+            {{view App.LinkView}}
             <div>
             {{#each data}}
                 <em>{{prompt}}</em>:{{value}}<br/>
@@ -99,10 +99,6 @@
   {% endraw %}
 </head>
 <body data-api-endpoint="{{api_endpoint}}">
-  <div id="container">
-  &nbsp;
-  </div>
-  
   <!-- The missing protocol means that it will match the current protocol, either http or https. If running locally, we use the local jQuery. -->
   <script src="//ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>
   <script>window.jQuery || document.write('<script src="js/libs/jquery-1.7.2.min.js"><\/script>')</script>

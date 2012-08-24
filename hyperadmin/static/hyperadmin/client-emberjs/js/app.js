@@ -181,7 +181,7 @@ App.handleResponseError = function(jqXHR, textStatus, errorThrown) {
 
 App.requestDefaults = {
     accepts: {
-        'json': 'application/vnd.Collection.next+JSON',
+        'json': 'application/vnd.Collection.hyperadmin+JSON', //custom media type defintion
     },
     success: App.resourceController.handleResponse,
     error: App.handleResponseError,

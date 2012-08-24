@@ -151,3 +151,16 @@ class CollectionNextJSON(CollectionJSON):
 
 BUILTIN_MEDIA_TYPES['application/vnd.Collection.next+JSON'] = CollectionNextJSON
 
+class CollectionHyperAdminJSON(CollectionNextJSON):
+    def convert_item_form(self, form):
+        item_r = super(CollectionHyperAdminJSON, self).convert_item_form(form)
+        item_r['prompt'] = unicode(form.instance)
+        return item_r
+    
+    def convert_resource(self, resource):
+        item_r = super(CollectionHyperAdminJSON, self).convert_resource(resource)
+        item_r['prompt'] = unicode(resource)
+        return item_r
+
+BUILTIN_MEDIA_TYPES['application/vnd.Collection.hyperadmin+JSON'] = CollectionHyperAdminJSON
+
