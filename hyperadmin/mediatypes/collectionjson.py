@@ -9,7 +9,6 @@ from common import MediaType, BUILTIN_MEDIA_TYPES
 class CollectionJSON(MediaType):
     def convert_field(self, field, name=None):
         entry = {"name": unicode(name),
-                 "value": field.initial,
                  "prompt": unicode(field.label)}
         return entry
     
@@ -34,10 +33,10 @@ class CollectionJSON(MediaType):
     
     def convert_form(self, form):
         data = list()
+        entry_data = self.get_form_instance_values(form)
         for name, field in form.fields.iteritems():
             entry = self.convert_field(field, name)
-            if getattr(form, 'instance', None):
-                entry['value'] = form[name].value()
+            entry['value'] = entry_data.get(name, None)
             data.append(entry)
         return data
     

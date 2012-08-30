@@ -10,5 +10,12 @@ class MediaType(object):
     
     def deserialize(self, form_class, instance=None):
         raise NotImplementedError
+    
+    def get_form_instance_values(self, form, include_initial=True):
+        data = dict()
+        if getattr(form, 'instance', None) or include_initial:
+            for name, field in form.fields.iteritems():
+                data[name] = form[name].value()
+        return data
 
 

@@ -7,9 +7,6 @@ from hyperadmin.resources import BaseResource
 from common import MediaType, BUILTIN_MEDIA_TYPES
 
 class JSON(MediaType):
-    def convert_field(self, field, name=None):
-        return field.initial
-    
     def convert_resource(self, resource):
         return {}
     
@@ -21,13 +18,7 @@ class JSON(MediaType):
         return result
     
     def convert_form(self, form):
-        data = dict()
-        for name, field in form.fields.iteritems():
-            entry = self.convert_field(field, name)
-            if form.instance:
-                entry = form[name].value()
-            data[name] = entry
-        return data
+        return self.get_form_instance_values(form)
     
     def convert_item_form(self, form):
         return self.convert_form(form)
