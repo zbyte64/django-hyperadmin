@@ -61,6 +61,13 @@ App.resourceController = Em.ObjectController.create({
                 for (var i=0; i<data.length; i++) {
                     var item_data = data[i];
                     var item = App.Item.create(item_data);
+                    item.set('links', Em.ArrayController.create({
+                        content: []
+                    }))
+                    for (var j=0; j<item_data.links.length; j++) {
+                        var link = App.Link.create(item_data.links[j])
+                        item.links.pushObject(link)
+                    }
                     this.pushObject(item);
                 }
             }

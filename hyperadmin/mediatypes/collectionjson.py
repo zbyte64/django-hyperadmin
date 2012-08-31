@@ -7,13 +7,13 @@ from hyperadmin.resources import BaseResource
 from common import MediaType, BUILTIN_MEDIA_TYPES
 
 class CollectionJSON(MediaType):
-    def convert_field(self, field, name=None):
-        entry = {"name": unicode(name),
+    def convert_field(self, field):
+        entry = {"name": unicode(field.name),
                  "prompt": unicode(field.label)}
         return entry
     
     def convert_resource(self, resource):
-        return {}
+        return {"classes":"resourceitem"}
     
     def links_for_instance(self, instance):
         result = dict()
@@ -34,9 +34,9 @@ class CollectionJSON(MediaType):
     def convert_form(self, form):
         data = list()
         entry_data = self.get_form_instance_values(form)
-        for name, field in form.fields.iteritems():
-            entry = self.convert_field(field, name)
-            entry['value'] = entry_data.get(name, None)
+        for field in form:
+            entry = self.convert_field(field)
+            entry['value'] = entry_data.get(field.name, None)
             data.append(entry)
         return data
     
@@ -112,18 +112,18 @@ class CollectionJSON(MediaType):
 BUILTIN_MEDIA_TYPES['application/vnd.Collection+JSON'] = CollectionJSON
 
 class CollectionNextJSON(CollectionJSON):
-    def convert_field(self, field, name=None):
-        entry = super(CollectionNextJSON, self).convert_field(field, name)
-        entry['required'] = field.required
+    def convert_field(self, field):
+        entry = super(CollectionNextJSON, self).convert_field(field)
+        entry['required'] = field.field.required
         entry['type'] = self.get_html_type_from_field(field)
-        if hasattr(field, 'options') and field.options:
+        if hasattr(field.field, 'options') and field.field.options:
             options = list()
-            for value, prompt in field.options:
+            for value, prompt in field.field.options:
                 options.append({"value":value,
                                 "prompt":prompt})
             entry['list'] = {'options':options}
             from django.forms.widgets import SelectMultiple
-            if isinstance(field.widget, SelectMultiple):
+            if isinstance(field.field.widget, SelectMultiple):
                 entry['multiple'] = True
         return entry
     
@@ -147,8 +147,8 @@ class CollectionNextJSON(CollectionJSON):
 BUILTIN_MEDIA_TYPES['application/vnd.Collection.next+JSON'] = CollectionNextJSON
 
 class CollectionHyperAdminJSON(CollectionNextJSON):
-    def convert_field(self, field, name=None):
-        entry = super(CollectionHyperAdminJSON, self).convert_field(field, name)
+    def convert_field(self, field):
+        entry = super(CollectionHyperAdminJSON, self).convert_field(field)
         resource = self.get_related_resource_from_field(field)
         if resource:
             entry['related_resource_url'] = resource.get_absolute_url()

@@ -88,6 +88,9 @@ class BaseResource(object):
     
     def get_html_type_from_field(self, field):
         return self.site.get_html_type_from_field(field)
+    
+    def get_child_resource_links(self):
+        return []
 
 class SiteResource(BaseResource):
     list_view = views.SiteResourceView
@@ -133,6 +136,12 @@ class SiteResource(BaseResource):
     def get_instance_url(self, instance):
         if hasattr(instance, 'get_absolute_url'):
             return instance.get_absolute_url()
+    
+    def get_embedded_links(self, instance=None):
+        #relationships go here
+        if instance and hasattr(instance, 'get_child_resource_links'): #AKA application resource
+            return instance.get_child_resource_links()
+        return []
 
 class ApplicationResource(BaseResource):
     list_view = views.ApplicationResourceView
@@ -191,6 +200,13 @@ class ApplicationResource(BaseResource):
     
     def get_absolute_url(self):
         return self.reverse(self.app_name)
+    
+    def get_child_resource_links(self):
+        links = list()
+        for key, resource in self.resource_adaptor.iteritems():
+            resource_link = Link(url=resource.get_absolute_url(), rel='child-resource', prompt=resource.resource_name)
+            links.append(resource_link)
+        return links
     
     def __unicode__(self):
         return u'App Resource: %s' % self.app_name
