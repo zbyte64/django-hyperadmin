@@ -30,21 +30,38 @@
   
   <script type="text/x-handlebars" data-template-name="breadcrumbs">
     {{#each App.resourceController.collection.links}}
-      {{#if rel}}
+      {{#if isBreadcrumb}}
         {{view App.BreadcrumbView}}
       {{/if }}
     {{/each}}
   </script>
   
   <script type="text/x-handlebars" data-template-name="queries">
+    <div class="sorting">
     {{#each App.resourceController.collection.queries}}
+      {{#if isSortby}}
       {{#if data}}
         <span>{{prompt}}</span>
         {{view App.FormView}}
       {{else}}
         {{view App.LinkView}}
       {{/if }}
+      {{/if }}
     {{/each}}
+    </div>
+    
+    <div class="filters">
+    {{#each App.resourceController.collection.queries}}
+      {{#if isFilterby}}
+      {{#if data}}
+        <span>{{prompt}}</span>
+        {{view App.FormView}}
+      {{else}}
+        {{view App.LinkView}}
+      {{/if }}
+      {{/if }}
+    {{/each}}
+    </div>
   </script>
   
   <script type="text/x-handlebars" data-template-name="error">
@@ -54,14 +71,14 @@
   </script>
   
   <script type="text/x-handlebars" data-template-name="link">
-    <a {{action followLink}} {{bindAttr class="classes"}} {{bindAttr href="emberUrl"}} {{bindAttr rel="rel"}}>{{prompt}}</a>
+    <a {{action followLink}} {{bindAttr class="css_class"}} {{bindAttr href="emberUrl"}} {{bindAttr rel="rel"}}>{{prompt}}</a>
   </script>
   
   <script type="text/x-handlebars" data-template-name="form">
     <form {{bindAttr method="method.options.0.value"}} {{bindAttr target="url"}} {{bindAttr rel="rel"}}>
     <div>
     {{#each data}}
-    <label>{{prompt}}</label><input {{bindAttr type="type"}} {{bindAttr name="name"}} {{bindAttr value="value"}} {{bindAttr class="classes"}}/>
+    <label>{{prompt}}</label><input {{bindAttr type="type"}} {{bindAttr name="name"}} {{bindAttr value="value"}} {{bindAttr class="css_class"}}/>
     {{/each}}
     <button {{action submitForm}} type="button">{{prompt}}</button>
     </div>
@@ -70,7 +87,7 @@
   
   <script type="text/x-handlebars" data-template-name="items">
     {{#each App.resourceController.collection.items}}
-        <div {{bindAttr class="classes"}}>
+        <div {{bindAttr class="css_class"}}>
             {{view App.LinkView}}
             <div>
             {{#each data}}

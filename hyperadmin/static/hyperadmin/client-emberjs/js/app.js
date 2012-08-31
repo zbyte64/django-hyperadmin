@@ -3,7 +3,16 @@ var App = Em.Application.create({});
 App.ApplicationController = Ember.Controller.extend();
 
 //here we define our data objects
-App.Link = Em.Object.extend({
+App.CommonObject = Em.Object.extend({
+  css_class: function() {
+    var classes = this.get('classes');
+    if (classes) {
+      return classes.join(' ');
+    }
+    return '';
+  }.property('classes')
+});
+App.Link = App.CommonObject.extend({
   url: function() {
     var url = this.get('href');
     if (url.charAt(0) != '/') {
@@ -21,13 +30,25 @@ App.Link = Em.Object.extend({
   }.property('href'),
   emberUrl: function() {
     return '#'+this.get('apiUrl');
-  }.property('href')
+  }.property('href'),
+  isBreadcrumb: function() {
+    return this.get('rel') == 'breadcrumb';
+  }.property('rel'),
+  isSortby: function() {
+    return this.get('rel') == 'sortby';
+  }.property('rel'),
+  isFilterby: function() {
+    return this.get('rel') == 'filterby';
+  }.property('rel')
 })
 App.Query = App.Link.extend({})
 App.Item = App.Link.extend({
   links: Em.ArrayController.create({})
 })
-App.Template = App.Link.extend({})
+App.Field = App.CommonObject.extend({})
+App.Template = App.Link.extend({
+  //TODO extend create
+})
 App.Error = Em.Object.extend({})
 
 //define a controller for managing these data objects
@@ -91,7 +112,15 @@ App.resourceController = Em.ObjectController.create({
             this.items.handleResponse(data['items'])
             this.queries.handleResponse(data['queries'])
             if (data['template']) {
-                this.set('template', App.Template.create(data['template']))
+                var template = App.Template.create(data['template'])
+                template.set('data', Em.ArrayController.create({
+                    content: []
+                }))
+                for (var i=0; i<data['template']['data'].length; i++) {
+                    var field = App.Field.create(data['template']['data'][i])
+                    template.data.pushObject(field)
+                }
+                this.set('template', template)
             } else {
                 this.set('template', null)
             }

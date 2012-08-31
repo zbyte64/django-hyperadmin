@@ -13,7 +13,7 @@ class CollectionJSON(MediaType):
         return entry
     
     def convert_resource(self, resource):
-        return {"classes":"resourceitem"}
+        return {"classes":["resourceitem"]}
     
     def links_for_instance(self, instance):
         result = dict()
@@ -152,7 +152,7 @@ class CollectionHyperAdminJSON(CollectionNextJSON):
         resource = self.get_related_resource_from_field(field)
         if resource:
             entry['related_resource_url'] = resource.get_absolute_url()
-        entry['classes'] = field.css_classes()
+        entry['classes'] = field.css_classes().split()
         return entry
     
     def convert_item_form(self, form):
