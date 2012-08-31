@@ -69,11 +69,11 @@ class CollectionNextJsonTestCase(unittest.TestCase):
         view = CollectionMockResourceView([])
         form_class = view.get_form_class()
         form = form_class()
-        fields = form.fields.items()
-        name, field = fields[0]
+        fields = list(form)
+        field = fields[0]
         adaptor = CollectionNextJSON(view)
-        field_r = adaptor.convert_field(field, name)
-        self.assertEqual(field_r['required'], field.required)
+        field_r = adaptor.convert_field(field)
+        self.assertEqual(field_r['required'], field.field.required)
     
     def test_convert_errors(self):
         view = CollectionMockResourceView([])
