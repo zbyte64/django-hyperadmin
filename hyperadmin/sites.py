@@ -80,6 +80,17 @@ class ResourceSite(object):
             view = never_cache(view)
         return view
     
+    def get_related_resource_from_field(self, field):
+        #TODO make more dynamic
+        from django.forms.models import ModelChoiceField
+        if hasattr(field, 'field'): #CONSIDER internally we use boundfield
+            field = field.field
+        if isinstance(field, ModelChoiceField):
+            model = field.queryset.model
+            if model in self.registry:
+                return self.registry[model]
+        return None
+    
     def register_builtin_media_types(self):
         from mediatypes import BUILTIN_MEDIA_TYPES
         for key, value in BUILTIN_MEDIA_TYPES.iteritems():

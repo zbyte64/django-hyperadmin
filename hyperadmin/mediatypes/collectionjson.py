@@ -151,6 +151,14 @@ class CollectionNextJSON(CollectionJSON):
 BUILTIN_MEDIA_TYPES['application/vnd.Collection.next+JSON'] = CollectionNextJSON
 
 class CollectionHyperAdminJSON(CollectionNextJSON):
+    def convert_field(self, field, name=None):
+        entry = super(CollectionHyperAdminJSON, self).convert_field(field, name)
+        resource = self.get_related_resource_from_field(field)
+        if resource:
+            entry['related_resource_url'] = resource.get_absolute_url()
+        entry['classes'] = field.css_classes()
+        return entry
+    
     def convert_item_form(self, form):
         item_r = super(CollectionHyperAdminJSON, self).convert_item_form(form)
         item_r['prompt'] = unicode(form.instance)

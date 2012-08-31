@@ -17,5 +17,8 @@ class MediaType(object):
             for name, field in form.fields.iteritems():
                 data[name] = form[name].value()
         return data
+    
+    def get_related_resource_from_field(self, field):
+        return self.view.resource.get_related_resource_from_field(field)
 
 
