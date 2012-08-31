@@ -20,5 +20,9 @@ class MediaType(object):
     
     def get_related_resource_from_field(self, field):
         return self.view.resource.get_related_resource_from_field(field)
+    
+    def get_html_type_from_field(self, field):
+        return self.view.resource.get_html_type_from_field(field)
+        return 'text'
 
 

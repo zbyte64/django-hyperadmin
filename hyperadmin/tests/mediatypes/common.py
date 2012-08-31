@@ -11,6 +11,9 @@ class BaseMockResourceView(ResourceViewMixin):
         self.items = items
         self.factory = RequestFactory()
         self.request = self.factory.get('/')
+        from hyperadmin.resources import ModelResource
+        from hyperadmin.sites import site
+        self.resource = ModelResource(ContentType, site)
         ResourceViewMixin.__init__(self)
     
     def get_items(self, **kwargs):

@@ -91,6 +91,13 @@ class ResourceSite(object):
                 return self.registry[model]
         return None
     
+    def get_html_type_from_field(self, field):
+        #TODO fill this out, datetime, etc
+        from django.forms.widgets import Input
+        if isinstance(field.widget, Input):
+            return field.widget.input_type
+        return 'text'
+    
     def register_builtin_media_types(self):
         from mediatypes import BUILTIN_MEDIA_TYPES
         for key, value in BUILTIN_MEDIA_TYPES.iteritems():

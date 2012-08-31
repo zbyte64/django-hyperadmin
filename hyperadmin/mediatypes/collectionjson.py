@@ -115,20 +115,16 @@ class CollectionNextJSON(CollectionJSON):
     def convert_field(self, field, name=None):
         entry = super(CollectionNextJSON, self).convert_field(field, name)
         entry['required'] = field.required
-        #TODO: entry['type'] = '' #html5 type
-        #TODO:
+        entry['type'] = self.get_html_type_from_field(field)
         if hasattr(field, 'options') and field.options:
             options = list()
             for value, prompt in field.options:
                 options.append({"value":value,
                                 "prompt":prompt})
             entry['list'] = {'options':options}
-        '''
-        entry['list'] = {
-            'multiple':True,
-            'options': [{"value":"", "prompt":""}]
-        }
-        '''
+            from django.forms.widgets import SelectMultiple
+            if isinstance(field.widget, SelectMultiple):
+                entry['multiple'] = True
         return entry
     
     def convert_errors(self, errors):

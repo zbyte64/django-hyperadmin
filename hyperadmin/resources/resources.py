@@ -85,6 +85,9 @@ class BaseResource(object):
     
     def get_related_resource_from_field(self, field):
         return self.site.get_related_resource_from_field(field)
+    
+    def get_html_type_from_field(self, field):
+        return self.site.get_html_type_from_field(field)
 
 class SiteResource(BaseResource):
     list_view = views.SiteResourceView
