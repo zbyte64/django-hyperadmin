@@ -1,73 +1,104 @@
-{% load hyperadmin_utils %}<!doctype html>
-<!--[if lt IE 7 ]> <html lang="en" class="ie6"> <![endif]--> <!--[if IE 7 ]>    <html lang="en" class="ie7"> <![endif]--> <!--[if IE 8 ]>    <html lang="en" class="ie8"> <![endif]--> <!--[if IE 9 ]>    <html lang="en" class="ie9"> <![endif]-->
-<!--[if (gt IE 9)|!(IE)]><!--> <html lang="en"> <!--<![endif]-->
+{% load hyperadmin_utils %}<!DOCTYPE html>
+<!--[if lt IE 7]>      <html class="no-js lt-ie9 lt-ie8 lt-ie7"> <![endif]-->
+<!--[if IE 7]>         <html class="no-js lt-ie9 lt-ie8"> <![endif]-->
+<!--[if IE 8]>         <html class="no-js lt-ie9"> <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js"> <!--<![endif]-->
 <head>
-  <meta charset="UTF-8">
-  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <title></title>
+    <meta name="description" content="">
+    <meta name="viewport" content="width=device-width">
 
-  <title></title>
-  <meta name="description" content="">
-  <meta name="author" content="">
+    <link rel="stylesheet" href="{{STATIC_URL}}hyperadmin/initializr/css/bootstrap.min.css">
+    <style>
+        body {
+            padding-top: 60px;
+            padding-bottom: 40px;
+        }
+    </style>
+    <link rel="stylesheet" href="{{STATIC_URL}}hyperadmin/initializr/css/bootstrap-responsive.min.css">
+    <link rel="stylesheet" href="{{STATIC_URL}}hyperadmin/initializr/css/main.css">
 
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="{{STATIC_URL}}hyperadmin/initializr/js/vendor/modernizr-2.6.1-respond-1.1.0.min.js"></script>
+    
 
-  <link rel="shortcut icon" href="/favicon.ico">
-  <link rel="apple-touch-icon" href="/apple-touch-icon.png">
   <link rel="stylesheet" href="{{STATIC_URL}}hyperadmin/client-emberjs/css/style.css?v=2">
-
-  <!--[if lt IE 9]>
-  <script src="http://html5shiv.googlecode.com/svn/trunk/html5.js"></script>
-  <![endif]-->
   
   {% raw %}
   <script type="text/x-handlebars" data-template-name="resource">
     {{view App.BreadcrumbsView}}
     {{view App.QueriesView}}
+    
     {{view App.ItemsView}}
-    {{view App.ErrorView}}
-    {{view App.TemplateView}}
+    
+    <div class="container">
+        {{view App.ErrorView}}
+        {{view App.TemplateView}}
+    </div>
+    
   </script>
   
   <script type="text/x-handlebars" data-template-name="breadcrumbs">
-    {{#each App.resourceController.collection.links}}
-      {{#if isBreadcrumb}}
-        {{view App.BreadcrumbView}}
-      {{/if }}
+    <ul class="breadcrumb">
+    {{#each App.resourceController.collection.links.breadcrumbs}}
+        <li>{{view App.BreadcrumbView}}</li>
     {{/each}}
+    </ul>
   </script>
   
   <script type="text/x-handlebars" data-template-name="queries">
+    {{#if App.resourceController.collection.queries.sortby}}
     <div class="sorting">
-    {{#each App.resourceController.collection.queries}}
-      {{#if isSortby}}
-      {{#if data}}
-        <span>{{prompt}}</span>
-        {{view App.FormView}}
-      {{else}}
-        {{view App.LinkView}}
-      {{/if }}
-      {{/if }}
+    <h2>Sort By</h2>
+    <div class="btn-group">
+    {{#each App.resourceController.collection.queries.sortby}}
+      {{view App.ButtonView}}
     {{/each}}
     </div>
+    </div>
+    {{/if }}
     
+    {{#if App.resourceController.collection.queries.filters}}
     <div class="filters">
-    {{#each App.resourceController.collection.queries}}
-      {{#if isFilterby}}
+    <h2>Filter By</h2>
+    {{#each App.resourceController.collection.queries.filters}}
       {{#if data}}
         <span>{{prompt}}</span>
         {{view App.FormView}}
       {{else}}
         {{view App.LinkView}}
       {{/if }}
-      {{/if }}
     {{/each}}
     </div>
+    {{/if }}
+    
+    {{#if App.resourceController.collection.queries.pagination}}
+    <div class="pagination">
+    <ul>
+    {{#each App.resourceController.collection.queries.pagination}}
+      <li>
+      {{#if data}}
+        <span>{{prompt}}</span>
+        {{view App.FormView}}
+      {{else}}
+        {{view App.LinkView}}
+      {{/if }}
+      </li>
+    {{/each}}
+    </ul>
+    </div>
+    {{/if}}
   </script>
   
   <script type="text/x-handlebars" data-template-name="error">
     {{#each App.resourceController.collection.error.messages}}
         <div><span>{{name}}</span>{{{message}}}</div>
     {{/each}}
+  </script>
+  
+  <script type="text/x-handlebars" data-template-name="button">
+    <button {{action followLink}} {{bindAttr class="css_class :btn"}} {{bindAttr href="emberUrl"}} {{bindAttr rel="rel"}}>{{prompt}}</button>
   </script>
   
   <script type="text/x-handlebars" data-template-name="link">
@@ -80,14 +111,14 @@
     {{#each data}}
     <label>{{prompt}}</label><input {{bindAttr type="type"}} {{bindAttr name="name"}} {{bindAttr value="value"}} {{bindAttr class="css_class"}}/>
     {{/each}}
-    <button {{action submitForm}} type="button">{{prompt}}</button>
+    <button {{action submitForm}} type="button" class="btn">{{prompt}}</button>
     </div>
     </form>
   </script>
   
   <script type="text/x-handlebars" data-template-name="items">
     {{#each App.resourceController.collection.items}}
-        <div {{bindAttr class="css_class"}}>
+        <div {{bindAttr class="css_class :row"}}>
             {{view App.LinkView}}
             <div>
             {{#each data}}
@@ -110,13 +141,23 @@
   </script>
   
   <script type="text/x-handlebars" data-template-name="main" >
-    Main View
     {{outlet}}
   </script>
   {% endraw %}
 </head>
 <body data-api-endpoint="{{api_endpoint}}">
+  <!--[if lt IE 7]>
+    <p class="chromeframe">You are using an outdated browser. <a href="http://browsehappy.com/">Upgrade your browser today</a> or <a href="http://www.google.com/chromeframe/?redirect=true">install Google Chrome Frame</a> to better experience this site.</p>
+  <![endif]-->
+  
   <!-- The missing protocol means that it will match the current protocol, either http or https. If running locally, we use the local jQuery. -->
+  <!--
+  <script src="//ajax.googleapis.com/ajax/libs/jquery/1.8.0/jquery.min.js"></script>
+  <script>window.jQuery || document.write('<script src="{{STATIC_URL}}hyperadmin/initializr/js/vendor/jquery-1.8.0.min.js"><\/script>')</script>
+  -->
+  <script src="{{STATIC_URL}}hyperadmin/initializr/js/vendor/bootstrap.min.js"></script>
+  <script src="{{STATIC_URL}}hyperadmin/initializr/js/main.js"></script>
+  
   <script src="//ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>
   <script>window.jQuery || document.write('<script src="js/libs/jquery-1.7.2.min.js"><\/script>')</script>
   <script src="{{STATIC_URL}}hyperadmin/client-emberjs/js/libs/handlebars-1.0.0.beta.6.js"></script>

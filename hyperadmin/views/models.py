@@ -112,7 +112,7 @@ class ModelListResourceView(ModelResourceViewMixin, generic.CreateView):
             if page == '.':
                 continue
             url = changelist.get_query_string({PAGE_VAR: page})
-            links.append(Link(url=url, prompt=u"page %s" % page, classes=classes, rel="pagination"))
+            links.append(Link(url=url, prompt=u"%s" % page, classes=classes, rel="pagination"))
         if ctx["show_all_url"]:
             links.append(Link(url=ctx["show_all_url"], prompt="show all", classes=classes, rel="pagination"))
         return links

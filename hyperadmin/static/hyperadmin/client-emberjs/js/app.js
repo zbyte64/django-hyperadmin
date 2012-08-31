@@ -30,16 +30,7 @@ App.Link = App.CommonObject.extend({
   }.property('href'),
   emberUrl: function() {
     return '#'+this.get('apiUrl');
-  }.property('href'),
-  isBreadcrumb: function() {
-    return this.get('rel') == 'breadcrumb';
-  }.property('rel'),
-  isSortby: function() {
-    return this.get('rel') == 'sortby';
-  }.property('rel'),
-  isFilterby: function() {
-    return this.get('rel') == 'filterby';
-  }.property('rel')
+  }.property('href')
 })
 App.Query = App.Link.extend({})
 App.Item = App.Link.extend({
@@ -74,7 +65,10 @@ App.resourceController = Em.ObjectController.create({
                     var link = App.Query.create(link_data);
                     this.pushObject(link);
                 }
-            }
+            },
+            breadcrumbs: function() {
+                return this.filterProperty('rel', 'breadcrumb')
+            }.property('@each.rel').cacheable()
         }),
         items: Em.ArrayController.create({
             handleResponse: function(data) {
@@ -101,7 +95,16 @@ App.resourceController = Em.ObjectController.create({
                     var query = App.Query.create(query_data);
                     this.pushObject(query);
                 }
-            }
+            },
+            sortby: function() {
+                return this.filterProperty('rel', 'sortby')
+            }.property('@each.rel').cacheable(),
+            filters: function() {
+                return this.filterProperty('rel', 'filter')
+            }.property('@each.rel').cacheable(),
+            pagination: function() {
+                return this.filterProperty('rel', 'pagination')
+            }.property('@each.rel').cacheable()
         }),
         template: null,
         error: null,
@@ -116,9 +119,11 @@ App.resourceController = Em.ObjectController.create({
                 template.set('data', Em.ArrayController.create({
                     content: []
                 }))
-                for (var i=0; i<data['template']['data'].length; i++) {
-                    var field = App.Field.create(data['template']['data'][i])
-                    template.data.pushObject(field)
+                if (data['template']['data']) {
+                    for (var i=0; i<data['template']['data'].length; i++) {
+                        var field = App.Field.create(data['template']['data'][i])
+                        template.data.pushObject(field)
+                    }
                 }
                 this.set('template', template)
             } else {
@@ -269,7 +274,7 @@ App.BreadcrumbsView = App.AdminView.extend({
 
 App.QueriesView = App.AdminView.extend({
   templateName: 'queries',
-  classNames: ['queries']
+  classNames: ['queries', 'container']
 })
 
 App.ErrorView = App.AdminView.extend({
@@ -279,7 +284,7 @@ App.ErrorView = App.AdminView.extend({
 
 App.ItemsView = App.AdminView.extend({
   templateName: 'items',
-  classNames: ['items']
+  classNames: ['items', 'container']
 })
 
 App.TemplateView = App.AdminView.extend({
@@ -290,6 +295,10 @@ App.TemplateView = App.AdminView.extend({
 App.LinkView = App.AdminView.extend({
   templateName: 'link',
   classNames: ['link']
+})
+
+App.ButtonView = App.LinkView.extend({
+  templateName: 'button',
 })
 
 App.BreadcrumbView = App.LinkView.extend({})
