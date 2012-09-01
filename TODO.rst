@@ -17,6 +17,7 @@ Unknowns
 Inlines: Make it a sub resource. Inline information & templates are slurped in at the top resource but adding another inline would be an ajax call. May add new field type "schema" which nests in a subtemplate.
 
 Link/Form display hints:
+
 * field inline, display result inlined with a field
 * module inline, display towards the bottom of the page, group the resources
 * page inline, new page but indicate that it is one nested in

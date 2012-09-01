@@ -1,7 +1,7 @@
 .. image:: https://secure.travis-ci.org/zbyte64/django-hyperadmin.png?branch=master
    :target: http://travis-ci.org/zbyte64/django-hyperadmin
 
-
+===========
 Introduction
 ============
 
@@ -9,6 +9,7 @@ django-hyperadmin is an API driven Admin interface for resources in Django. Reso
 
 This is (mostly) ALPHA
 
+--------
 Features
 --------
 * ModelResource works like AdminModel
@@ -24,6 +25,7 @@ Features
 * Architecture allows for more media formats
 * Internal resource representation based on hfactor and forms
 
+============
 Installation
 ============
 
@@ -43,30 +45,40 @@ Add to root url patterns::
     url(r'^hyper-admin/', include(hyperadmin.site.urls)),
     url(r'^emberjs-admin/', include(admin_client.urls)),
 
-
+=================
 Builtin Resources
 =================
 
+Each resource has it's own url patterns and links the urls through hypermedia links. There will be a going back and forth between the frontend needs and defining extra metadata in an extended version of the collections media type. The ember.js client should treat each view as uniformally as possible as all the contextual data should be contained in the API.
+
+------------
 SiteResource
 ------------
 
 API Endpoints
+-------------
 
-* "/" lists resources known in the system. Additionally provides an html fallback to load up the ember.js interface.
+* "/" lists resources known in the system.
 * "/_authentication/" ; PUT/POST to authenticate, DELETE to logout, GET for useful info and login forms. Uses django sessions by default.
 
+-------------------
 ApplicationResource
 -------------------
 
 API Endpoints
+-------------
 
 * "/<appname>/" lists resources belonging to the app
 * "/<appname>/<module>/" mount point of crud resource
 
+---------------
 StorageResource
 ---------------
 
+Allows for direct browsing and uploading of files. The storage backend may optionally provide a custom link object to facilitate direct uploading to a CDN.
+
 API Endpoints
+-------------
 
 * "/storages/media/" lists directories and files
 * "/storages/media/?path=<path>" lists directories and files belonging to a certain path
@@ -74,8 +86,18 @@ API Endpoints
 * "/storages/static/"
 * "/storages/static/<path>/"
 
+-------------
+ModelResource
+-------------
+
+API Endpoints
+-------------
+
+* "/" lists rows; POST to create
+* "/<id>/" displays a specific row; POST to update, DELETE to delete
+
 Registering models
-==================
+-------------------
 
 Registering a model with hyperadmin::
 
@@ -85,26 +107,25 @@ Registering a model with hyperadmin::
     
     class ChildModelResource(InlineModelResource):
         model = ChildModel
-        list_display = ['name', 'number']
-        list_filter = ['timestamp', 'category']
-        
     
     class MyModelResource(ModelResource):
         inlines = [ChildModelResource]
+        list_display = ['name', 'number']
+        list_filter = ['timestamp', 'category']
     
     hyperadmin.site.register(MyModel, MyModelResource)
 
-Each resource has it's own url patterns and links the urls through hypermedia links. There will be a going back and forth between the frontend needs and defining extra metadata in an extended version of the collections media type. Hyperadmin facilitates this by allowing for custom mediatypes to be defined. The ember.js client should treat each view as uniformally as possible as all the contextual data should be contained in the API.
 
-
+======
 Client
 ======
 
 Currently there is one client written using emberjs. See ``hyperadmin.clients.emberjs.EmberJSClient``
 This client is able to browse the API and perform CRUD operations. There are plans to support inlines and file uploading.
 
-Hypermedia APIs
-===============
+=============================
+Reading up on Hypermedia APIs
+=============================
 
 http://www.amundsen.com/hypermedia/hfactor/
 
