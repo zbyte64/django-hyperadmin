@@ -133,8 +133,10 @@ class SiteResource(BaseResource):
         return urlpatterns
     
     def get_items(self, request):
-        #TODO sort by name
-        return self.site.applications.values() + [self.auth_resource]
+        applications = self.site.applications.items()
+        apps = [entry[1] for entry in sorted(applications, key=lambda x: x[0])]
+        apps.append(self.auth_resource)
+        return apps
     
     def get_instance_url(self, instance):
         if hasattr(instance, 'get_absolute_url'):
