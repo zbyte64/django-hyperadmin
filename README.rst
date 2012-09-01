@@ -16,10 +16,11 @@ Features
 * Supported Media Formats:
  * application/vnd.Collection+JSON
  * application/vnd.Collection.next+JSON
+ * application/vnd.Collection.hyperadmin+JSON - for the emberjs client
  * application/text-html - for browsing
  * application/json - plain json serialization
  * text/javascript - for jsonp
- * TODO: xml
+ * TODO: xml, yaml, ???
 * Architecture allows for more media formats
 * Internal resource representation based on hfactor and forms
 
@@ -31,13 +32,16 @@ Put 'hyperadmin' into your ``INSTALLED_APPS`` section of your settings file.
 And the following to urls.py::
 
     import hyperadmin
+    from hyperadmin.clients import EmberJSClient
     hyperadmin.autodiscover() #TODO this does nothing
     hyperadmin.site.install_models_from_site(admin.site) #ports admin models to hyperadmin
     hyperadmin.site.install_storage_resources() #enables the storage resource for media and static
+    admin_client = EmberJSClient(api_endpoint='/hyper-admin/')
 
 Add to root url patterns::
 
     url(r'^hyper-admin/', include(hyperadmin.site.urls)),
+    url(r'^emberjs-admin/', include(admin_client.urls)),
 
 
 Builtin Resources
@@ -89,8 +93,18 @@ Registering a model with hyperadmin::
 
 Each resource has it's own url patterns and links the urls through hypermedia links. There will be a going back and forth between the frontend needs and defining extra metadata in an extended version of the collections media type. Hyperadmin facilitates this by allowing for custom mediatypes to be defined. The ember.js client should treat each view as uniformally as possible as all the contextual data should be contained in the API.
 
-TODO: Admin Actions
--------------------
+
+Client
+======
+
+Currently there is one client written using emberjs. See ``hyperadmin.clients.emberjs.EmberJSClient``
+This client is able to browse the API and perform CRUD operations. There are plans to support inlines and file uploading.
+
+TODOs
+=====
+
+Admin Actions
+-------------
 
 Admin actions are functions that return a link object. 
 If the action is a string then it is assumed to be the function of the resource. The string is mapped as a url and a link object is automatically generated for it. The ``ActionResourceView`` returns a response with the main form being the link object and the post going to the function of the admin.
@@ -99,8 +113,7 @@ Unknowns
 --------
 
 * inlines
-* fieldsets
-* display hints? 
+* fieldsets - perhaps this should be configured client side
 * custom controls; some fields may need to specify custom front-end logic so there needs to be away to register new controls in the frontend
 
 Inlines: Make it a sub resource. Inline information & templates are slurped in at the top resource but adding another inline would be an ajax call. May add new field type "schema" which nests in a subtemplate.
@@ -113,11 +126,10 @@ Link/Form display hints:
 
 Idea: transactional resource creation (documents only).
 
-TODO
-----
+Other Features
+--------------
 
 * changelist
- * list display
  * search
  * date hierarchy
 * form manipulations
@@ -126,30 +138,6 @@ TODO
 * logging
 * permissions
 * admin actions
-
-
-
-TODO: Backporting
-=================
-
-Converting admin models from within::
-
-    from hyperadmin import TransitionalAdminModel
-    from django.contrib import admin
-    from myapp.models import MyModel
-    
-    admin.site.register(MyModel, TransitionalAdminModel)
-
-
-This admin model would be built ontop the standard admin model but would inject extra context to load up the ember.js interface. Additionally it registers the model with the hyperadmin.
-~ 2 days to integrate
-
-
-TODO: Client
-============
-
-resource <=> hfactor <=> media type <=> |browser| <=> media type layer <=> template engine / js form handler / css
-
 
 
 Hypermedia APIs
