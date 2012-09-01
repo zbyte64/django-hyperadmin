@@ -1,5 +1,6 @@
 from django.core.serializers.json import DjangoJSONEncoder
 from django.utils import simplejson as json
+from django.utils.encoding import force_unicode
 from django import http
 
 from hyperadmin.resources import BaseResource
@@ -8,8 +9,8 @@ from common import MediaType, BUILTIN_MEDIA_TYPES
 
 class CollectionJSON(MediaType):
     def convert_field(self, field):
-        entry = {"name": unicode(field.name),
-                 "prompt": unicode(field.label)}
+        entry = {"name": force_unicode(field.name),
+                 "prompt": force_unicode(field.label)}
         return entry
     
     def convert_resource(self, resource):

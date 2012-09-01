@@ -2,6 +2,7 @@ import inspect
 
 from django.conf.urls.defaults import patterns, url, include
 from django.utils.functional import update_wrapper
+from django.utils.encoding import force_unicode
 from django.core.paginator import Paginator
 from django import forms
 
@@ -51,7 +52,7 @@ class ListForm(forms.Form):
                 val = getattr(self.instance, display)
                 if callable(val):
                     val = val()
-                self.initial[display] = str(val)
+                self.initial[display] = force_unicode(val)
 
 class ModelResource(CRUDResource):
     #TODO support the following:
