@@ -109,7 +109,16 @@
     <form {{bindAttr method="method.options.0.value"}} {{bindAttr target="url"}} {{bindAttr rel="rel"}}>
     <div>
     {{#each data}}
-    <label>{{prompt}}</label><input {{bindAttr type="type"}} {{bindAttr name="name"}} {{bindAttr value="value"}} {{bindAttr class="css_class"}}/>
+    <label>{{prompt}}</label>
+    {{#if isSelect}}
+    <select {{bindAttr name="name"}} {{bindAttr class="css_class"}} {{bindAttr multiple="multiple"}}>
+        {{#each list.options}}
+        <option {{bindAttr value="value"}}>{{prompt}}</option>
+        {{/each}}
+    </select>
+    {{else}}
+    <input {{bindAttr type="type"}} {{bindAttr name="name"}} {{bindAttr value="value"}} {{bindAttr class="css_class"}} {{bindAttr checked="isChecked:checked"}}/>
+    {{/if}}
     {{/each}}
     <button {{action submitForm}} type="button" class="btn">{{prompt}}</button>
     </div>
@@ -120,16 +129,21 @@
     {{#each App.resourceController.collection.items}}
         <div {{bindAttr class="css_class :row"}}>
             {{view App.LinkView}}
+            {{#if data}}
             <div>
             {{#each data}}
                 <em>{{prompt}}</em>:{{value}}<br/>
             {{/each}}
             </div>
+            {{/if}}
+            
+            {{#if links}}
             <div>
             {{#each links}}
                 {{view App.LinkView}}
             {{/each}}
             </div>
+            {{/if}}
         </div>
     {{/each}}
   </script>

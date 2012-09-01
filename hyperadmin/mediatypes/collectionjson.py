@@ -116,9 +116,9 @@ class CollectionNextJSON(CollectionJSON):
         entry = super(CollectionNextJSON, self).convert_field(field)
         entry['required'] = field.field.required
         entry['type'] = self.get_html_type_from_field(field)
-        if hasattr(field.field, 'options') and field.field.options:
+        if hasattr(field.field, 'choices') and field.field.choices is not None:
             options = list()
-            for value, prompt in field.field.options:
+            for value, prompt in field.field.choices:
                 options.append({"value":value,
                                 "prompt":prompt})
             entry['list'] = {'options':options}

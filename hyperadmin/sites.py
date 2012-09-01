@@ -93,9 +93,16 @@ class ResourceSite(object):
     
     def get_html_type_from_field(self, field):
         #TODO fill this out, datetime, etc
-        from django.forms.widgets import Input
-        if isinstance(field.field.widget, Input):
-            return field.field.widget.input_type
+        from django.forms import widgets
+        widget = field.field.widget
+        if isinstance(widget, widgets.Input):
+            return widget.input_type
+        if isinstance(widget, widgets.CheckboxInput):
+            return 'checkbox'
+        if isinstance(widget, widgets.Select):
+            #if widget.allow_multiple_selected
+            return 'select'
+        print 'Uhandled:', type(widget)
         return 'text'
     
     def register_builtin_media_types(self):

@@ -36,7 +36,17 @@ App.Query = App.Link.extend({})
 App.Item = App.Link.extend({
   links: Em.ArrayController.create({})
 })
-App.Field = App.CommonObject.extend({})
+App.Field = App.CommonObject.extend({
+  isSelect: function() {
+    return this.get('type') == 'select';
+  }.property('type'),
+  isChecked: function() {
+    if (this.get('type') != 'checkbox') {
+      return false;
+    }
+    return this.get('value');
+  }.property('type', 'value')
+})
 App.Template = App.Link.extend({
   //TODO extend create
 })
