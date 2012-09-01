@@ -2,6 +2,7 @@ from django.conf.urls.defaults import patterns, url
 from django.utils.functional import update_wrapper
 from django.contrib.auth.forms import AuthenticationForm
 from django.contrib.auth import login
+from django import http
 
 from hyperadmin import views
 
@@ -73,7 +74,12 @@ class AuthResource(CRUDResource):
             return []
         else:
             site_link = Link(url=self.reverse('index'), rel='breadcrumb', prompt='root')
-            #app_link = Link(url=self.reverse(self.app_name), rel='breadcrumb', prompt=self.app_name)
-            #resource_list = Link(url=self.get_absolute_url(), rel='breadcrumb', prompt=self.resource_name)
-            return [site_link]#, app_link, resource_list]
+            return [site_link]
+    
+    def form_valid(self, form):
+        instance = form.save()
+        next_url = self.site.site_resource.get_absolute_url()
+        response = http.HttpResponse(next_url, status=303)
+        response['Location'] = next_url
+        return response
 

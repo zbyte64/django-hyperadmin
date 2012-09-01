@@ -145,6 +145,9 @@ class SiteResource(BaseResource):
         if instance and hasattr(instance, 'get_child_resource_links'): #AKA application resource
             return instance.get_child_resource_links()
         return []
+    
+    def get_absolute_url(self):
+        return self.reverse('index')
 
 class ApplicationResource(BaseResource):
     resource_class = 'resourcelisting'
