@@ -5,9 +5,9 @@
 Introduction
 ============
 
-django-hyperadmin is an Admin interface for resources in Django that are powered by Hypermedia REST APIs.
+django-hyperadmin is an API driven Admin interface for resources in Django. Resources tend to be anything you can manipulate with a form (including models) and you configure your API resource like you would an Admin Model. The current client is written in emberjs and is powered by a Hypermedia REST API.
 
-This is ALPHA
+This is (mostly) ALPHA
 
 Features
 --------
@@ -85,6 +85,9 @@ Registering a model with hyperadmin::
     
     class ChildModelResource(InlineModelResource):
         model = ChildModel
+        list_display = ['name', 'number']
+        list_filter = ['timestamp', 'category']
+        
     
     class MyModelResource(ModelResource):
         inlines = [ChildModelResource]
