@@ -1,3 +1,5 @@
+from django.core.files import File
+
 BUILTIN_MEDIA_TYPES = dict()
 
 class MediaType(object):
@@ -15,7 +17,15 @@ class MediaType(object):
         data = dict()
         if getattr(form, 'instance', None) or include_initial:
             for name, field in form.fields.iteritems():
-                data[name] = form[name].value()
+                val = form[name].value()
+                if isinstance(val, File):
+                    if hasattr(val, 'path'):
+                        val = val.path
+                    elif hasattr(val, 'name'):
+                        val = val.name
+                    else:
+                        val = None
+                data[name] = val
         return data
     
     def get_related_resource_from_field(self, field):
@@ -23,6 +33,4 @@ class MediaType(object):
     
     def get_html_type_from_field(self, field):
         return self.view.resource.get_html_type_from_field(field)
-        return 'text'
-
 

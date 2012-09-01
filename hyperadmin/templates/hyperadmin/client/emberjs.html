@@ -31,7 +31,7 @@
     {{view App.QueriesView}}
     
     {{#if App.resourceController.collection.isCrudResource}}
-    {{view App.CrudItemsView}}
+      {{view App.CrudItemsView}}
     {{else}}
       {{#if App.resourceController.collection.isResourceListing}}
         {{view App.ResourceItemsView}}
