@@ -28,13 +28,18 @@ class ModelResourceViewMixin(ResourceViewMixin, generic.edit.ModelFormMixin):
         return {}
     
     def get_form(self, **kwargs):
-        form_class = self.get_form_class()
+        form_class = self.get_form_class(instance=kwargs.get('instance', None))
         form = form_class(**kwargs)
         return form
     
     #form_valid & form_invalid should not be used
 
 class ModelListResourceView(ModelResourceViewMixin, generic.CreateView):
+    def get_form_class(self, instance=None):
+        if instance:
+            return self.resource.get_list_form_class()
+        return generic.edit.ModelFormMixin.get_form_class(self)
+    
     def get_changelist(self):
         if not hasattr(self, '_changelist'):
             self._changelist = self.resource.get_changelist(self.request)

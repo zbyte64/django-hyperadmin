@@ -63,7 +63,7 @@ class CollectionJSON(MediaType):
                    'message':str(errors),}
         return error_r
     
-    def serialize(self, content_type, instance=None, errors=None):
+    def prepare_collection(self, content_type, instance=None, errors=None):
         #CONSIDER a better inferface
         if hasattr(self.view, 'get_items_forms'):
             items = [self.convert_item_form(form) for form in self.view.get_items_forms()]
@@ -92,6 +92,10 @@ class CollectionJSON(MediaType):
             data['template'] = self.convert_link(ln_links[0])
         
         data.update(href=self.request.get_full_path(), version="1.0")
+        return data
+    
+    def serialize(self, content_type, instance=None, errors=None):
+        data = self.prepare_collection(content_type, instance=instance, errors=errors)
         content = json.dumps({"collection":data}, cls=DjangoJSONEncoder)
         return http.HttpResponse(content, content_type)
     
@@ -164,6 +168,17 @@ class CollectionHyperAdminJSON(CollectionNextJSON):
         item_r = super(CollectionHyperAdminJSON, self).convert_resource(resource)
         item_r['prompt'] = unicode(resource)
         return item_r
+    
+    def prepare_collection(self, content_type, instance=None, errors=None):
+        data = super(CollectionHyperAdminJSON, self).prepare_collection(content_type, instance=instance, errors=errors)
+        data['resource_class'] = self.view.resource.resource_class
+        #TODO a better interface for list fields?
+        if instance is None and hasattr(self.view.resource, 'get_list_form_class'):
+            form_cls = self.view.resource.get_list_form_class()
+            data['display_fields'] = list()
+            for field in form_cls():
+                data['display_fields'].append({'prompt':field.label})
+        return data
 
 BUILTIN_MEDIA_TYPES['application/vnd.Collection.hyperadmin+JSON'] = CollectionHyperAdminJSON
 

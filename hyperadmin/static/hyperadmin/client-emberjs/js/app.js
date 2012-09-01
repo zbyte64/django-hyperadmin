@@ -59,6 +59,24 @@ App.resourceController = Em.ObjectController.create({
     collection: Em.ObjectController.create({ //bind data to this
         version: null,
         href: null,
+        resource_class: null,
+        isResourceListing: function() {
+            return this.get('resource_class') == 'resourcelisting'
+        }.property('resource_class'),
+        isCrudResource: function() {
+            return this.get('resource_class') == 'crudresource'
+        }.property('resource_class'),
+        display_fields: Em.ArrayController.create({
+            handleResponse: function(data) {
+                this.set('content', []);
+                if (!data) return;
+                for (var i=0; i<data.length; i++) {
+                    var display_data = data[i];
+                    var display = App.CommonObject.create(display_data);
+                    this.pushObject(display);
+                }
+            }
+        }),
         url: function() {
             var url = this.get('href');
             var end_pos = url.indexOf('?')
@@ -121,6 +139,8 @@ App.resourceController = Em.ObjectController.create({
         handleResponse: function(data) {
             this.set('version', data['version']);
             this.set('href', data['href']);
+            this.set('resource_class', data['resource_class']);
+            this.display_fields.handleResponse(data['display_fields'])
             this.links.handleResponse(data['links'])
             this.items.handleResponse(data['items'])
             this.queries.handleResponse(data['queries'])
@@ -295,6 +315,14 @@ App.ErrorView = App.AdminView.extend({
 App.ItemsView = App.AdminView.extend({
   templateName: 'items',
   classNames: ['items', 'container']
+})
+
+App.CrudItemsView = App.ItemsView.extend({
+  templateName: 'cruditems'
+})
+
+App.ResourceItemsView = App.ItemsView.extend({
+  templateName: 'resourceitems'
 })
 
 App.TemplateView = App.AdminView.extend({

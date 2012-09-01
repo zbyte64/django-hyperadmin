@@ -6,6 +6,8 @@ from hyperadmin import views
 from links import Link
 
 class BaseResource(object):
+    resource_class = '' #hint to the client how this resource is used
+    
     def __init__(self, resource_adaptor, site):
         self.resource_adaptor = resource_adaptor
         self.site = site
@@ -93,6 +95,7 @@ class BaseResource(object):
         return []
 
 class SiteResource(BaseResource):
+    resource_class = 'resourcelisting'
     list_view = views.SiteResourceView
     
     def __init__(self, site, auth_resource=None):
@@ -144,6 +147,7 @@ class SiteResource(BaseResource):
         return []
 
 class ApplicationResource(BaseResource):
+    resource_class = 'resourcelisting'
     list_view = views.ApplicationResourceView
     
     def __init__(self, app_name, site):
@@ -212,6 +216,8 @@ class ApplicationResource(BaseResource):
         return u'App Resource: %s' % self.app_name
 
 class CRUDResource(BaseResource):
+    resource_class = 'crudresource'
+    
     #TODO support the following:
     actions = []
     

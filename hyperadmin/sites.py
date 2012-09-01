@@ -138,7 +138,7 @@ class ResourceSite(object):
             #inlines = []
             
             #list display options
-            list_display = admin_model.list_display
+            list_display = list(admin_model.list_display)
             #list_display_links = ()
             list_filter = admin_model.list_filter
             list_select_related = admin_model.list_select_related
@@ -149,6 +149,9 @@ class ResourceSite(object):
             date_hierarchy = admin_model.date_hierarchy
             ordering = admin_model.ordering
             form_class = getattr(admin_model, 'form_class', None)
+        
+        if 'action_checkbox' in GeneratedModelResource.list_display:
+            GeneratedModelResource.list_display.remove('action_checkbox')
         
         if admin_model.form != forms.ModelForm:
             GeneratedModelResource.form_class = admin_model.form

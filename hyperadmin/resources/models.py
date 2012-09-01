@@ -2,7 +2,6 @@ import inspect
 
 from django.conf.urls.defaults import patterns, url, include
 from django.utils.functional import update_wrapper
-from django.utils.datastructures import SortedDict
 from django.core.paginator import Paginator
 from django import forms
 
@@ -31,6 +30,28 @@ class MockAdminModel(object):
     
     def queryset(self, request):
         return self.resource.get_queryset(request)
+
+class ListForm(forms.Form):
+    '''
+    hyperadmin knows how to serialize forms, not models.
+    So for the list display we need a form
+    '''
+    
+    resource = None
+    
+    def __init__(self, **kwargs):
+        self.instance = kwargs.pop('instance', None)
+        super(ListForm, self).__init__(**kwargs)
+        for display in self.resource.list_display:
+            label = display
+            if label == '__str__':
+                label = self.resource.resource_name
+            self.fields[display] = forms.CharField(label=label)
+            if self.instance:
+                val = getattr(self.instance, display)
+                if callable(val):
+                    val = val()
+                self.initial[display] = str(val)
 
 class ModelResource(CRUDResource):
     #TODO support the following:
@@ -187,6 +208,12 @@ class ModelResource(CRUDResource):
                 #TODO formfield overides
                 #TODO fields
         return AdminForm
+    
+    def get_list_form_class(self):
+        #TODO improve this
+        class AdminListForm(ListForm):
+            resource = self
+        return AdminListForm
     
     def get_embedded_links(self, instance=None):
         links = super(ModelResource, self).get_embedded_links(instance=instance)
