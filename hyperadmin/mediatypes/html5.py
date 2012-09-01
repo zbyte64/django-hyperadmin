@@ -73,6 +73,8 @@ class Html5MediaType(MediaType):
         form = form_class(**kwargs)
         return form
 
+BUILTIN_MEDIA_TYPES['text/html'] = Html5MediaType
+BUILTIN_MEDIA_TYPES['application/xhtml+xml'] = Html5MediaType
 BUILTIN_MEDIA_TYPES['application/text-html'] = Html5MediaType
 BUILTIN_MEDIA_TYPES['application/x-www-form-urlencoded'] = Html5MediaType
 BUILTIN_MEDIA_TYPES['multipart/form-data'] = Html5MediaType
