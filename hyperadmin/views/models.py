@@ -173,6 +173,13 @@ class ModelDetailResourceView(ModelResourceViewMixin, generic.UpdateView):
                                rel='update',)
             return [update_link] + links
         return links
+    
+    def get_outbound_links(self, instance=None):
+        links = super(ModelDetailResourceView, self).get_outbound_links(instance=instance)
+        if instance is None:
+            detail_link = Link(url=self.resource.get_instance_url(self.object), rel='breadcrumb', prompt=unicode(self.object))
+            links.append(detail_link)
+        return links
 
 class InlineModelMixin(object):
     def get_changelist_links(self):

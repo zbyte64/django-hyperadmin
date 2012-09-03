@@ -201,7 +201,8 @@ class ApplicationResource(BaseResource):
             return []
         else:
             site_link = Link(url=self.reverse('index'), rel='breadcrumb', prompt='root')
-            return [site_link]
+            app_link = Link(url=self.get_absolute_url(), rel='breadcrumb', prompt=self.app_name)
+            return [site_link, app_link]
     
     def get_instance_url(self, instance):
         if hasattr(instance, 'get_absolute_url'):
