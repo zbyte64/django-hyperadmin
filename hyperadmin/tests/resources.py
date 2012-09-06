@@ -245,7 +245,7 @@ class StorageResourceTestCase(ResourceTestCase):
             except:
                 pass
         self.site.install_storage_resources()
-        return self.site.applications['storages'].resource_adaptor['media']
+        return self.site.applications['-storages'].resource_adaptor['media']
     
     def test_get_list(self):
         self.resource.resource_adaptor.save('test.txt', ContentFile('foobar'))
@@ -271,7 +271,7 @@ class StorageResourceTestCase(ResourceTestCase):
         self.assertTrue('items' in data)
         self.assertEqual(len(data['items']), 1)
         
-        self.assertEqual(data['items'][0]['href'], 'storages/media/test.txt/')
+        self.assertEqual(data['items'][0]['href'], '-storages/media/test.txt/')
     
     def test_post_list(self):
         view_kwargs = self.resource.get_view_kwargs()

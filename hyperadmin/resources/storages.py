@@ -40,7 +40,7 @@ class StorageResource(CRUDResource):
     detail_view = views.StorageDetailResourceView
     
     def __init__(self, **kwargs):
-        self._app_name = kwargs.pop('app_name', 'storages')
+        self._app_name = kwargs.pop('app_name', '-storages')
         self._resource_name = kwargs.pop('resource_name')
         super(StorageResource, self).__init__(**kwargs)
     

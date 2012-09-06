@@ -33,6 +33,15 @@ class ModelResourceViewMixin(ResourceViewMixin, generic.edit.ModelFormMixin):
         return form
     
     #form_valid & form_invalid should not be used
+    
+    def can_add(self):
+        return self.resource.has_add_permission(self.request)
+    
+    def can_change(self, instance=None):
+        return self.resource.has_change_permission(self.request, instance)
+    
+    def can_delete(self, instance=None):
+        return self.resource.has_delete_permission(self.request, instance)
 
 class ModelListResourceView(ModelResourceViewMixin, generic.CreateView):
     def get_form_class(self, instance=None):
@@ -52,6 +61,8 @@ class ModelListResourceView(ModelResourceViewMixin, generic.CreateView):
         return self.resource.generate_response(self)
     
     def post(self, request, *args, **kwargs):
+        if not self.can_add():
+            return http.HttpResponseForbidden(_(u"You may add an object"))
         return self.resource.generate_create_response(self, form_class=self.get_form_class())
     
     def get_templated_queries(self):
@@ -149,11 +160,13 @@ class ModelDetailResourceView(ModelResourceViewMixin, generic.UpdateView):
         #    request.method = 'DELETE'
         #    return self.delete(request, *args, **kwargs)
         self.object = self.get_object()
+        if not self.can_change(self.object):
+            return http.HttpResponseForbidden(_(u"You may not modify that object"))
         return self.resource.generate_update_response(self, instance=self.object, form_class=self.get_form_class())
     
     def delete(self, request, *args, **kwargs):
         self.object = self.get_object()
-        if not self.can_delete():
+        if not self.can_delete(self.object):
             return http.HttpResponseForbidden(_(u"You may not delete that object"))
         
         with log_action(request.user, self.object, DELETION, request=request):
@@ -164,7 +177,7 @@ class ModelDetailResourceView(ModelResourceViewMixin, generic.UpdateView):
     def get_ln_links(self, instance=None):
         links = super(ModelDetailResourceView, self).get_ln_links(instance)
         assert instance
-        if instance:
+        if instance and self.can_change(instance):
             form = self.get_form(instance=instance)
             update_link = Link(url=self.request.path,
                                method='POST',
@@ -173,6 +186,15 @@ class ModelDetailResourceView(ModelResourceViewMixin, generic.UpdateView):
                                rel='update',)
             return [update_link] + links
         return links
+    
+    def get_li_links(self, instance=None):
+        if instance and self.can_delete(instance):
+            delete_link = Link(url=self.get_instance_url(instance),
+                               rel='delete',
+                               prompt='delete',
+                               method='DELETE')
+            return [delete_link]
+        return []
     
     def get_outbound_links(self, instance=None):
         links = super(ModelDetailResourceView, self).get_outbound_links(instance=instance)

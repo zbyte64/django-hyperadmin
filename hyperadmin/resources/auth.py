@@ -29,7 +29,7 @@ class AuthResource(CRUDResource):
     detail_view = views.AuthenticationResourceView
     
     def __init__(self, **kwargs):
-        self._app_name = kwargs.pop('app_name', '_authentication')
+        self._app_name = kwargs.pop('app_name', '-authentication')
         self._resource_name = kwargs.pop('resource_name', 'auth')
         kwargs.setdefault('resource_adaptor', None)
         super(AuthResource, self).__init__(**kwargs)

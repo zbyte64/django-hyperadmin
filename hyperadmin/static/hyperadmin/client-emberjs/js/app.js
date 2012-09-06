@@ -194,6 +194,8 @@ App.resourceController = Em.ObjectController.create({
             data: form.serialize(),
             success: this.handleResponse
         })
+        //TODO: upload files
+        //then populate file fields with their returned path
         $.ajax(settings)
     },
     handleResponse: function(data, textStatus, jqXHR) {

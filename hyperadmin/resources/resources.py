@@ -120,7 +120,7 @@ class SiteResource(BaseResource):
             url(r'^$',
                 wrap(self.list_view.as_view(**init)),
                 name='index'),
-            url(r'^_authentication/',
+            url(r'^-authentication/',
                 include(self.auth_resource.urls)),
         )
         for key, app in self.site.applications.iteritems():
@@ -312,16 +312,6 @@ class CRUDResource(BaseResource):
     
     def get_templated_queries(self):
         #search and filter goes here
-        return []
-    
-    #TODO find a better name
-    def get_li_links(self, instance=None):
-        if instance:
-            delete_link = Link(url=self.get_instance_url(instance),
-                               rel='delete',
-                               prompt='delete',
-                               method='DELETE')
-            return [delete_link]
         return []
     
     def get_actions(self, request):
