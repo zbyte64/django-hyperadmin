@@ -1,6 +1,5 @@
 from django import http
 from django.conf.urls.defaults import patterns, url, include
-from django.utils.functional import update_wrapper
 
 from hyperadmin import views
 from links import Link
@@ -111,9 +110,7 @@ class SiteResource(BaseResource):
     
     def get_urls(self):
         def wrap(view, cacheable=False):
-            def wrapper(*args, **kwargs):
-                return self.as_view(view, cacheable)(*args, **kwargs)
-            return update_wrapper(wrapper, view)
+            return self.as_view(view, cacheable)
         
         init = self.get_view_kwargs()
         
@@ -166,9 +163,7 @@ class ApplicationResource(BaseResource):
     
     def get_urls(self):
         def wrap(view, cacheable=False):
-            def wrapper(*args, **kwargs):
-                return self.as_view(view, cacheable)(*args, **kwargs)
-            return update_wrapper(wrapper, view)
+            return self.as_view(view, cacheable)
         
         init = self.get_view_kwargs()
         
@@ -237,9 +232,7 @@ class CRUDResource(BaseResource):
     
     def get_urls(self):
         def wrap(view, cacheable=False):
-            def wrapper(*args, **kwargs):
-                return self.as_view(view, cacheable)(*args, **kwargs)
-            return update_wrapper(wrapper, view)
+            return self.as_view(view, cacheable)
         
         init = self.get_view_kwargs()
         

@@ -1,5 +1,4 @@
 from django.conf.urls.defaults import patterns, url
-from django.utils.functional import update_wrapper
 from django.contrib.auth.forms import AuthenticationForm
 from django.contrib.auth import login
 from django import http
@@ -45,9 +44,7 @@ class AuthResource(CRUDResource):
     
     def get_urls(self):
         def wrap(view, cacheable=False):
-            def wrapper(*args, **kwargs):
-                return self.as_nonauthenticated_view(view, cacheable)(*args, **kwargs)
-            return update_wrapper(wrapper, view)
+            return self.as_nonauthenticated_view(view, cacheable)
         
         init = self.get_view_kwargs()
         
