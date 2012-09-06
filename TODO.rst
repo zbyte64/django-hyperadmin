@@ -35,6 +35,5 @@ Other Features
  * readonly
  * markup
 * logging
-* permissions
 * admin actions
 

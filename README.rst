@@ -9,11 +9,13 @@ django-hyperadmin is an API driven Admin interface for resources in Django. Reso
 
 This is (mostly) ALPHA
 
+Demo site: http://hyperadmindemo.herokuapp.com/
+
 --------
 Features
 --------
 * ModelResource works like AdminModel
-* StorageResource for RESTful media uploads
+* StorageResource powers file uploads in client
 * Supported Media Formats:
  * application/vnd.Collection+JSON
  * application/vnd.Collection.next+JSON
@@ -24,6 +26,7 @@ Features
  * TODO: xml, yaml, ???
 * Architecture allows for more media formats
 * Internal resource representation based on hfactor and forms
+* Headers control media type; "Accepts" and "Content-Type" control response and request format
 
 ============
 Installation
@@ -121,7 +124,7 @@ Client
 ======
 
 Currently there is one client written using emberjs. See ``hyperadmin.clients.emberjs.EmberJSClient``
-This client is able to browse the API and perform CRUD operations. There are plans to support inlines and file uploading.
+This client is able to browse the API and perform CRUD operations. There are plans to support inlines.
 
 =============================
 Reading up on Hypermedia APIs
