@@ -116,7 +116,7 @@
   <script type="text/x-handlebars" data-template-name="form">
     <form {{bindAttr method="method.options.0.value"}} {{bindAttr target="url"}} {{bindAttr rel="rel"}}>
     <div>
-    {{#each data}}
+    {{#each fields}}
     <label>{{prompt}}</label>
     {{#if isSelect}}
     <select {{bindAttr name="name"}} {{bindAttr class="css_class"}} {{bindAttr multiple="multiple"}}>
@@ -195,9 +195,9 @@
   </script>
   
   <script type="text/x-handlebars" data-template-name="template">
-    {{#with App.resourceController.collection.template}}
+    {{#each App.resourceController.collection.templates}}
       {{view App.FormView}}
-    {{/with}}
+    {{/each}}
   </script>
   
   <script type="text/x-handlebars" data-template-name="main" >

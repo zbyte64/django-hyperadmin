@@ -48,7 +48,17 @@ App.Field = App.CommonObject.extend({
   }.property('type', 'value')
 })
 App.Template = App.Link.extend({
-  //TODO extend create
+  fields: function() {
+    var fields = Array();
+    var data = this.get('data');
+    if (data) {
+      for (var i=0; i<data.length; i++) {
+        var field = App.Field.create(data[i])
+        fields.pushObject(field)
+      }
+    }
+    return fields;
+  }.property('data')
 })
 App.Error = Em.Object.extend({})
 
@@ -135,6 +145,18 @@ App.resourceController = Em.ObjectController.create({
             }.property('@each.rel').cacheable()
         }),
         template: null,
+        templates: Em.ArrayController.create({
+            handleResponse: function(data) {
+                this.set('content', []);
+                if (data) {
+                    for (var i=0; i<data.length; i++) {
+                        var template_data = data[i];
+                        var template = App.Template.create(template_data);
+                        this.pushObject(template);
+                    }
+                }
+            }
+        }),
         error: null,
         handleResponse: function(data) {
             this.set('version', data['version']);
@@ -144,17 +166,9 @@ App.resourceController = Em.ObjectController.create({
             this.links.handleResponse(data['links'])
             this.items.handleResponse(data['items'])
             this.queries.handleResponse(data['queries'])
+            this.templates.handleResponse(data['templates'])
             if (data['template']) {
                 var template = App.Template.create(data['template'])
-                template.set('data', Em.ArrayController.create({
-                    content: []
-                }))
-                if (data['template']['data']) {
-                    for (var i=0; i<data['template']['data'].length; i++) {
-                        var field = App.Field.create(data['template']['data'][i])
-                        template.data.pushObject(field)
-                    }
-                }
                 this.set('template', template)
             } else {
                 this.set('template', null)

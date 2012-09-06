@@ -172,6 +172,13 @@ class CollectionHyperAdminJSON(CollectionNextJSON):
     
     def prepare_collection(self, content_type, instance=None, errors=None):
         data = super(CollectionHyperAdminJSON, self).prepare_collection(content_type, instance=instance, errors=errors)
+        
+        update_links = self.view.get_ln_links(instance=instance) + self.view.get_li_links(instance=instance)
+        #get_non_idempotent_updates
+        #get_idempotent_updates
+        if len(update_links):
+            data['templates'] = [self.convert_link(link) for link in update_links]
+        
         data['resource_class'] = self.view.resource.resource_class
         #TODO a better interface for list fields?
         if instance is None and hasattr(self.view.resource, 'get_list_form_class'):
