@@ -14,6 +14,7 @@ class SuperUserRequestFactory(RequestFactory):
         ret = super(SuperUserRequestFactory, self).request(**request)
         ret.user = self.user
         ret.session = MockSession()
+        ret.csrf_processing_done = True #lets not worry about csrf
         return ret
 
 class GenericURLResolver(RegexURLResolver):

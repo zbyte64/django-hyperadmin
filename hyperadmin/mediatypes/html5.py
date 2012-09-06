@@ -1,4 +1,5 @@
 from django.template.response import TemplateResponse
+from django.middleware.csrf import CsrfViewMiddleware
 
 from hyperadmin.resources import BaseResource
 
@@ -66,12 +67,21 @@ class Html5MediaType(MediaType):
         return response
     
     def deserialize(self, form_class, instance=None):
+        self.check_csrf()
+        
         kwargs = self.view.get_form_kwargs()
         kwargs.update({'instance':instance,
                        'data':self.request.POST,
                        'files':self.request.FILES,})
         form = form_class(**kwargs)
         return form
+    
+    def check_csrf(self):
+        csrf_middleware = CsrfViewMiddleware()
+        response = csrf_middleware.process_view(self.view.request, self.deserialize, self.view.args, self.view.kwargs)
+        if response is not None:
+            assert False, 'csrf failed' #TODO APIException(response) or SuspiciousOperation ....
+            raise response
 
 BUILTIN_MEDIA_TYPES['text/html'] = Html5MediaType
 BUILTIN_MEDIA_TYPES['application/xhtml+xml'] = Html5MediaType
