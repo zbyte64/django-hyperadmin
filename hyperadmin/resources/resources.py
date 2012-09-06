@@ -66,14 +66,14 @@ class BaseResource(object):
         content_type = view.get_request_type()
         media_type_cls = self.site.media_types.get(content_type, None)
         if media_type_cls is None:
-            raise ValueError('Unrecognized content type')
+            raise ValueError('Unrecognized request content type: %s' % content_type)
         return media_type_cls(view)
     
     def get_response_media_type(self, view):
         content_type = view.get_response_type()
         media_type_cls = self.site.media_types.get(content_type, None)
         if media_type_cls is None:
-            raise ValueError('Unrecognized content type')
+            raise ValueError('Unrecognized response content type: %s' % content_type)
         return media_type_cls(view)
     
     def generate_response(self, view, instance=None, errors=None):
@@ -123,14 +123,14 @@ class SiteResource(BaseResource):
             url(r'^-authentication/',
                 include(self.auth_resource.urls)),
         )
-        for key, app in self.site.applications.iteritems():
+        for key, app in self.applications.iteritems():
             urlpatterns += patterns('',
                 url(r'^%s/' % key, include(app.urls))
             )
         return urlpatterns
     
     def get_items(self, request):
-        applications = self.site.applications.items()
+        applications = self.applications.items()
         apps = [entry[1] for entry in sorted(applications, key=lambda x: x[0])]
         apps.append(self.auth_resource)
         return apps
@@ -147,6 +147,10 @@ class SiteResource(BaseResource):
     
     def get_absolute_url(self):
         return self.reverse('index')
+    
+    @property
+    def applications(self):
+        return self.site.applications
 
 class ApplicationResource(BaseResource):
     resource_class = 'resourcelisting'

@@ -106,11 +106,20 @@ class CollectionJSON(MediaType):
             payload = self.request.body
         else:
             payload = self.request.raw_post_data
-        data = json.loads(payload)['data']
+        data = json.loads(payload)
+        data = data['data']
+        form_data = dict()
+        files = dict()
+        for field in data:
+            form_data[field['name']] = field['value']
+            if field['type'] == 'file' and field['value']:
+                #TODO storage lookup could be done better
+                storage = self.site.applications['-storages'].resource_adaptor['media'].resource_adaptor
+                files[field['name']] = storage.open(field['value'])
         kwargs = self.view.get_form_kwargs()
         kwargs.update({'instance':instance,
-                       'data':data,
-                       'files':self.request.FILES,})
+                       'data':form_data,
+                       'files':files,})
         form = form_class(**kwargs)
         return form
 
@@ -158,6 +167,9 @@ class CollectionHyperAdminJSON(CollectionNextJSON):
         if resource:
             entry['related_resource_url'] = resource.get_absolute_url()
         entry['classes'] = field.css_classes().split()
+        #if isinstance(field, forms.FileField):
+        #    field.form.instance
+        #TODO upload to
         return entry
     
     def convert_item_form(self, form):

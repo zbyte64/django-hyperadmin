@@ -83,13 +83,17 @@ class ResourceSite(object):
     
     def get_related_resource_from_field(self, field):
         #TODO make more dynamic
+        from django.forms import FileField
         from django.forms.models import ModelChoiceField
+        form = field.form
         if hasattr(field, 'field'): #CONSIDER internally we use boundfield
             field = field.field
         if isinstance(field, ModelChoiceField):
             model = field.queryset.model
             if model in self.registry:
                 return self.registry[model]
+        if isinstance(field, FileField):
+            return self.applications['-storages'].resource_adaptor['media']
         return None
     
     def get_html_type_from_field(self, field):

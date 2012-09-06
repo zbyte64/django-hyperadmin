@@ -1,4 +1,31 @@
+//TODO put this elsewhere
+jQuery(function($) {
+    $.extend({
+        serializeJSON: function(obj) {
+            var t = typeof(obj);
+            if(t != "object" || obj === null) {
+                // simple data type
+                if(t == "string") obj = '"' + obj + '"';
+                return String(obj);
+            } else {
+                // array or object
+                var json = [], arr = (obj && obj.constructor == Array);
+ 
+                $.each(obj, function(k, v) {
+                    t = typeof(v);
+                    if(t == "string") v = '"' + v + '"';
+                    else if (t == "object" & v !== null) v = $.serializeJSON(v)
+                    json.push((arr ? "" : '"' + k + '":') + String(v));
+                });
+ 
+                return (arr ? "[" : "{") + String(json) + (arr ? "]" : "}");
+            }
+        }
+    });
+});
+
 var App = Em.Application.create({});
+App.contentType = 'application/vnd.Collection.hyperadmin+JSON';
 
 App.ApplicationController = Ember.Controller.extend();
 
@@ -61,6 +88,103 @@ App.Template = App.Link.extend({
   }.property('data')
 })
 App.Error = Em.Object.extend({})
+
+App.uploadingFiles = false;
+App.initUploadFile = function(field, options) {
+  console.log('upload init', field, options)
+  function add(e, data) {
+    console.log('upload add', e, data)
+    App.uploadingFiles = true;
+    
+    var fileInput = $(e.target);
+    var file = data.files[0];
+    fileInput.siblings('.uploadstatus').remove()
+    fileInput.after('<span class="uploadstatus">Uploading: '+file.name+'<span class="uploadprogress">&nbsp;</span></span>')
+    fileInput.hide()
+    
+    //TODO this is only necessary because forms insist on resaving and "upload to" is not communicated
+    data.formData = {'name':'hyperadmin-tmp/'+data.files[0].name}
+    data.submit()
+  }
+  function progress(e, data) {
+    console.log('upload progress', e, data)
+    var fileInput = $(e.target);
+    var progress = parseInt(data.loaded / data.total * 100, 10);
+    fileInput.siblings('.uploadstatus').find('.uploadprogress').text(progress+'%')
+  }
+  function fail(e, data) {
+    console.log('upload fail', e, data)
+  }
+  function done(e, data) {
+    console.log('upload done', e, data)
+    var fileInput = $(e.target);
+    var fields = $.parseJSON(data.result).collection.items[0]['data']
+    var path = null;
+    var file = data.files[0]
+    console.log(fields)
+    for(var i=0; i<fields.length; i++) {
+      var field = fields[i];
+      if (field.name == 'name') {
+        path = field.value;
+        break;
+      }
+    }
+    
+    function remove_click() {
+      fileInput.data('path', null);
+      fileInput.siblings('.uploadstatus').remove()
+      fileInput.show()
+    }
+    
+    fileInput.data('api-skip', true);
+    fileInput.data('path', path);
+    fileInput.siblings('.uploadstatus').remove()
+    fileInput.after('<span class="uploadstatus">File uploaded: '+file.name+' <a href="#">Remove</a><input name="'+fileInput.attr('name')+'" value="'+path+'" type="hidden"/></span>')
+    fileInput.siblings('.uploadstatus').find('a').click(remove_click)
+    fileInput.siblings('.uploadstatus').find(':input').data('api-type', 'file')
+    
+    var form = get_form(this)
+    if (form.data('submitted')) {
+      //TODO submit form
+    }
+  }
+  function stop(e) {
+    console.log('upload stop', e)
+    App.uploadingFiles = false;
+  }
+  
+  function get_form(item) {
+    return $(item).parents('form:first')
+  }
+  var options = $.extend({
+        //'onUploadSuccess': on_upload_success,
+        'add': add,
+        //'progress': progress,
+        'fail': fail,
+        'done': done,
+        'stop': stop,
+        //'onUploadError': on_upload_error,
+        //'onUploadCancel': on_upload_cancel,
+        'autoUpload': true,
+        'multi': false,
+        //'removeCompleted': false,
+        //'uploadLimit': 1,
+        'async': true,
+        'type': 'POST',
+        'url': '/hyper-admin/-storages/media/',
+        'paramName': 'upload',
+        'data': 'json',
+        'accepts': {
+          'json': App.contentType, //custom media type defintion
+        },
+        'headers': {
+            'Accept': App.contentType,
+            //'Content-Type': 'multipart/form-data'
+            'Content-Type': 'text/html'
+        }
+    }, options);
+    field.fileupload(options);
+}
 
 //define a controller for managing these data objects
 //views bind to this and are automatically updated when the controller issues update actions
@@ -188,14 +312,15 @@ App.resourceController = Em.ObjectController.create({
         $.ajax(settings)
     },
     submitForm: function(form) {
+        var payload = App.serializeFormJSON(form)
+        console.log(payload)
         var settings = $.extend({}, App.requestDefaults, {
             url: form.attr('target'),
             type: form.attr('method') || 'POST',
-            data: form.serialize(),
-            success: this.handleResponse
+            data: payload,
+            success: this.handleResponse,
+            contentType: App.contentType
         })
-        //TODO: upload files
-        //then populate file fields with their returned path
         $.ajax(settings)
     },
     handleResponse: function(data, textStatus, jqXHR) {
@@ -266,9 +391,25 @@ App.handleResponseError = function(jqXHR, textStatus, errorThrown) {
     }
 }
 
+App.serializeFormJSON = function(form) {
+    //TODO power this by the view context as well as form
+    var o = Array();
+    form.find(':input').each(function() {
+        var $this = $(this)
+        if ($this.data('api-skip') || !$this.attr('name')) return;
+        var type = $this.data('api-type') || $this.attr('type') || 'text'
+        var value = $this.val()
+        var name = $this.attr('name')
+        o.push({"type": type,
+                "value": value,
+                "name": name})
+    });
+    return $.serializeJSON({'data':o});
+};
+
 App.requestDefaults = {
     accepts: {
-        'json': 'application/vnd.Collection.hyperadmin+JSON', //custom media type defintion
+        'json': App.contentType, //custom media type defintion
     },
     success: App.resourceController.handleResponse,
     error: App.handleResponseError,
@@ -359,7 +500,11 @@ App.BreadcrumbView = App.LinkView.extend({})
 
 App.FormView = App.AdminView.extend({
   templateName: 'form',
-  classNames: ['form']
+  classNames: ['form'],
+  didInsertElement: function() {
+    var file_fields = this.$().find('input[type="file"]')
+    App.initUploadFile(file_fields)
+  }
 })
 
 $(function() {

@@ -7,6 +7,14 @@ class MediaType(object):
         self.view = view
         self.request = view.request
     
+    @property
+    def resource(self):
+        return self.view.resource
+    
+    @property
+    def site(self):
+        return self.resource.site
+    
     def serialize(self, content_type, instance=None, errors=None):
         raise NotImplementedError
     
@@ -19,9 +27,7 @@ class MediaType(object):
             for name, field in form.fields.iteritems():
                 val = form[name].value()
                 if isinstance(val, File):
-                    if hasattr(val, 'path'):
-                        val = val.path
-                    elif hasattr(val, 'name'):
+                    if hasattr(val, 'name'):
                         val = val.name
                     else:
                         val = None
@@ -29,8 +35,8 @@ class MediaType(object):
         return data
     
     def get_related_resource_from_field(self, field):
-        return self.view.resource.get_related_resource_from_field(field)
+        return self.resource.get_related_resource_from_field(field)
     
     def get_html_type_from_field(self, field):
-        return self.view.resource.get_html_type_from_field(field)
+        return self.resource.get_html_type_from_field(field)
 
