@@ -3,7 +3,7 @@ from django.contrib.auth.forms import AuthenticationForm
 from django.contrib.auth import login
 from django import http
 
-from hyperadmin import views
+from hyperadmin.views import auth as views
 
 from resources import CRUDResource
 from links import Link
@@ -27,6 +27,7 @@ class AuthResource(CRUDResource):
     form_class = AuthenticationResourceForm
     
     detail_view = views.AuthenticationResourceView
+    logout_view = views.AuthenticationLogoutView
     
     def __init__(self, **kwargs):
         self._app_name = kwargs.pop('app_name', '-authentication')
@@ -54,6 +55,9 @@ class AuthResource(CRUDResource):
             url(r'^$',
                 wrap(self.detail_view.as_view(**init)),
                 name='authentication'),
+            url(r'^logout/$',
+                wrap(self.logout_view.as_view(**init)),
+                name='logout'),
         )
         return urlpatterns
     
@@ -81,5 +85,6 @@ class AuthResource(CRUDResource):
         return response
     
     def get_embedded_links(self, instance=None):
-        return []
+        logout_link = Link(url=self.reverse('logout'), rel='delete', prompt='Logout')
+        return [logout_link]
 

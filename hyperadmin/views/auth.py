@@ -54,3 +54,8 @@ class AuthenticationResourceView(ResourceViewMixin, generic.View):
             links.append(login_link)
         return links
 
+class AuthenticationLogoutView(ResourceViewMixin, generic.View):
+    def get(self, request, *args, **kwargs):
+        logout(request)
+        return self.resource.generate_delete_response(self)
+
