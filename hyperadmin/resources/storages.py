@@ -4,7 +4,7 @@ from django.utils.functional import update_wrapper
 
 import urllib
 
-from hyperadmin import views
+from hyperadmin.views import storages as views
 from hyperadmin.views.storages import BoundFile
 
 from resources import CRUDResource
@@ -37,7 +37,9 @@ class StorageResource(CRUDResource):
     form_class = UploadForm
     
     list_view = views.StorageListResourceView
+    add_view = views.StorageAddResourceView
     detail_view = views.StorageDetailResourceView
+    delete_view = views.StorageDeleteResourceView
     
     def __init__(self, **kwargs):
         self._app_name = kwargs.pop('app_name', '-storages')
@@ -66,9 +68,15 @@ class StorageResource(CRUDResource):
             url(r'^$',
                 wrap(self.list_view.as_view(**init)),
                 name='%s_%s_list' % (self.app_name, self.resource_name)),
+            url(r'^add/$',
+                wrap(self.add_view.as_view(**init)),
+                name='%s_%s_add' % (self.app_name, self.resource_name)),
             url(r'^(?P<path>.+)/$',
                 wrap(self.detail_view.as_view(**init)),
                 name='%s_%s_detail' % (self.app_name, self.resource_name)),
+            url(r'^(?P<path>.+)/delete/$',
+                wrap(self.delete_view.as_view(**init)),
+                name='%s_%s_delete' % (self.app_name, self.resource_name)),
         )
         return urlpatterns
     
@@ -98,6 +106,9 @@ class StorageResource(CRUDResource):
     
     def get_instance_url(self, instance):
         return self.reverse('%s_%s_detail' % (self.app_name, self.resource_name), path=instance.name)
+    
+    def get_delete_url(self, instance):
+        return self.reverse('%s_%s_delete' % (self.app_name, self.resource_name), path=instance.name)
     
     def get_embedded_links(self, instance=None):
         links = super(StorageResource, self).get_embedded_links(instance=instance)

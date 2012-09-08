@@ -227,7 +227,9 @@ class CRUDResource(BaseResource):
     actions = []
     
     list_view = None
+    add_view = None
     detail_view = None
+    delete_view = None
     form_class = None
     
     def get_resource_name(self):
@@ -246,14 +248,26 @@ class CRUDResource(BaseResource):
             url(r'^$',
                 wrap(self.list_view.as_view(**init)),
                 name='%s_%s_list' % (self.app_name, self.resource_name)),
+            url(r'^add/$',
+                wrap(self.add_view.as_view(**init)),
+                name='%s_%s_add' % (self.app_name, self.resource_name)),
             url(r'^(?P<pk>\w+)/$',
                 wrap(self.detail_view.as_view(**init)),
                 name='%s_%s_detail' % (self.app_name, self.resource_name)),
+            url(r'^(?P<pk>\w+)/delete/$',
+                wrap(self.delete_view.as_view(**init)),
+                name='%s_%s_delete' % (self.app_name, self.resource_name)),
         )
         return urlpatterns
     
+    def get_add_url(self):
+        return self.reverse('%s_%s_add' % (self.app_name, self.resource_name))
+    
     def get_instance_url(self, instance):
         return self.reverse('%s_%s_detail' % (self.app_name, self.resource_name), pk=instance.pk)
+    
+    def get_delete_url(self, instance):
+        return self.reverse('%s_%s_delete' % (self.app_name, self.resource_name), pk=instance.pk)
     
     def get_absolute_url(self):
         return self.reverse('%s_%s_list' % (self.app_name, self.resource_name))
@@ -302,8 +316,11 @@ class CRUDResource(BaseResource):
         return True
     
     def get_embedded_links(self, instance=None):
-        #relationships go here
-        return []
+        if instance:
+            delete_link = Link(url=self.get_delete_url(instance), rel='delete', prompt='Delete')
+            return [delete_link]
+        add_link = Link(url=self.get_add_url(), rel='add', prompt='Add')
+        return [add_link]
     
     def get_outbound_links(self, instance=None):
         if instance:

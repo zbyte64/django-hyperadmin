@@ -6,7 +6,7 @@ from django.utils.encoding import force_unicode
 from django.core.paginator import Paginator
 from django import forms
 
-from hyperadmin import views
+from hyperadmin.views import models as views
 
 from resources import CRUDResource
 from links import Link
@@ -86,7 +86,9 @@ class ModelResource(CRUDResource):
     ordering = None
     
     list_view = views.ModelListResourceView
+    add_view = views.ModelCreateResourceView
     detail_view = views.ModelDetailResourceView
+    delete_view = views.ModelDeleteResourceView
     
     def __init__(self, *args, **kwargs):
         super(ModelResource, self).__init__(*args, **kwargs)
@@ -232,7 +234,9 @@ class ModelResource(CRUDResource):
 
 class InlineModelResource(ModelResource):
     list_view = views.InlineModelListResourceView
+    add_view = views.InlineModelCreateResourceView
     detail_view = views.InlineModelDetailResourceView
+    delete_view = views.InlineModelDeleteResourceView
     
     model = None
     fk_name = None
@@ -257,6 +261,9 @@ class InlineModelResource(ModelResource):
             queryset = queryset.none()
         return queryset
     
+    def get_base_url_name(self):
+        return '%s_%s_%s_' % (self.parent_resource.app_name, self.parent_resource.resource_name, self.rel_name)
+    
     def get_urls(self):
         def wrap(view, cacheable=False):
             def wrapper(*args, **kwargs):
@@ -264,24 +271,37 @@ class InlineModelResource(ModelResource):
             return update_wrapper(wrapper, view)
         
         init = self.get_view_kwargs()
+        base_name = self.get_base_url_name()
         
         # Admin-site-wide views.
         urlpatterns = self.get_extra_urls()
         urlpatterns += patterns('',
             url(r'^$',
                 wrap(self.list_view.as_view(**init)),
-                name='%s_%s_%s_list' % (self.parent_resource.app_name, self.parent_resource.resource_name, self.rel_name)),
+                name='%slist' % (base_name)),
+            url(r'^add/$',
+                wrap(self.add_view.as_view(**init)),
+                name='%sadd' % (base_name)),
             url(r'^(?P<inline_pk>\w+)/$',
                 wrap(self.detail_view.as_view(**init)),
-                name='%s_%s_%s_detail' % (self.parent_resource.app_name, self.parent_resource.resource_name, self.rel_name)),
+                name='%sdetail' % (base_name)),
+            url(r'^(?P<inline_pk>\w+)/delete/$',
+                wrap(self.detail_view.as_view(**init)),
+                name='%sdelete' % (base_name)),
         )
         return urlpatterns
     
-    def get_instance_url(self, instance):
-        url = self.parent_resource.get_instance_url(instance)
+    def get_add_url(self):
+        #TODO i need parent resource in order to work
+        return ''
+    
+    def get_delete_url(self, instance):
         pk = getattr(instance, self.fk.name).pk
-        return '%s%s/%s/' % (url, self.rel_name, pk)
-        #return self.reverse('%s_%s_%s_detail' % (self.parent_resource.app_name, self.parent_resource.resource_name, self.rel_name), inline_pk=instance.pk, pk=pk)
+        return self.reverse('%sdelete' % self.get_base_url_name(), pk=pk, inline_pk=instance.pk)
+    
+    def get_instance_url(self, instance):
+        pk = getattr(instance, self.fk.name).pk
+        return self.reverse('%sdetail' % self.get_base_url_name(), pk=pk, inline_pk=instance.pk)
     
     def get_absolute_url(self, instance=None):
         if not instance:

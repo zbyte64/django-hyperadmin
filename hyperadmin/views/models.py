@@ -43,7 +43,28 @@ class ModelResourceViewMixin(ResourceViewMixin, generic.edit.ModelFormMixin):
     def can_delete(self, instance=None):
         return self.resource.has_delete_permission(self.request, instance)
 
-class ModelListResourceView(ModelResourceViewMixin, generic.CreateView):
+class ModelCreateResourceView(ModelResourceViewMixin, generic.CreateView):
+    def get_queryset(self):
+        return []
+    
+    def get(self, request, *args, **kwargs):
+        return self.resource.generate_response(self)
+    
+    def post(self, request, *args, **kwargs):
+        if not self.can_add():
+            return http.HttpResponseForbidden(_(u"You may add an object"))
+        return self.resource.generate_create_response(self, form_class=self.get_form_class())
+    
+    def get_ln_links(self, instance=None):
+        form = self.get_form(instance=instance)
+        create_link = Link(url=self.request.path,
+                           method='POST', #TODO should this be put?
+                           form=form,
+                           prompt='create',
+                           rel='create',)
+        return [create_link] + super(ModelCreateResourceView, self).get_ln_links(instance)
+
+class ModelListResourceView(ModelCreateResourceView):
     def get_form_class(self, instance=None):
         if instance:
             return self.resource.get_list_form_class()
@@ -56,14 +77,6 @@ class ModelListResourceView(ModelResourceViewMixin, generic.CreateView):
     
     def get_queryset(self):
         return self.get_changelist().result_list
-    
-    def get(self, request, *args, **kwargs):
-        return self.resource.generate_response(self)
-    
-    def post(self, request, *args, **kwargs):
-        if not self.can_add():
-            return http.HttpResponseForbidden(_(u"You may add an object"))
-        return self.resource.generate_create_response(self, form_class=self.get_form_class())
     
     def get_templated_queries(self):
         links = super(ModelListResourceView, self).get_templated_queries()
@@ -132,19 +145,8 @@ class ModelListResourceView(ModelResourceViewMixin, generic.CreateView):
         if ctx["show_all_url"]:
             links.append(Link(url=ctx["show_all_url"], prompt="show all", classes=classes, rel="pagination"))
         return links
-    
-    def get_ln_links(self, instance=None):
-        form = self.get_form(instance=instance)
-        create_link = Link(url=self.request.path,
-                           method='POST', #TODO should this be put?
-                           form=form,
-                           prompt='create',
-                           rel='create',)
-        return [create_link] + super(ModelListResourceView, self).get_ln_links(instance)
 
-class ModelDetailResourceView(ModelResourceViewMixin, generic.UpdateView):
-    #TODO get_form retrieves information from mediatype
-    
+class ModelDetailMixin(object):
     def get_items(self, **kwargs):
         if not getattr(self, 'object', None):
             self.object = self.get_object()
@@ -153,12 +155,30 @@ class ModelDetailResourceView(ModelResourceViewMixin, generic.UpdateView):
     def get(self, request, *args, **kwargs):
         self.object = self.get_object()
         return self.resource.generate_response(self, instance=self.object)
+
+class ModelDeleteResourceView(ModelDetailMixin, ModelResourceViewMixin, generic.DeleteView):
+    def delete(self, request, *args, **kwargs):
+        self.object = self.get_object()
+        if not self.can_delete(self.object):
+            return http.HttpResponseForbidden(_(u"You may not delete that object"))
+        
+        with log_action(request.user, self.object, DELETION, request=request):
+            self.object.delete()
+        
+        return self.resource.generate_delete_response(self)
     
+    def get_li_links(self, instance=None):
+        if instance and self.can_delete(instance):
+            delete_link = Link(url=self.get_instance_url(instance),
+                               rel='delete',
+                               prompt='delete',
+                               method='POST')
+            return [delete_link]
+        return []
+
+
+class ModelDetailResourceView(ModelDetailMixin, ModelResourceViewMixin, generic.UpdateView):
     def post(self, request, *args, **kwargs):
-        # Workaround browsers not being able to send a DELETE method.
-        #if request.POST.get('DELETE', None) == "DELETE":
-        #    request.method = 'DELETE'
-        #    return self.delete(request, *args, **kwargs)
         self.object = self.get_object()
         if not self.can_change(self.object):
             return http.HttpResponseForbidden(_(u"You may not modify that object"))
@@ -215,12 +235,20 @@ class InlineModelMixin(object):
     def get_queryset(self):
         return self.resource.get_queryset(self.request, instance=self.get_parent())
 
+class InlineModelCreateResourceView(InlineModelMixin, ModelCreateResourceView):
+    pass
+
 class InlineModelListResourceView(InlineModelMixin, ModelListResourceView):
     pass
 
-class InlineModelDetailResourceView(InlineModelMixin, ModelDetailResourceView):
+class InlineModelDetailMixin(object):
     def get_object(self):
         queryset = self.get_queryset()
         return queryset.get(pk=self.kwargs['inline_pk'])
 
+class InlineModelDeleteResourceView(InlineModelDetailMixin, InlineModelMixin, ModelDeleteResourceView):
+    pass
+
+class InlineModelDetailResourceView(InlineModelDetailMixin, InlineModelMixin, ModelDetailResourceView):
+    pass
 

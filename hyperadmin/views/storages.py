@@ -13,6 +13,10 @@ class BoundFile(object):
         self.name = name
     
     @property
+    def pk(self):
+        return self.name
+    
+    @property
     def url(self):
         return self.storage.url(self.name)
     
@@ -79,6 +83,9 @@ class StorageListResourceView(StorageResourceViewMixin, generic.View): #generic.
         links += self.get_links_and_items()[0]
         return links
 
+#TODO
+StorageAddResourceView = StorageListResourceView
+
 class StorageDetailResourceView(StorageResourceViewMixin, generic.View): #generic.ListView
     #TODO get_form retrieves information from mediatype
     
@@ -115,4 +122,7 @@ class StorageDetailResourceView(StorageResourceViewMixin, generic.View): #generi
             update_link = self.get_upload_link(instance=instance)
             return [update_link] + links
         return links
+
+#TODO
+StorageDeleteResourceView = StorageDetailResourceView
 

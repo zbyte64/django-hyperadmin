@@ -5,7 +5,7 @@ from django import http
 
 from hyperadmin import views
 
-from resources import CRUDResource #TODO singleton resource
+from resources import CRUDResource
 from links import Link
 
 class AuthenticationResourceForm(AuthenticationForm):
@@ -79,4 +79,7 @@ class AuthResource(CRUDResource):
         response = http.HttpResponse(next_url, status=303)
         response['Location'] = next_url
         return response
+    
+    def get_embedded_links(self, instance=None):
+        return []
 
