@@ -6,6 +6,8 @@ from hyperadmin.resources.links import Link
 from common import ResourceViewMixin
 
 class AuthenticationResourceView(ResourceViewMixin, generic.View):
+    view_class = 'login'
+    
     def get_form_kwargs(self, **defaults):
         defaults['request'] = self.request
         return defaults
@@ -55,6 +57,8 @@ class AuthenticationResourceView(ResourceViewMixin, generic.View):
         return links
 
 class AuthenticationLogoutView(ResourceViewMixin, generic.View):
+    view_class = 'logout'
+    
     def get(self, request, *args, **kwargs):
         logout(request)
         return self.resource.generate_delete_response(self)

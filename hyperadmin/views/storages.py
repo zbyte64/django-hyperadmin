@@ -67,6 +67,8 @@ class StorageResourceViewMixin(ResourceViewMixin, generic.edit.FormMixin):
             return Link(**link_params)
 
 class StorageListResourceView(StorageResourceViewMixin, generic.View): #generic.UpdateView
+    view_class = 'change_list'
+    
     def get(self, request, *args, **kwargs):
         return self.resource.generate_response(self)
     
@@ -87,7 +89,7 @@ class StorageListResourceView(StorageResourceViewMixin, generic.View): #generic.
 StorageAddResourceView = StorageListResourceView
 
 class StorageDetailResourceView(StorageResourceViewMixin, generic.View): #generic.ListView
-    #TODO get_form retrieves information from mediatype
+    view_class = 'change_form'
     
     def get_object(self):
         return BoundFile(self.resource.resource_adaptor, self.kwargs['path'])

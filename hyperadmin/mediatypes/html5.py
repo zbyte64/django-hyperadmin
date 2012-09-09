@@ -7,6 +7,7 @@ from common import MediaType, BUILTIN_MEDIA_TYPES
 
 class Html5MediaType(MediaType):
     template_name = 'hyperadmin/html5/resource.html'
+    template_dir_name = 'hyperadmin'
     response_class = TemplateResponse
     
     def convert_field(self, field, name=None):
@@ -47,7 +48,7 @@ class Html5MediaType(MediaType):
         item_r['prompt'] = unicode(form.instance)
         return item_r
     
-    def serialize(self, content_type, instance=None, errors=None):
+    def get_context_data(self, instance=None, errors=None):
         context = {'instance':instance,
                    'errors':errors}
         
@@ -63,7 +64,29 @@ class Html5MediaType(MediaType):
         context['non_idempotent_updates'] = self.view.get_ln_links(instance=instance)
         context['idempotent_updates'] = self.view.get_li_links(instance=instance)
         
-        response = self.response_class(request=self.request, template=self.template_name, context=context)
+        return context
+    
+    def get_template_names(self):
+        params = {
+            'base': self.template_dir_name,
+            'view_class': self.view.view_class,
+            'resource_name': getattr(self.resource, 'resource_name', None),
+            'app_name': self.resource.app_name,
+        }
+        
+        names = [
+            '{base}/{app_name}/{resource_name}/{view_class}.html'.format(**params),
+            '{base}/{app_name}/{view_class}.html'.format(**params),
+            '{base}/{view_class}.html'.format(**params),
+            self.template_name,
+        ]
+        
+        return names
+    
+    def serialize(self, content_type, instance=None, errors=None):
+        context = self.get_context_data(instance=instance, errors=errors)
+        response = self.response_class(request=self.request, template=self.get_template_names(), context=context)
+        response['Content-Type'] = 'text/html'
         return response
     
     def deserialize(self, form_class, instance=None):

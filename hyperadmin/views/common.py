@@ -20,6 +20,7 @@ class ConditionalAccessMixin(object):
 class ResourceViewMixin(ConditionalAccessMixin):
     resource = None
     resource_site = None
+    view_class = None
     
     def get_response_type(self):
         return mimeparse.best_match(

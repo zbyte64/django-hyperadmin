@@ -1,8 +1,6 @@
 {% extends "hyperadmin/base.html" %}
 
 {% block content %}
-<h1>Site Administration</h1>
-
 <div class="hypermediaresource">
 {% block embedded_links %}
 {% if embedded_links %}
@@ -22,6 +20,15 @@
 {% endif %}
 {% endblock %}
 
+{% block templated_queries %}
+{% if templated_queries %}
+<h2>Templated Queries</h2>
+<div id=templated_queries">
+{% include "hyperadmin/includes/templated_queries.html" with links=templated_queries %}
+</div>
+{% endif %}
+{% endblock %}
+
 {% block errors %}
 {% if errors %}
 <h2>Errors</2>
@@ -31,11 +38,12 @@
 {% endif %}
 {% endblock errors %}
 {% block items %}
-<h2>Applications</h2>
+<h2>Items</h2>
 <div id="items">
-{% include "hyperadmin/includes/resource_items.html" %}
+{% include "hyperadmin/includes/items.html" %}
 </div>
 {% endblock items %}
+
 </div>
 {% endblock content %}
 

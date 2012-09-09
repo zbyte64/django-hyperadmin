@@ -1,2 +1,2 @@
-from common import Client, TemplateClient
+from common import Client, SimpleTemplateClient
 from emberjs import EmberJSClient

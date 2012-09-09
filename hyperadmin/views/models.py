@@ -44,6 +44,8 @@ class ModelResourceViewMixin(ResourceViewMixin, generic.edit.ModelFormMixin):
         return self.resource.has_delete_permission(self.request, instance)
 
 class ModelCreateResourceView(ModelResourceViewMixin, generic.CreateView):
+    view_class = 'change_form'
+    
     def get_queryset(self):
         return []
     
@@ -65,6 +67,8 @@ class ModelCreateResourceView(ModelResourceViewMixin, generic.CreateView):
         return [create_link] + super(ModelCreateResourceView, self).get_ln_links(instance)
 
 class ModelListResourceView(ModelCreateResourceView):
+    view_class = 'change_list'
+    
     def get_form_class(self, instance=None):
         if instance:
             return self.resource.get_list_form_class()
@@ -157,6 +161,8 @@ class ModelDetailMixin(object):
         return self.resource.generate_response(self, instance=self.object)
 
 class ModelDeleteResourceView(ModelDetailMixin, ModelResourceViewMixin, generic.DeleteView):
+    view_class = 'delete_confirmation'
+    
     def delete(self, request, *args, **kwargs):
         self.object = self.get_object()
         if not self.can_delete(self.object):
@@ -178,6 +184,8 @@ class ModelDeleteResourceView(ModelDetailMixin, ModelResourceViewMixin, generic.
 
 
 class ModelDetailResourceView(ModelDetailMixin, ModelResourceViewMixin, generic.UpdateView):
+    view_class = 'change_form'
+    
     def post(self, request, *args, **kwargs):
         self.object = self.get_object()
         if not self.can_change(self.object):

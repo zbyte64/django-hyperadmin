@@ -1,5 +1,5 @@
-from common import TemplateClient
+from common import SimpleTemplateClient
 
-class EmberJSClient(TemplateClient):
+class EmberJSClient(SimpleTemplateClient):
     template_name = 'hyperadmin/client/emberjs.html'
     

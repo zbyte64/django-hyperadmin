@@ -1,4 +1,4 @@
-from django.conf.urls.defaults import patterns, url
+from django.conf.urls import patterns, url
 from django.views.generic import TemplateView
 
 class Client(object):
@@ -14,7 +14,7 @@ class Client(object):
         return self.get_urls(), self.app_name, self.name
     urls = property(urls)
 
-class TemplateClientView(TemplateView):
+class SimpleTemplateClientView(TemplateView):
     client = None
     
     def get_context_data(self, **kwargs):
@@ -22,9 +22,9 @@ class TemplateClientView(TemplateView):
         context.update(self.client.get_context_data())
         return context
 
-class TemplateClient(Client):
+class SimpleTemplateClient(Client):
     template_name = None
-    template_view = TemplateClientView
+    template_view = SimpleTemplateClientView
     
     def get_media(self):
         pass #TODO

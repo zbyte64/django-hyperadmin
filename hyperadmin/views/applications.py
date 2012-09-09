@@ -3,6 +3,8 @@ from django.views import generic
 from common import ResourceViewMixin
 
 class ApplicationResourceView(ResourceViewMixin, generic.ListView):
+    view_class = 'app_index'
+    
     def get_items(self):
         return self.resource.get_items(self.request)
     
@@ -10,5 +12,5 @@ class ApplicationResourceView(ResourceViewMixin, generic.ListView):
         return self.resource.generate_response(self)
 
 class SiteResourceView(ApplicationResourceView):
-    pass
+    view_class = 'index'
 
