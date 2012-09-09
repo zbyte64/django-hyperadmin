@@ -2,14 +2,6 @@
 
 {% block content %}
 <div class="hypermediaresource">
-{% block embedded_links %}
-{% if embedded_links %}
-<h2>Embedded Links</h2>
-<div id="embedded_links">
-{% include "hyperadmin/includes/links.html" with links=embedded_links %}
-</div>
-{% endif %}
-{% endblock %}
 
 {% block outbound_links %}
 {% if outbound_links %}
@@ -29,20 +21,21 @@
 {% endif %}
 {% endblock %}
 
-{% block errors %}
-{% if errors %}
-<h2>Errors</2>
-<div id="errors" class="errors">
-{{errors}}
-</div>
-{% endif %}
-{% endblock errors %}
 {% block items %}
 <h2>Items</h2>
 <div id="items">
 {% include "hyperadmin/includes/items.html" %}
 </div>
 {% endblock items %}
+
+{% block embedded_links %}
+{% if embedded_links %}
+<h2>Embedded Links</h2>
+<div id="embedded_links">
+{% include "hyperadmin/includes/links.html" with links=embedded_links %}
+</div>
+{% endif %}
+{% endblock %}
 
 </div>
 {% endblock content %}
