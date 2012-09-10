@@ -32,6 +32,14 @@ class MockAdminModel(object):
     def queryset(self, request):
         return self.resource.get_queryset(request)
 
+class MockInlineAdminModel(MockAdminModel):
+    def __init__(self, parent, resource, model_admin=None):
+        self.parent = parent
+        super(MockInlineAdminModel, self).__init__(resource=resource, model_admin=model_admin)
+    
+    def queryset(self, request):
+        return self.resource.get_queryset(request, self.parent)
+
 class ListForm(forms.Form):
     '''
     hyperadmin knows how to serialize forms, not models.
@@ -307,4 +315,28 @@ class InlineModelResource(ModelResource):
         if not instance:
             return self.parent_resource.get_absolute_url()
         return None
+    
+    def get_changelist(self, parent, request):
+        from django.contrib.admin.views.main  import ChangeList
+        
+        admin_model = MockInlineAdminModel(parent, self)
+        
+        changelist_cls = ChangeList
+        kwargs = {'request':request,
+                  'model':self.resource_adaptor,
+                  'list_display':self.list_display,
+                  'list_display_links':self.list_display_links,
+                  'list_filter':self.list_filter,
+                  'date_hierarchy':self.date_hierarchy,
+                  'search_fields':self.search_fields,
+                  'list_select_related':self.list_select_related,
+                  'list_per_page':self.list_per_page,
+                  'list_max_show_all':self.list_max_show_all,
+                  'list_editable':self.list_editable,
+                  'model_admin':admin_model,}
+        argspec = inspect.getargspec(changelist_cls.__init__)
+        for key in kwargs.keys():
+            if key not in argspec.args:
+                del kwargs[key]
+        return changelist_cls(**kwargs)
 

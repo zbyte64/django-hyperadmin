@@ -281,8 +281,10 @@ class InlineModelCreateResourceView(InlineModelMixin, ModelCreateResourceView):
     pass
 
 class InlineModelListResourceView(InlineModelMixin, ModelListResourceView):
-    def get_meta(self):
-        return {} #TODO implement changelist instead
+    def get_changelist(self):
+        if not hasattr(self, '_changelist'):
+            self._changelist = self.resource.get_changelist(self.get_parent(), self.request)
+        return self._changelist
 
 class InlineModelDetailMixin(object):
     def get_object(self):
