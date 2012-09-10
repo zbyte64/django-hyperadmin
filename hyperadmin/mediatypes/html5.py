@@ -65,12 +65,8 @@ class Html5MediaType(MediaType):
         context['non_idempotent_updates'] = self.view.get_ln_links(instance=instance)
         context['idempotent_updates'] = self.view.get_li_links(instance=instance)
         
-        #TODO this should be handle by meta
-        if instance is None and hasattr(self.view.resource, 'get_list_form_class'):
-            form_cls = self.view.resource.get_list_form_class()
-            context['display_fields'] = list()
-            for field in form_cls():
-                context['display_fields'].append({'prompt':field.label})
+        if meta and 'display_fields' in meta:
+            context['display_fields'] = meta['display_fields']
         
         return context
     

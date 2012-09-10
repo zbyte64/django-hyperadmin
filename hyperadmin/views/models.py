@@ -12,6 +12,9 @@ class ModelResourceViewMixin(ResourceViewMixin, generic.edit.ModelFormMixin):
     model = None
     queryset = None
     
+    def get_meta(self):
+        return {}
+    
     def get_queryset(self):
         return self.resource.get_queryset(self.request)
     
@@ -50,7 +53,7 @@ class ModelCreateResourceView(ModelResourceViewMixin, generic.CreateView):
         return []
     
     def get(self, request, *args, **kwargs):
-        return self.resource.generate_response(self, form_link=self.get_create_link())
+        return self.resource.generate_response(self, form_link=self.get_create_link(), meta=self.get_meta())
     
     def get_create_link(self, **form_kwargs):
         form_class = self.get_form_class()
@@ -68,7 +71,7 @@ class ModelCreateResourceView(ModelResourceViewMixin, generic.CreateView):
             return http.HttpResponseForbidden(_(u"You may add an object"))
         form_kwargs = self.get_request_form_kwargs()
         form_link = self.get_create_link(**form_kwargs)
-        return self.resource.generate_create_response(self, form_link=form_link)
+        return self.resource.generate_create_response(self, form_link=form_link, meta=self.get_meta())
     
     def get_ln_links(self, instance=None):
         create_link = self.get_create_link()
@@ -76,6 +79,14 @@ class ModelCreateResourceView(ModelResourceViewMixin, generic.CreateView):
 
 class ModelListResourceView(ModelCreateResourceView):
     view_class = 'change_list'
+    
+    def get_meta(self):
+        form_cls = self.resource.get_list_form_class()
+        data = dict()
+        data['display_fields'] = list()
+        for field in form_cls():
+            data['display_fields'].append({'prompt':field.label})
+        return data
     
     def get_form_class(self, instance=None):
         if instance:
@@ -166,7 +177,7 @@ class ModelDetailMixin(object):
     
     def get(self, request, *args, **kwargs):
         self.object = self.get_object()
-        return self.resource.generate_response(self, instance=self.object)
+        return self.resource.generate_response(self, instance=self.object, meta=self.get_meta())
 
 class ModelDeleteResourceView(ModelDetailMixin, ModelResourceViewMixin, generic.DeleteView):
     view_class = 'delete_confirmation'
@@ -196,7 +207,7 @@ class ModelDetailResourceView(ModelDetailMixin, ModelResourceViewMixin, generic.
     
     def get(self, request, *args, **kwargs):
         self.object = self.get_object()
-        return self.resource.generate_response(self, instance=self.object, form_link=self.get_update_link(instance=self.object))
+        return self.resource.generate_response(self, instance=self.object, form_link=self.get_update_link(instance=self.object), meta=self.get_meta())
     
     def post(self, request, *args, **kwargs):
         self.object = self.get_object()
@@ -204,7 +215,7 @@ class ModelDetailResourceView(ModelDetailMixin, ModelResourceViewMixin, generic.
             return http.HttpResponseForbidden(_(u"You may not modify that object"))
         form_kwargs = self.get_request_form_kwargs()
         form_link = self.get_update_link(instance=self.object, **form_kwargs)
-        return self.resource.generate_update_response(self, instance=self.object, form_link=form_link)
+        return self.resource.generate_update_response(self, instance=self.object, form_link=form_link, meta=self.get_meta())
     
     def delete(self, request, *args, **kwargs):
         self.object = self.get_object()

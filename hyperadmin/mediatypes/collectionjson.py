@@ -188,11 +188,8 @@ class CollectionHyperAdminJSON(CollectionNextJSON):
         
         data['resource_class'] = self.view.resource.resource_class
         #TODO power this by meta
-        if instance is None and hasattr(self.view.resource, 'get_list_form_class'):
-            form_cls = self.view.resource.get_list_form_class()
-            data['display_fields'] = list()
-            for field in form_cls():
-                data['display_fields'].append({'prompt':field.label})
+        if meta and 'display_fields' in meta:
+            data['display_fields'] = meta.pop('display_fields')
         return data
 
 BUILTIN_MEDIA_TYPES['application/vnd.Collection.hyperadmin+JSON'] = CollectionHyperAdminJSON
