@@ -1,0 +1,25 @@
+{% if link.method == "GET" or link.method == "POST" %}
+{% with link.get_link_factor as link_factor %}
+<div class="hypermedialink {{link_factor}}">
+{% if link.form %}
+<form method="{{link.method}}" action="{{link.url}}" class="{{link.class_attr}}" rel="{{link.rel}}" enctype="multipart/form-data">
+{% if link_factor == "LI" or link_factor == "LN" %}
+{% csrf_token %}
+{% endif %}
+<table>
+{{link.form.as_table}}
+</table>
+<input type="submit" value="{{link.prompt}}"/>
+</form>
+{% else %}
+{% if link.method == "GET" %}
+<a href="{{link.url}}" class="{{link.class_attr}}" rel="{{link.rel}}">{{link.prompt}}</a>
+{% else %}
+<form method="{{link.method}}" action="{{link.url}}" class="{{link.class_attr}}" rel="{{link.rel}}">{% csrf_token %}
+<input type="submit" value="{{link.prompt}}"/>
+</form>
+{% endif %}
+{% endif %}
+</div>
+{% endwith %}
+{% endif %}
