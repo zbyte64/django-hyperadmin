@@ -197,7 +197,7 @@ class ModelDeleteResourceView(ModelDetailMixin, ModelResourceViewMixin, generic.
     
     def get_li_links(self, instance=None):
         if instance and self.can_delete(instance):
-            delete_link = Link(url=self.get_instance_url(instance),
+            delete_link = Link(url=self.resource.get_delete_url(instance),
                                rel='delete',
                                prompt='delete',
                                method='POST')
