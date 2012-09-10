@@ -76,13 +76,17 @@ class BaseResource(object):
             raise ValueError('Unrecognized response content type: %s' % content_type)
         return media_type_cls(view)
     
-    def generate_response(self, view, instance=None, errors=None):
+    def convert_form_to_link(self, form):
+        #TODO this is wrong....
+        return Link(form=form, url=self.get_absolute_url(), method="POST")
+    
+    def generate_response(self, view, instance=None, form_link=None, meta=None):
         try:
             media_type = self.get_response_media_type(view)
         except ValueError:
             raise #TODO raise Bad request...
         content_type = view.get_response_type()
-        return media_type.serialize(content_type=content_type, instance=instance, errors=errors)
+        return media_type.serialize(content_type=content_type, instance=instance, form_link=form_link, meta=meta)
     
     def get_related_resource_from_field(self, field):
         return self.site.get_related_resource_from_field(field)
@@ -92,6 +96,9 @@ class BaseResource(object):
     
     def get_child_resource_links(self):
         return []
+    
+    def get_absolute_url(self):
+        raise NotImplementedError
 
 class SiteResource(BaseResource):
     resource_class = 'resourcelisting'
@@ -279,26 +286,26 @@ class CRUDResource(BaseResource):
         response['Location'] = next_url
         return response
     
-    def generate_create_response(self, view, form_class):
+    def generate_create_response(self, view, form_link, meta=None):
         instance = None
         try:
             media_type = self.get_request_media_type(view)
         except ValueError:
             raise #TODO raise Bad request
-        form = media_type.deserialize(form_class=form_class)
-        if form.is_valid():
-            return self.form_valid(form)
-        return self.generate_response(view, instance=instance, errors=form.errors)
+        #form = media_type.deserialize(form_class=form_class)
+        if form_link.form.is_valid():
+            return self.form_valid(form_link.form)
+        return self.generate_response(view, instance=instance, form_link=form_link, meta=meta)
     
-    def generate_update_response(self, view, instance, form_class):
+    def generate_update_response(self, view, instance, form_link, meta=None):
         try:
             media_type = self.get_request_media_type(view)
         except ValueError:
             raise #TODO raise Bad request
-        form = media_type.deserialize(instance=instance, form_class=form_class)
-        if form.is_valid():
-            return self.form_valid(form)
-        return self.generate_response(view, instance=instance, errors=form.errors)
+        #form = media_type.deserialize(instance=instance, form_class=form_class)
+        if form_link.form.is_valid():
+            return self.form_valid(form_link.form)
+        return self.generate_response(view, instance=instance, form_link=form_link, meta=meta)
     
     def generate_delete_response(self, view):
         next_url = self.get_absolute_url()

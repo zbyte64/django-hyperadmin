@@ -34,6 +34,17 @@ class ResourceViewMixin(ConditionalAccessMixin):
             self.request.META.get('CONTENT_TYPE', self.request.META.get('HTTP_ACCEPT', ''))
         )
     
+    def get_response_media_type(self):
+        return self.resource.get_response_media_type(self)
+    
+    def get_request_media_type(self):
+        return self.resource.get_request_media_type(self)
+    
+    def get_request_form_kwargs(self):
+        media_type = self.get_request_media_type()
+        form_kwargs = media_type.deserialize()
+        return form_kwargs
+    
     def get_embedded_links(self, instance=None):
         return self.resource.get_embedded_links(instance)
     

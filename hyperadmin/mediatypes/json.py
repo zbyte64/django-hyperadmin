@@ -23,7 +23,7 @@ class JSON(MediaType):
     def convert_item_form(self, form):
         return self.convert_form(form)
     
-    def get_payload(self, instance=None, errors=None):
+    def get_payload(self, instance=None, form_link=None, meta=None):
         #CONSIDER a better inferface
         if hasattr(self.view, 'get_items_forms'):
             items = [self.convert_item_form(form) for form in self.view.get_items_forms()]
@@ -34,24 +34,19 @@ class JSON(MediaType):
             return items[0]
         return items
     
-    def serialize(self, content_type, instance=None, errors=None):
-        data = self.get_payload(instance=instance, errors=errors)
+    def serialize(self, content_type, instance=None, form_link=None, meta=None):
+        data = self.get_payload(instance=instance, form_link=form_link, meta=meta)
         content = json.dumps(data, cls=DjangoJSONEncoder)
         return http.HttpResponse(content, content_type)
     
     def deserialize(self, form_class, instance=None):
-        #TODO this needs more thinking
         if hasattr(self.request, 'body'):
             payload = self.request.body
         else:
             payload = self.request.raw_post_data
         data = json.loads(payload)
-        kwargs = self.view.get_form_kwargs()
-        kwargs.update({'instance':instance,
-                       'data':data,
-                       'files':self.request.FILES,})
-        form = form_class(**kwargs)
-        return form
+        return {'data':data,
+                'files':self.request.FILES,}
 
 BUILTIN_MEDIA_TYPES['application/json'] = JSON
 
@@ -60,8 +55,8 @@ class JSONP(JSON):
         #TODO make configurable
         return self.view.request.GET['callback']
     
-    def serialize(self, content_type, instance=None, errors=None):
-        data = self.get_payload(instance=instance, errors=errors)
+    def serialize(self, content_type, instance=None, form_link=None, meta=None):
+        data = self.get_payload(instance=instance, form_link=form_link, meta=meta)
         content = json.dumps(data, cls=DjangoJSONEncoder)
         callback = self.get_jsonp_callback()
         return http.HttpResponse(u'%s(%s)' % (callback, content), content_type)

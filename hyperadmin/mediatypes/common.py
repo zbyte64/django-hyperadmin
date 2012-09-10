@@ -15,10 +15,13 @@ class MediaType(object):
     def site(self):
         return self.resource.site
     
-    def serialize(self, content_type, instance=None, errors=None):
+    def serialize(self, content_type, instance=None, form_link=None, meta=None):
         raise NotImplementedError
     
-    def deserialize(self, form_class, instance=None):
+    def deserialize(self):
+        '''
+        returns keyword arguments for instantiating a form
+        '''
         raise NotImplementedError
     
     def get_form_instance_values(self, form, include_initial=True):

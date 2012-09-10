@@ -64,7 +64,7 @@ class CollectionJSON(MediaType):
                    'message':str(errors),}
         return error_r
     
-    def prepare_collection(self, content_type, instance=None, errors=None):
+    def prepare_collection(self, content_type, instance=None, form_link=None, meta=None):
         #CONSIDER a better inferface
         if hasattr(self.view, 'get_items_forms'):
             items = [self.convert_item_form(form) for form in self.view.get_items_forms()]
@@ -83,25 +83,23 @@ class CollectionJSON(MediaType):
             "queries": [self.convert_link(query) for query in queries],
         }
         
-        if errors:
-            data['error'] = self.convert_errors(errors)
+        if form_link and form_link.form.errors:
+            data['error'] = self.convert_errors(form_link.form.errors)
         
-        ln_links = self.view.get_ln_links(instance=instance)
         #get_non_idempotent_updates
         #get_idempotent_updates
-        if len(ln_links):
-            data['template'] = self.convert_link(ln_links[0])
+        if form_link:
+            data['template'] = self.convert_link(form_link)
         
-        data.update(href=self.request.get_full_path(), version="1.0")
+        data.update(href=self.request.get_full_path(), version="1.0", meta=meta)
         return data
     
-    def serialize(self, content_type, instance=None, errors=None):
-        data = self.prepare_collection(content_type, instance=instance, errors=errors)
+    def serialize(self, content_type, instance=None, form_link=None, meta=None):
+        data = self.prepare_collection(content_type, instance=instance, form_link=form_link, meta=meta)
         content = json.dumps({"collection":data}, cls=DjangoJSONEncoder)
         return http.HttpResponse(content, content_type)
     
-    def deserialize(self, form_class, instance=None):
-        #TODO this needs more thinking
+    def deserialize(self):
         if hasattr(self.request, 'body'):
             payload = self.request.body
         else:
@@ -116,12 +114,9 @@ class CollectionJSON(MediaType):
                 #TODO storage lookup could be done better
                 storage = self.site.applications['-storages'].resource_adaptor['media'].resource_adaptor
                 files[field['name']] = storage.open(field['value'])
-        kwargs = self.view.get_form_kwargs()
-        kwargs.update({'instance':instance,
-                       'data':form_data,
-                       'files':files,})
-        form = form_class(**kwargs)
-        return form
+        
+        return {'data':form_data,
+                'files':files,}
 
 BUILTIN_MEDIA_TYPES['application/vnd.Collection+JSON'] = CollectionJSON
 
@@ -182,8 +177,8 @@ class CollectionHyperAdminJSON(CollectionNextJSON):
         item_r['prompt'] = unicode(resource)
         return item_r
     
-    def prepare_collection(self, content_type, instance=None, errors=None):
-        data = super(CollectionHyperAdminJSON, self).prepare_collection(content_type, instance=instance, errors=errors)
+    def prepare_collection(self, content_type, instance=None, form_link=None, meta=None):
+        data = super(CollectionHyperAdminJSON, self).prepare_collection(content_type, instance=instance, form_link=form_link, meta=meta)
         
         update_links = self.view.get_ln_links(instance=instance) + self.view.get_li_links(instance=instance)
         #get_non_idempotent_updates
@@ -192,7 +187,7 @@ class CollectionHyperAdminJSON(CollectionNextJSON):
             data['templates'] = [self.convert_link(link) for link in update_links]
         
         data['resource_class'] = self.view.resource.resource_class
-        #TODO a better interface for list fields?
+        #TODO power this by meta
         if instance is None and hasattr(self.view.resource, 'get_list_form_class'):
             form_cls = self.view.resource.get_list_form_class()
             data['display_fields'] = list()

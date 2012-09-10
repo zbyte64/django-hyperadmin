@@ -61,7 +61,7 @@ class CollectionJsonTestCase(unittest.TestCase):
         view = CollectionMockResourceView(items)
         view.request = view.factory.post('/', **{'wsgi.input':FakePayload(payload), 'CONTENT_LENGTH':len(payload)})
         adaptor = CollectionJSON(view)
-        data = adaptor.deserialize(form_class=view.get_form_class())
+        data = adaptor.deserialize()
         #json_items = data['collection']['items']
 
 class CollectionNextJsonTestCase(unittest.TestCase):

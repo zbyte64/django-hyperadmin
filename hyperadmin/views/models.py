@@ -50,20 +50,28 @@ class ModelCreateResourceView(ModelResourceViewMixin, generic.CreateView):
         return []
     
     def get(self, request, *args, **kwargs):
-        return self.resource.generate_response(self)
+        return self.resource.generate_response(self, form_link=self.get_create_link())
     
-    def post(self, request, *args, **kwargs):
-        if not self.can_add():
-            return http.HttpResponseForbidden(_(u"You may add an object"))
-        return self.resource.generate_create_response(self, form_class=self.get_form_class())
-    
-    def get_ln_links(self, instance=None):
-        form = self.get_form(instance=instance)
+    def get_create_link(self, **form_kwargs):
+        form_class = self.get_form_class()
+        form_kwargs.update(self.get_form_kwargs())
+        form = form_class(**form_kwargs)
         create_link = Link(url=self.request.path,
                            method='POST', #TODO should this be put?
                            form=form,
                            prompt='create',
                            rel='create',)
+        return create_link
+    
+    def post(self, request, *args, **kwargs):
+        if not self.can_add():
+            return http.HttpResponseForbidden(_(u"You may add an object"))
+        form_kwargs = self.get_request_form_kwargs()
+        form_link = self.get_create_link(**form_kwargs)
+        return self.resource.generate_create_response(self, form_link=form_link)
+    
+    def get_ln_links(self, instance=None):
+        create_link = self.get_create_link()
         return [create_link] + super(ModelCreateResourceView, self).get_ln_links(instance)
 
 class ModelListResourceView(ModelCreateResourceView):
@@ -186,11 +194,17 @@ class ModelDeleteResourceView(ModelDetailMixin, ModelResourceViewMixin, generic.
 class ModelDetailResourceView(ModelDetailMixin, ModelResourceViewMixin, generic.UpdateView):
     view_class = 'change_form'
     
+    def get(self, request, *args, **kwargs):
+        self.object = self.get_object()
+        return self.resource.generate_response(self, instance=self.object, form_link=self.get_update_link(instance=self.object))
+    
     def post(self, request, *args, **kwargs):
         self.object = self.get_object()
         if not self.can_change(self.object):
             return http.HttpResponseForbidden(_(u"You may not modify that object"))
-        return self.resource.generate_update_response(self, instance=self.object, form_class=self.get_form_class())
+        form_kwargs = self.get_request_form_kwargs()
+        form_link = self.get_update_link(instance=self.object, **form_kwargs)
+        return self.resource.generate_update_response(self, instance=self.object, form_link=form_link)
     
     def delete(self, request, *args, **kwargs):
         self.object = self.get_object()
@@ -202,16 +216,22 @@ class ModelDetailResourceView(ModelDetailMixin, ModelResourceViewMixin, generic.
         
         return self.resource.generate_delete_response(self)
     
+    def get_update_link(self, **form_kwargs):
+        form_class = self.get_form_class()
+        form_kwargs.update(self.get_form_kwargs())
+        form = form_class(**form_kwargs)
+        update_link = Link(url=self.request.path,
+                           method='POST',
+                           form=form,
+                           prompt='update',
+                           rel='update',)
+        return update_link
+    
     def get_ln_links(self, instance=None):
         links = super(ModelDetailResourceView, self).get_ln_links(instance)
         assert instance
         if instance and self.can_change(instance):
-            form = self.get_form(instance=instance)
-            update_link = Link(url=self.request.path,
-                               method='POST',
-                               form=form,
-                               prompt='update',
-                               rel='update',)
+            update_link = self.get_update_link(instance=instance)
             return [update_link] + links
         return links
     

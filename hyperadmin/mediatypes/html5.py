@@ -48,9 +48,10 @@ class Html5MediaType(MediaType):
         item_r['prompt'] = unicode(form.instance)
         return item_r
     
-    def get_context_data(self, instance=None, errors=None):
+    def get_context_data(self, instance=None, form_link=None, meta=None):
         context = {'instance':instance,
-                   'errors':errors}
+                   'form_link':form_link,
+                   'meta':meta,}
         
         if hasattr(self.view, 'get_items_forms'):
             items = [self.convert_item_form(form) for form in self.view.get_items_forms()]
@@ -64,6 +65,7 @@ class Html5MediaType(MediaType):
         context['non_idempotent_updates'] = self.view.get_ln_links(instance=instance)
         context['idempotent_updates'] = self.view.get_li_links(instance=instance)
         
+        #TODO this should be handle by meta
         if instance is None and hasattr(self.view.resource, 'get_list_form_class'):
             form_cls = self.view.resource.get_list_form_class()
             context['display_fields'] = list()
@@ -89,21 +91,17 @@ class Html5MediaType(MediaType):
         
         return names
     
-    def serialize(self, content_type, instance=None, errors=None):
-        context = self.get_context_data(instance=instance, errors=errors)
+    def serialize(self, content_type, instance=None, form_link=None, meta=None):
+        context = self.get_context_data(instance=instance, form_link=form_link, meta=meta)
         response = self.response_class(request=self.request, template=self.get_template_names(), context=context)
         response['Content-Type'] = 'text/html'
         return response
     
-    def deserialize(self, form_class, instance=None):
+    def deserialize(self):
         self.check_csrf()
         
-        kwargs = self.view.get_form_kwargs()
-        kwargs.update({'instance':instance,
-                       'data':self.request.POST,
-                       'files':self.request.FILES,})
-        form = form_class(**kwargs)
-        return form
+        return {'data':self.request.POST,
+                'files':self.request.FILES,}
     
     def check_csrf(self):
         csrf_middleware = CsrfViewMiddleware()
