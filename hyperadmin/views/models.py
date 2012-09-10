@@ -86,6 +86,9 @@ class ModelListResourceView(ModelCreateResourceView):
         data['display_fields'] = list()
         for field in form_cls():
             data['display_fields'].append({'prompt':field.label})
+        changelist = self.get_changelist()
+        data['object_count'] = changelist.paginator.count
+        data['number_of_pages'] = changelist.paginator.num_pages
         return data
     
     def get_form_class(self, instance=None):
@@ -278,7 +281,8 @@ class InlineModelCreateResourceView(InlineModelMixin, ModelCreateResourceView):
     pass
 
 class InlineModelListResourceView(InlineModelMixin, ModelListResourceView):
-    pass
+    def get_meta(self):
+        return {} #TODO implement changelist instead
 
 class InlineModelDetailMixin(object):
     def get_object(self):
