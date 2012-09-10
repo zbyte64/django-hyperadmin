@@ -83,7 +83,7 @@ class CollectionJSON(MediaType):
             "queries": [self.convert_link(query) for query in queries],
         }
         
-        if form_link and form_link.form.errors:
+        if form_link and form_link.form and form_link.form.errors:
             data['error'] = self.convert_errors(form_link.form.errors)
         
         #get_non_idempotent_updates
