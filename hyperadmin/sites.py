@@ -40,6 +40,15 @@ class ResourceSite(object):
     def register_media_type(self, media_type, media_type_handler):
         self.media_types[media_type] = media_type_handler
     
+    def get_resource(self, resource_adaptor):
+        return self.registry[resource_adaptor]
+    
+    def get_resource_item(self, instance, resource_adaptor=None):
+        if resource_adaptor is None:
+            resource_adaptor = type(instance)
+        resource = self.get_resource(resource_adaptor)
+        return resource.get_resource_item(instance)
+    
     def get_urls(self):
         urlpatterns = self.get_extra_urls()
         urlpatterns += self.site_resource.get_urls()
@@ -165,8 +174,11 @@ class ResourceSite(object):
     
     def install_models_from_site(self, site):
         from resources import InlineModelResource
+        from django.contrib.admin import ModelAdmin
         for model, admin_model in site._registry.iteritems():
             if model in self.registry:
+                continue
+            if not isinstance(admin_model, ModelAdmin):
                 continue
             admin_class = self.generate_model_resource_from_admin_model(admin_model)
             resource = self.register(model, admin_class)

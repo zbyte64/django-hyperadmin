@@ -2,10 +2,11 @@ from django import http
 from django.conf.urls.defaults import patterns, url, include
 
 from hyperadmin import views
-from links import Link
+from links import Link, ResourceItem
 
 class BaseResource(object):
     resource_class = '' #hint to the client how this resource is used
+    resource_item_class = ResourceItem
     
     def __init__(self, resource_adaptor, site):
         self.resource_adaptor = resource_adaptor
@@ -76,10 +77,6 @@ class BaseResource(object):
             raise ValueError('Unrecognized response content type: %s' % content_type)
         return media_type_cls(view)
     
-    def convert_form_to_link(self, form):
-        #TODO this is wrong....
-        return Link(form=form, url=self.get_absolute_url(), method="POST")
-    
     def generate_response(self, view, instance=None, form_link=None, meta=None):
         try:
             media_type = self.get_response_media_type(view)
@@ -99,6 +96,9 @@ class BaseResource(object):
     
     def get_absolute_url(self):
         raise NotImplementedError
+    
+    def get_resource_item(self, instance):
+        return self.resource_item_class(resource=self, instance=instance)
 
 class SiteResource(BaseResource):
     resource_class = 'resourcelisting'

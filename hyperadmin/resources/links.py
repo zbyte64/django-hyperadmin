@@ -31,4 +31,39 @@ class Link(object):
     def class_attr(self):
         return u' '.join(self.classes)
 
+class ResourceItem(object):
+    def __init__(self, resource, instance):
+        self.resource = resource
+        self.instance = instance
+    
+    def get_embedded_links(self):
+        return self.resource.get_embedded_links(instance=self.instance)
+    
+    def get_outbound_links(self):
+        return self.resource.get_outbound_links(instance=self.instance)
+    
+    def get_templated_queries(self):
+        return self.resource.get_templated_queries(instance=self.instance)
+    
+    def get_ln_links(self):
+        return self.resource.get_ln_links(instance=self.instance)
+    
+    def get_li_links(self):
+        return self.resource.get_li_links(instance=self.instance)
+    
+    def get_absolute_url(self):
+        return self.resource.get_instance_url(instance=self.instance)
+    
+    def get_form_class(self):
+        return self.resource.get_form_class(instance=self.instance)
+    
+    def get_form_kwargs(self, **kwargs):
+        kwargs['instance'] = self.instance
+        return kwargs
+    
+    def get_form(self, **form_kwargs):
+        form_cls = self.get_form_class()
+        kwargs = self.get_form_kwargs(**form_kwargs)
+        form = form_cls(**kwargs)
+        return form
 
