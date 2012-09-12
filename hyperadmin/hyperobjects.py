@@ -1,5 +1,5 @@
 class Link(object):
-    def __init__(self, url, method='GET', form=None, classes=[], descriptors=None, rel=None, prompt=None, cu_headers=None, cr_headers=None):
+    def __init__(self, url, method='GET', form=None, classes=[], descriptors=None, rel=None, prompt=None, cu_headers=None, cr_headers=None, response=None):
         '''
         fields = dictionary of django fields describing the accepted data
         descriptors = dictionary of data describing the link
@@ -14,6 +14,7 @@ class Link(object):
         self.prompt = prompt
         self.cu_headers = cu_headers
         self.cr_headers = cr_headers
+        self.response = response
     
     def get_link_factor(self):
         if self.method in ('PUT', 'DELETE'):
@@ -30,6 +31,16 @@ class Link(object):
     
     def class_attr(self):
         return u' '.join(self.classes)
+    
+    def submit(self, media_type=None, content_type=None, meta=None):
+        assert self.response
+        if self.form:
+            assert self.form.is_valid()
+        if media_type is None:
+            media_type = lambda **kwargs: kwargs
+        if content_type is None:
+            content_type = 'text/html'
+        return self.response(media_type=media_type, content_type=content_type, meta=meta, form_link=self)
 
 class ResourceItem(object):
     form_class = None

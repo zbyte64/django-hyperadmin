@@ -44,6 +44,19 @@ class ModelResourceViewMixin(ResourceViewMixin, generic.edit.ModelFormMixin):
     
     def can_delete(self, instance=None):
         return self.resource.has_delete_permission(self.request, instance)
+    
+    def get_create_link(self, **form_kwargs):
+        form_class = self.get_form_class()
+        form_kwargs.update(self.get_form_kwargs())
+        return self.resource.get_create_link(form_class=form_class, form_kwargs=form_kwargs)
+    
+    def get_update_link(self, **form_kwargs):
+        form_class = self.get_form_class()
+        form_kwargs.update(self.get_form_kwargs())
+        return self.resource.get_update_link(form_class=form_class, form_kwargs=form_kwargs)
+    
+    def get_delete_link(self, **form_kwargs):
+        return self.resource.get_delete_link(form_kwargs=form_kwargs)
 
 class ModelCreateResourceView(ModelResourceViewMixin, generic.CreateView):
     view_class = 'change_form'
@@ -53,17 +66,6 @@ class ModelCreateResourceView(ModelResourceViewMixin, generic.CreateView):
     
     def get(self, request, *args, **kwargs):
         return self.resource.generate_response(self.get_response_media_type(), self.get_response_type(), form_link=self.get_create_link(), meta=self.get_meta())
-    
-    def get_create_link(self, **form_kwargs):
-        form_class = self.get_form_class()
-        form_kwargs.update(self.get_form_kwargs())
-        form = form_class(**form_kwargs)
-        create_link = Link(url=self.request.path,
-                           method='POST', #TODO should this be put?
-                           form=form,
-                           prompt='create',
-                           rel='create',)
-        return create_link
     
     def post(self, request, *args, **kwargs):
         if not self.can_add():
@@ -195,10 +197,7 @@ class ModelDeleteResourceView(ModelDetailMixin, ModelResourceViewMixin, generic.
     
     def get_li_links(self, instance=None):
         if instance and self.can_delete(instance):
-            delete_link = Link(url=self.resource.get_delete_url(instance),
-                               rel='delete',
-                               prompt='delete',
-                               method='POST')
+            delete_link = self.get_delete_link(instance=instance)
             return [delete_link]
         return []
 
@@ -227,17 +226,6 @@ class ModelDetailResourceView(ModelDetailMixin, ModelResourceViewMixin, generic.
             self.object.delete()
         
         return self.resource.generate_delete_response(self.get_response_media_type(), self.get_response_type())
-    
-    def get_update_link(self, **form_kwargs):
-        form_class = self.get_form_class()
-        form_kwargs.update(self.get_form_kwargs())
-        form = form_class(**form_kwargs)
-        update_link = Link(url=self.request.path,
-                           method='POST',
-                           form=form,
-                           prompt='update',
-                           rel='update',)
-        return update_link
     
     def get_ln_links(self, instance=None):
         links = super(ModelDetailResourceView, self).get_ln_links(instance)

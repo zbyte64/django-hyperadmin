@@ -157,6 +157,7 @@ class CRUDResource(BaseResource):
     def generate_create_response(self, media_type, content_type, form_link, meta=None):
         instance = None
         if form_link.form.is_valid():
+            #TODO media type should have a protocol for redirects and instances
             return self.form_valid(form_link.form)
         return self.generate_response(media_type, content_type, instance=instance, form_link=form_link, meta=meta)
     
