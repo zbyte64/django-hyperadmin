@@ -32,6 +32,8 @@ class Link(object):
         return u' '.join(self.classes)
 
 class ResourceItem(object):
+    form_class = None
+    
     def __init__(self, resource, instance):
         self.resource = resource
         self.instance = instance
@@ -55,6 +57,8 @@ class ResourceItem(object):
         return self.resource.get_instance_url(instance=self.instance)
     
     def get_form_class(self):
+        if self.form_class is not None:
+            return self.form_class
         return self.resource.get_form_class()
     
     def get_form_kwargs(self, **kwargs):

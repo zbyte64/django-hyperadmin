@@ -68,8 +68,11 @@ class ResourceViewMixin(ConditionalAccessMixin):
     def get_items(self):
         return []
     
+    def get_resource_item(self, instance):
+        return self.resource.get_resource_item(instance)
+    
     def get_resource_items(self):
-        return [self.resource.get_resource_item(item) for item in self.get_items()]
+        return [self.get_resource_item(item) for item in self.get_items()]
     
     def get_form_class(self, instance=None):
         return None

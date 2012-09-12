@@ -45,10 +45,9 @@ class ListForm(forms.Form):
     So for the list display we need a form
     '''
     
-    resource = None
-    
     def __init__(self, **kwargs):
         self.instance = kwargs.pop('instance', None)
+        self.resource = kwargs.pop('resource')
         super(ListForm, self).__init__(**kwargs)
         for display in self.resource.list_display:
             label = display
@@ -60,6 +59,14 @@ class ListForm(forms.Form):
                 if callable(val):
                     val = val()
                 self.initial[display] = force_unicode(val)
+
+class ListResourceItem(ResourceItem):
+    form_class = ListForm
+    
+    def get_form_kwargs(self, **kwargs):
+        kwargs = super(ListResourceItem, self).get_form_kwargs(**kwargs)
+        kwargs['resource'] = self.resource
+        return kwargs
 
 class ModelResource(CRUDResource):
     #TODO support the following:
@@ -219,12 +226,6 @@ class ModelResource(CRUDResource):
                 #TODO fields
         return AdminForm
     
-    def get_list_form_class(self):
-        #TODO improve this
-        class AdminListForm(ListForm):
-            resource = self
-        return AdminListForm
-    
     def get_embedded_links(self, instance=None):
         links = super(ModelResource, self).get_embedded_links(instance=instance)
         inline_links = list()
@@ -238,6 +239,11 @@ class ModelResource(CRUDResource):
                             rel='inline-%s' % inline.rel_name,)
                 inline_links.append(link)
         return links + inline_links
+    
+    def get_resource_item(self, instance, from_list=False):
+        if from_list:
+            return ListResourceItem(resource=self, instance=instance)
+        return super(ModelResource, self).get_resource_item(instance)
 
 class InlineModelResource(ModelResource):
     list_view = views.InlineModelListResourceView

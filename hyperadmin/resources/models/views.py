@@ -80,20 +80,16 @@ class ModelListResourceView(ModelCreateResourceView):
     view_class = 'change_list'
     
     def get_meta(self):
-        form_cls = self.resource.get_list_form_class()
+        resource_item = self.resource.get_resource_item(None, from_list=True)
+        form = resource_item.get_form()
         data = dict()
         data['display_fields'] = list()
-        for field in form_cls():
+        for field in form:
             data['display_fields'].append({'prompt':field.label})
         changelist = self.get_changelist()
         data['object_count'] = changelist.paginator.count
         data['number_of_pages'] = changelist.paginator.num_pages
         return data
-    
-    def get_form_class(self, instance=None):
-        if instance:
-            return self.resource.get_list_form_class()
-        return generic.edit.ModelFormMixin.get_form_class(self)
     
     def get_changelist(self):
         if not hasattr(self, '_changelist'):
@@ -170,6 +166,9 @@ class ModelListResourceView(ModelCreateResourceView):
         if ctx["show_all_url"]:
             links.append(Link(url=ctx["show_all_url"], prompt="show all", classes=classes, rel="pagination"))
         return links
+    
+    def get_resource_item(self, instance):
+        return self.resource.get_resource_item(instance, from_list=True)
 
 class ModelDetailMixin(object):
     def get_items(self, **kwargs):
