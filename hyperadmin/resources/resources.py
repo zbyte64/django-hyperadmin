@@ -1,11 +1,19 @@
 from django import http
+from django import forms
 from django.conf.urls.defaults import patterns, url
 
 from hyperadmin.hyperobjects import Link, ResourceItem
 
+
+class EmptyForm(forms.Form):
+    def __init__(self, **kwargs):
+        self.instance = kwargs.pop('instance', None)
+        super(EmptyForm, self).__init__(**kwargs)
+
 class BaseResource(object):
     resource_class = '' #hint to the client how this resource is used
     resource_item_class = ResourceItem
+    form_class = EmptyForm
     
     def __init__(self, resource_adaptor, site):
         self.resource_adaptor = resource_adaptor
@@ -62,6 +70,9 @@ class BaseResource(object):
     def get_form_class(self, instance=None):
         return self.form_class
     
+    def get_form_kwargs(self, **kwargs):
+        return kwargs
+    
     def get_request_media_type(self, view):
         content_type = view.get_request_type()
         media_type_cls = self.site.media_types.get(content_type, None)
@@ -98,6 +109,9 @@ class BaseResource(object):
     
     def get_resource_item(self, instance):
         return self.resource_item_class(resource=self, instance=instance)
+    
+    def get_prompt(self, instance):
+        return unicode(instance)
 
 class CRUDResource(BaseResource):
     resource_class = 'crudresource'

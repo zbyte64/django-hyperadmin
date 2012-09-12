@@ -1,33 +1,13 @@
-from django import forms
 from django.conf.urls.defaults import patterns, url
 from django.utils.functional import update_wrapper
 
 import urllib
 
-from hyperadmin.hyperobjects import Link, ResourceItem
+from hyperadmin.hyperobjects import Link
 from hyperadmin.resources import CRUDResource
 from hyperadmin.resources.storages import views
 from hyperadmin.resources.storages.views import BoundFile
-
-class UploadForm(forms.Form):
-    name = forms.CharField()
-    upload = forms.FileField()
-    overwrite = forms.BooleanField(required=False)
-    
-    def __init__(self, **kwargs):
-        self.instance = kwargs.pop('instance', None)
-        self.storage = kwargs.pop('storage')
-        super(UploadForm, self).__init__(**kwargs)
-        if self.instance:
-            self.initial['name'] = self.instance.name
-            self.initial['overwrite'] = True
-    
-    def save(self, commit=True):
-        if self.cleaned_data.get('overwrite', False): #TODO would be better if storage accepted an argument to overwrite
-            if self.storage.exists(self.cleaned_data['name']):
-                self.storage.delete(self.cleaned_data['name'])
-        name = self.storage.save(self.cleaned_data['name'], self.cleaned_data['upload'])
-        return BoundFile(self.storage, name)
+from hyperadmin.resources.storages.forms import UploadForm
 
 #CONSIDER: post needs to be multipart
 
@@ -100,8 +80,10 @@ class StorageResource(CRUDResource):
             links.append(link)
         return links, items
     
-    def get_form_class(self):
-        return self.form_class
+    def get_form_kwargs(self, **kwargs):
+        kwargs = super(StorageResource, self).get_form_kwargs(**kwargs)
+        kwargs['storage'] = self.resource_adaptor
+        return kwargs
     
     def get_instance_url(self, instance):
         return self.reverse('%s_%s_detail' % (self.app_name, self.resource_name), path=instance.name)

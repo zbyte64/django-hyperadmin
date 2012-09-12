@@ -55,9 +55,10 @@ class ResourceItem(object):
         return self.resource.get_instance_url(instance=self.instance)
     
     def get_form_class(self):
-        return self.resource.get_form_class(instance=self.instance)
+        return self.resource.get_form_class()
     
     def get_form_kwargs(self, **kwargs):
+        kwargs = self.resource.get_form_kwargs(**kwargs)
         kwargs['instance'] = self.instance
         return kwargs
     
@@ -66,4 +67,7 @@ class ResourceItem(object):
         kwargs = self.get_form_kwargs(**form_kwargs)
         form = form_cls(**kwargs)
         return form
+    
+    def get_prompt(self):
+        return self.resource.get_prompt(self.instance)
 

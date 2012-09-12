@@ -13,23 +13,20 @@ class CollectionJSON(MediaType):
                  "prompt": force_unicode(field.label)}
         return entry
     
-    def convert_resource(self, resource):
-        return {"classes":["resourceitem"]}
-    
     def links_for_instance(self, instance):
         result = dict()
         links = list()
-        links.extend(self.view.get_embedded_links(instance))
-        links.extend(self.view.get_outbound_links(instance))
+        links.extend(instance.get_embedded_links())
+        links.extend(instance.get_outbound_links())
         result["links"] = [self.convert_link(link) for link in links]
-        result["href"] = self.view.get_instance_url(instance)
+        result["href"] = instance.get_absolute_url()
         return result
     
     def convert_instance(self, instance):
-        #instance may be: ApplicationResource or CRUDResource
         result = self.links_for_instance(instance)
-        if isinstance(instance, BaseResource):
-            result.update(self.convert_resource(instance))
+        form = instance.get_form()
+        result['data'] = self.convert_form(form)
+        result['prompt'] = instance.get_prompt()
         return result
     
     def convert_form(self, form):
@@ -65,11 +62,7 @@ class CollectionJSON(MediaType):
         return error_r
     
     def prepare_collection(self, content_type, instance=None, form_link=None, meta=None):
-        #CONSIDER a better inferface
-        if hasattr(self.view, 'get_items_forms'):
-            items = [self.convert_item_form(form) for form in self.view.get_items_forms()]
-        else:
-            items = [self.convert_instance(item) for item in self.view.get_items()]
+        items = [self.convert_instance(item) for item in self.view.get_resource_items()]
         
         #the following maps hfactor to this media type
         links = list()
