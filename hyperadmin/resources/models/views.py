@@ -52,7 +52,7 @@ class ModelCreateResourceView(ModelResourceViewMixin, generic.CreateView):
         return []
     
     def get(self, request, *args, **kwargs):
-        return self.resource.generate_response(self, form_link=self.get_create_link(), meta=self.get_meta())
+        return self.resource.generate_response(self.get_response_media_type(), self.get_response_type(), form_link=self.get_create_link(), meta=self.get_meta())
     
     def get_create_link(self, **form_kwargs):
         form_class = self.get_form_class()
@@ -70,7 +70,7 @@ class ModelCreateResourceView(ModelResourceViewMixin, generic.CreateView):
             return http.HttpResponseForbidden(_(u"You may add an object"))
         form_kwargs = self.get_request_form_kwargs()
         form_link = self.get_create_link(**form_kwargs)
-        return self.resource.generate_create_response(self, form_link=form_link, meta=self.get_meta())
+        return self.resource.generate_create_response(self.get_response_media_type(), self.get_response_type(), form_link=form_link, meta=self.get_meta())
     
     def get_ln_links(self, instance=None):
         create_link = self.get_create_link()
@@ -178,7 +178,7 @@ class ModelDetailMixin(object):
     
     def get(self, request, *args, **kwargs):
         self.object = self.get_object()
-        return self.resource.generate_response(self, instance=self.object, meta=self.get_meta())
+        return self.resource.generate_response(self.get_response_media_type(), self.get_response_type(), instance=self.object, meta=self.get_meta())
 
 class ModelDeleteResourceView(ModelDetailMixin, ModelResourceViewMixin, generic.DeleteView):
     view_class = 'delete_confirmation'
@@ -191,7 +191,7 @@ class ModelDeleteResourceView(ModelDetailMixin, ModelResourceViewMixin, generic.
         with log_action(request.user, self.object, DELETION, request=request):
             self.object.delete()
         
-        return self.resource.generate_delete_response(self)
+        return self.resource.generate_delete_response(self.get_response_media_type(), self.get_response_type())
     
     def get_li_links(self, instance=None):
         if instance and self.can_delete(instance):
@@ -208,7 +208,7 @@ class ModelDetailResourceView(ModelDetailMixin, ModelResourceViewMixin, generic.
     
     def get(self, request, *args, **kwargs):
         self.object = self.get_object()
-        return self.resource.generate_response(self, instance=self.object, form_link=self.get_update_link(instance=self.object), meta=self.get_meta())
+        return self.resource.generate_response(self.get_response_media_type(), self.get_response_type(), instance=self.object, form_link=self.get_update_link(instance=self.object), meta=self.get_meta())
     
     def post(self, request, *args, **kwargs):
         self.object = self.get_object()
@@ -216,7 +216,7 @@ class ModelDetailResourceView(ModelDetailMixin, ModelResourceViewMixin, generic.
             return http.HttpResponseForbidden(_(u"You may not modify that object"))
         form_kwargs = self.get_request_form_kwargs()
         form_link = self.get_update_link(instance=self.object, **form_kwargs)
-        return self.resource.generate_update_response(self, instance=self.object, form_link=form_link, meta=self.get_meta())
+        return self.resource.generate_update_response(self.get_response_media_type(), self.get_response_type(), instance=self.object, form_link=form_link, meta=self.get_meta())
     
     def delete(self, request, *args, **kwargs):
         self.object = self.get_object()
@@ -226,7 +226,7 @@ class ModelDetailResourceView(ModelDetailMixin, ModelResourceViewMixin, generic.
         with log_action(request.user, self.object, DELETION, request=request):
             self.object.delete()
         
-        return self.resource.generate_delete_response(self)
+        return self.resource.generate_delete_response(self.get_response_media_type(), self.get_response_type())
     
     def get_update_link(self, **form_kwargs):
         form_class = self.get_form_class()

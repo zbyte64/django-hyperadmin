@@ -34,11 +34,19 @@ class ResourceViewMixin(ConditionalAccessMixin):
             self.request.META.get('CONTENT_TYPE', self.request.META.get('HTTP_ACCEPT', ''))
         )
     
-    def get_response_media_type(self):
-        return self.resource.get_response_media_type(self)
-    
     def get_request_media_type(self):
-        return self.resource.get_request_media_type(self)
+        content_type = self.get_request_type()
+        media_type_cls = self.resource_site.media_types.get(content_type, None)
+        if media_type_cls is None:
+            raise ValueError('Unrecognized request content type: %s' % content_type)
+        return media_type_cls(self)
+    
+    def get_response_media_type(self):
+        content_type = self.get_response_type()
+        media_type_cls = self.resource_site.media_types.get(content_type, None)
+        if media_type_cls is None:
+            raise ValueError('Unrecognized response content type: %s' % content_type)
+        return media_type_cls(self)
     
     def get_request_form_kwargs(self):
         media_type = self.get_request_media_type()

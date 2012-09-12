@@ -27,17 +27,17 @@ class AuthenticationResourceView(ResourceViewMixin, generic.View):
     
     def get(self, request, *args, **kwargs):
         self.object = self.get_object()
-        return self.resource.generate_response(self, instance=self.object, form_link=self.get_active_link())
+        return self.resource.generate_response(self.get_response_media_type(), self.get_response_type(), instance=self.object, form_link=self.get_active_link())
     
     def post(self, request, *args, **kwargs):
         self.object = self.get_object()
         form_kwargs = self.get_request_form_kwargs()
         form_link = self.get_active_link(**form_kwargs)
-        return self.resource.generate_update_response(self, instance=self.object, form_link=form_link)
+        return self.resource.generate_update_response(self.get_response_media_type(), self.get_response_type(), instance=self.object, form_link=form_link)
     
     def delete(self, request, *args, **kwargs):
         logout(request)
-        return self.resource.generate_delete_response(self)
+        return self.resource.generate_delete_response(self.get_response_media_type(), self.get_response_type())
     
     def get_login_link(self, **form_kwargs):
         form_class = self.get_form_class()
@@ -73,5 +73,5 @@ class AuthenticationLogoutView(ResourceViewMixin, generic.View):
     
     def get(self, request, *args, **kwargs):
         logout(request)
-        return self.resource.generate_delete_response(self)
+        return self.resource.generate_delete_response(self.get_response_media_type(), self.get_response_type())
 

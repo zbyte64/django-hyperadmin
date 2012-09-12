@@ -9,7 +9,7 @@ class ApplicationResourceView(ResourceViewMixin, generic.ListView):
         return self.resource.get_items(self.request)
     
     def get(self, request, *args, **kwargs):
-        return self.resource.generate_response(self)
+        return self.resource.generate_response(self.get_response_media_type(), self.get_response_type())
 
 class SiteResourceView(ApplicationResourceView):
     view_class = 'index'
