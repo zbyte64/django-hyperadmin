@@ -3,9 +3,8 @@ from django.views import generic
 from django import http
 
 from hyperadmin.models import log_action, DELETION
-from hyperadmin.resources.links import Link
-
-from common import ResourceViewMixin
+from hyperadmin.hyperobjects import Link
+from hyperadmin.resources.views import ResourceViewMixin
 
 class ModelResourceViewMixin(ResourceViewMixin, generic.edit.ModelFormMixin):
     form_class = None

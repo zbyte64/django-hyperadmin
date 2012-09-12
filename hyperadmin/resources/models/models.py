@@ -6,10 +6,9 @@ from django.utils.encoding import force_unicode
 from django.core.paginator import Paginator
 from django import forms
 
-from hyperadmin.views import models as views
-
-from resources import CRUDResource
-from links import Link
+from hyperadmin.hyperobjects import Link, ResourceItem
+from hyperadmin.resources import CRUDResource
+from hyperadmin.resources.models import views
 
 class MockAdminModel(object):
     def __init__(self, resource, model_admin=None):
@@ -301,7 +300,7 @@ class InlineModelResource(ModelResource):
     
     def get_add_url(self):
         #TODO i need parent resource in order to work
-        return ''
+        return './add/'
     
     def get_delete_url(self, instance):
         pk = getattr(instance, self.fk.name).pk

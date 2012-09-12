@@ -4,7 +4,8 @@ from django.test.client import FakePayload
 from django.utils import simplejson as json
 
 from hyperadmin.mediatypes.collectionjson import CollectionJSON, CollectionNextJSON
-from hyperadmin.resources import SiteResource, ApplicationResource
+from hyperadmin.resources.applications.site import SiteResource
+from hyperadmin.resources.applications.application import ApplicationResource
 from hyperadmin.sites import site
 
 from common import BaseMockResourceView

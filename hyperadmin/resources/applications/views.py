@@ -1,6 +1,6 @@
 from django.views import generic
 
-from common import ResourceViewMixin
+from hyperadmin.resources.views import ResourceViewMixin
 
 class ApplicationResourceView(ResourceViewMixin, generic.ListView):
     view_class = 'app_index'

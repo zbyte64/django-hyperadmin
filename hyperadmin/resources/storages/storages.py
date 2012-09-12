@@ -4,11 +4,10 @@ from django.utils.functional import update_wrapper
 
 import urllib
 
-from hyperadmin.views import storages as views
-from hyperadmin.views.storages import BoundFile
-
-from resources import CRUDResource
-from links import Link
+from hyperadmin.hyperobjects import Link, ResourceItem
+from hyperadmin.resources import CRUDResource
+from hyperadmin.resources.storages import views
+from hyperadmin.resources.storages.views import BoundFile
 
 class UploadForm(forms.Form):
     name = forms.CharField()

@@ -6,7 +6,7 @@ from django.test.client import FakePayload
 from django.utils import simplejson as json
 from django.core.files.base import ContentFile
 
-from hyperadmin.resources import ModelResource, InlineModelResource
+from hyperadmin.resources.models.models import ModelResource, InlineModelResource
 from hyperadmin.sites import ResourceSite
 
 from common import GenericURLResolver, SuperUserRequestFactory

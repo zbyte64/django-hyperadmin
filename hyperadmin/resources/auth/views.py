@@ -1,9 +1,8 @@
 from django.views import generic
 from django.contrib.auth import logout
 
-from hyperadmin.resources.links import Link
-
-from common import ResourceViewMixin
+from hyperadmin.hyperobjects import Link
+from hyperadmin.resources.views import ResourceViewMixin
 
 class AuthenticationResourceView(ResourceViewMixin, generic.View):
     view_class = 'login'

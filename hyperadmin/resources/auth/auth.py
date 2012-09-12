@@ -1,27 +1,11 @@
 from django.conf.urls.defaults import patterns, url
-from django.contrib.auth.forms import AuthenticationForm
-from django.contrib.auth import login
 from django import http
 
-from hyperadmin.views import auth as views
+from hyperadmin.hyperobjects import Link, ResourceItem
+from hyperadmin.resources import CRUDResource
+from hyperadmin.resources.auth import views
+from hyperadmin.resources.auth.forms import AuthenticationResourceForm
 
-from resources import CRUDResource
-from links import Link
-
-class AuthenticationResourceForm(AuthenticationForm):
-    def __init__(self, **kwargs):
-        self.instance = kwargs.pop('instance', None)
-        super(AuthenticationResourceForm, self).__init__(**kwargs)
-    
-    def check_for_test_cookie(self):
-        return
-    
-    def save(self, commit=True):
-        assert self.request
-       
-        user = self.get_user()
-        login(self.request, user)
-        return user
 
 class AuthResource(CRUDResource):
     form_class = AuthenticationResourceForm

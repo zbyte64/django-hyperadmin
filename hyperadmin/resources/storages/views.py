@@ -1,9 +1,8 @@
 from django.utils.translation import ugettext as _
 from django.views import generic
 
-from hyperadmin.resources.links import Link
-
-from common import ResourceViewMixin
+from hyperadmin.hyperobjects import Link
+from hyperadmin.resources.views import ResourceViewMixin
 
 class BoundFile(object):
     def __init__(self, storage, name):

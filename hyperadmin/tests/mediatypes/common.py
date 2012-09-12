@@ -2,7 +2,7 @@ from django.contrib.contenttypes.models import ContentType
 from django import forms
 from django.test.client import RequestFactory
 
-from hyperadmin.views import ResourceViewMixin
+from hyperadmin.resources.views import ResourceViewMixin
 
 class BaseMockResourceView(ResourceViewMixin):
     content_type = 'text/html'
@@ -11,7 +11,7 @@ class BaseMockResourceView(ResourceViewMixin):
         self.items = items
         self.factory = RequestFactory()
         self.request = self.factory.get('/')
-        from hyperadmin.resources import ModelResource
+        from hyperadmin.resources.models.models import ModelResource
         from hyperadmin.sites import site
         self.resource = ModelResource(ContentType, site)
         ResourceViewMixin.__init__(self)
