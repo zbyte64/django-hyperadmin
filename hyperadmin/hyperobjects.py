@@ -1,5 +1,8 @@
+from copy import copy
+
 class Link(object):
-    def __init__(self, url, method='GET', form=None, classes=[], descriptors=None, rel=None, prompt=None, cu_headers=None, cr_headers=None, response=None):
+    def __init__(self, url, method='GET', resource_item=None, form=None, form_class=None, form_kwargs=None,
+                 classes=[], descriptors=None, rel=None, prompt=None, cu_headers=None, cr_headers=None, on_submit=None):
         '''
         fields = dictionary of django fields describing the accepted data
         descriptors = dictionary of data describing the link
@@ -7,14 +10,17 @@ class Link(object):
         '''
         self.url = url
         self.method = str(method).upper() #CM
-        self.form = form
+        self.resource_item = resource_item
+        self._form = form
+        self.form_class = form_class
+        self.form_kwargs = form_kwargs
         self.classes = classes
         self.descriptors = descriptors
         self.rel = rel #CL
         self.prompt = prompt
         self.cu_headers = cu_headers
         self.cr_headers = cr_headers
-        self.response = response
+        self.on_submit = on_submit
     
     def get_link_factor(self):
         if self.method in ('PUT', 'DELETE'):
@@ -22,7 +28,7 @@ class Link(object):
         if self.method == 'POST':
             return 'LN'
         if self.method == 'GET':
-            if self.form:
+            if self.form_class:
                 return 'LT'
             #TODO how do we determine which to return?
             return 'LO'
@@ -32,17 +38,45 @@ class Link(object):
     def class_attr(self):
         return u' '.join(self.classes)
     
-    def submit(self, media_type=None, content_type=None, meta=None):
-        assert self.response
-        if self.form:
-            assert self.form.is_valid()
-        if media_type is None:
-            media_type = lambda **kwargs: kwargs
-        if content_type is None:
-            content_type = 'text/html'
-        return self.response(media_type=media_type, content_type=content_type, meta=meta, form_link=self)
+    def get_form_kwargs(self, **form_kwargs):
+        if self.form_kwargs:
+            kwargs = copy(self.form_kwargs)
+        else:
+            kwargs = dict()
+        kwargs.update(form_kwargs)
+        return kwargs
+    
+    def get_form(self, **form_kwargs):
+        kwargs = self.get_form_kwargs(**form_kwargs)
+        form = self.form_class(**kwargs)
+        return form
+    
+    @property
+    def form(self):
+        if self._form is None and self.form_class:
+            self._form = self.get_form()
+        return self._form
+    
+    @property
+    def errors(self):
+        if self.form_class:
+            return self.form.errors
+        return None
+    
+    def submit(self, **kwargs):
+        '''
+        Returns a link representing the action
+        The resource_item of the link may represent the updated/created object
+        or in the case of a collection resource item you get access to the filter items
+        '''
+        on_submit = self.on_submit
+        
+        return on_submit(link=self, submit_kwargs=kwargs)
 
 class ResourceItem(object):
+    '''
+    Represents an instance that is bound to a resource
+    '''
     form_class = None
     
     def __init__(self, resource, instance):
@@ -78,6 +112,9 @@ class ResourceItem(object):
         return kwargs
     
     def get_form(self, **form_kwargs):
+        '''
+        Used for serialization
+        '''
         form_cls = self.get_form_class()
         kwargs = self.get_form_kwargs(**form_kwargs)
         form = form_cls(**kwargs)
@@ -85,4 +122,12 @@ class ResourceItem(object):
     
     def get_prompt(self):
         return self.resource.get_prompt(self.instance)
+
+class CollectionResourceItem(ResourceItem):
+    def __init__(self, resource, instance, filter_params=None):
+        super(CollectionResourceItem, self).__init__(resource, instance)
+        self.filter_params = filter_params #oject constructed by the resource that instructs how to filter
+    
+    def get_resource_items(self):
+        return self.resource.get_resource_items(filter_params=self.filter_params)
 

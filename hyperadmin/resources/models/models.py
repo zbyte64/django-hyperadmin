@@ -244,38 +244,6 @@ class ModelResource(CRUDResource):
         if from_list:
             return ListResourceItem(resource=self, instance=instance)
         return super(ModelResource, self).get_resource_item(instance)
-    
-    def get_create_link(self, form_kwargs, form_class=None):
-        if form_class is None:
-            form_class = self.get_form_class()
-        form = form_class(**form_kwargs)
-        create_link = Link(url=self.get_add_url(),
-                           response=self.generate_create_response,
-                           method='POST',
-                           form=form,
-                           prompt='create',
-                           rel='create',)
-        return create_link
-    
-    def get_update_link(self, form_kwargs, form_class=None):
-        if form_class is None:
-            form_class = self.get_form_class()
-        form = form_class(**form_kwargs)
-        update_link = Link(url=self.get_instance_url(form_kwargs['instance']),
-                           response=self.generate_update_response,
-                           method='POST',
-                           form=form,
-                           prompt='update',
-                           rel='update',)
-        return update_link
-    
-    def get_delete_link(self, form_kwargs, form_class=None):
-        delete_link = Link(url=self.get_delete_url(form_kwargs['instance']),
-                           response=self.generate_delete_response,
-                           rel='delete',
-                           prompt='delete',
-                           method='POST')
-        return delete_link
 
 class InlineModelResource(ModelResource):
     list_view = views.InlineModelListResourceView
