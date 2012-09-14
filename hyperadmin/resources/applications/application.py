@@ -44,13 +44,12 @@ class ApplicationResource(BaseResource):
         #TODO sort by name
         return self.resource_adaptor.values()
     
-    def get_embedded_links(self, instance=None):
-        #relationships go here
-        return []
+    def get_item_prompt(self, item):
+        return item.instance.get_prompt()
     
-    def get_instance_url(self, instance):
-        if hasattr(instance, 'get_absolute_url'):
-            return instance.get_absolute_url()
+    def get_item_url(self, item):
+        if hasattr(item.instance, 'get_absolute_url'):
+            return item.instance.get_absolute_url()
     
     def get_absolute_url(self):
         return self.reverse(self.app_name)
@@ -65,11 +64,11 @@ class ApplicationResource(BaseResource):
     def get_child_resource_links(self):
         links = list()
         for key, resource in self.resource_adaptor.iteritems():
-            resource_link = Link(url=resource.get_absolute_url(), resource=resource, resource_item=self.get_resource_item(resource), rel='child-resource', prompt=resource.resource_name)
+            resource_link = resource.get_resource_link(rel='child-resource')
             links.append(resource_link)
         return links
     
-    def prompt(self):
+    def get_prompt(self):
         return self.app_name
     
     def __unicode__(self):

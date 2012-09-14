@@ -1,7 +1,7 @@
 from django import forms
 from django.conf.urls.defaults import patterns, url
 
-from hyperadmin.hyperobjects import Link, ResourceItem
+from hyperadmin.hyperobjects import Link, ResourceItem, CollectionResourceItem
 
 
 class EmptyForm(forms.Form):
@@ -110,8 +110,11 @@ class BaseResource(object):
     def get_resource_item(self, instance):
         return self.resource_item_class(resource=self, instance=instance)
     
+    def get_resource_items(self, user, filter_params):
+        return []
+    
     def get_resource_link_item(self, filter_params=None):
-        return None
+        return CollectionResourceItem(self, None, filter_params)
     
     def get_resource_link(self, **kwargs):
         link_kwargs = {'url':self.get_absolute_url(),
@@ -221,6 +224,7 @@ class CRUDResource(BaseResource):
     
     def get_restful_create_link(self, **kwargs):
         kwargs['url'] = self.get_absolute_url()
+        kwargs['item'] = self.get_resource_link_item()
         return self.get_create_link(**kwargs)
     
     def get_update_link(self, item, form_kwargs=None, **kwargs):
@@ -254,7 +258,7 @@ class CRUDResource(BaseResource):
     def get_restful_delete_link(self, item, **kwargs):
         kwargs['url'] = item.get_absolute_url()
         kwargs['method'] = 'DELETE'
-        return self.get_item_link(item, **kwargs)
+        return self.get_delete_link(item, **kwargs)
     
     def handle_create_submission(self, link, submit_kwargs):
         form = link.get_form(**submit_kwargs)

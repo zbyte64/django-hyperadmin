@@ -34,6 +34,7 @@ class ResourceSite(object):
         app_name = resource.app_name
         if app_name not in self.applications:
             self.applications[app_name] = self.application_resource_class(app_name, self)
+        resource.parent = self.applications[app_name] #TODO clean up
         self.applications[app_name].register_resource(resource)
         self.registry[model] = resource
         return resource

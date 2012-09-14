@@ -50,7 +50,7 @@ class ModelListResourceView(ModelCreateResourceView):
     view_class = 'change_list'
     
     def get(self, request, *args, **kwargs):
-        return self.resource.generate_response(self.get_response_media_type(), self.get_response_type(), self.get_list_link(), meta=self.get_meta())
+        return self.resource.generate_response(self.get_response_media_type(), self.get_response_type(), self.get_restful_create_link(), meta=self.get_meta())
     
     def get_meta(self):
         resource_item = self.resource.get_resource_item(None, from_list=True)
@@ -208,7 +208,7 @@ class InlineModelMixin(object):
         return []
     
     def get_parent(self):
-        queryset = self.resource.parent_resource.get_queryset(self.request.user)
+        queryset = self.resource.parent.get_queryset(self.request.user)
         parent = queryset.get(pk=self.kwargs['pk'])
         return parent
     

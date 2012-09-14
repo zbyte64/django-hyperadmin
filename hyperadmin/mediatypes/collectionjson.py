@@ -172,7 +172,7 @@ class CollectionHyperAdminJSON(CollectionNextJSON):
     
     def prepare_collection(self, form_link, meta=None):
         data = super(CollectionHyperAdminJSON, self).prepare_collection(form_link, meta=meta)
-        resource_item = form_link.resource_item
+        resource_item = form_link.item
         
         update_links = resource_item.get_ln_links() + resource_item.get_idempotent_links()
         #get_non_idempotent_updates

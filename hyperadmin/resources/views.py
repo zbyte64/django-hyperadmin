@@ -83,6 +83,11 @@ class CRUDResourceViewMixin(ResourceViewMixin):
         form_kwargs.update(self.get_form_kwargs())
         return self.resource.get_create_link(form_class=form_class, form_kwargs=form_kwargs, state=self.state)
     
+    def get_restful_create_link(self, **form_kwargs):
+        form_class = self.get_form_class()
+        form_kwargs.update(self.get_form_kwargs())
+        return self.resource.get_restful_create_link(form_class=form_class, form_kwargs=form_kwargs, state=self.state)
+    
     def get_update_link(self, item, **form_kwargs):
         form_class = self.get_form_class()
         form_kwargs.update(self.get_form_kwargs())
@@ -90,6 +95,9 @@ class CRUDResourceViewMixin(ResourceViewMixin):
     
     def get_delete_link(self, item, **form_kwargs):
         return self.resource.get_delete_link(item=item, form_kwargs=form_kwargs, state=self.state)
+    
+    def get_restful_delete_link(self, item, **form_kwargs):
+        return self.resource.get_restful_delete_link(item=item, form_kwargs=form_kwargs, state=self.state)
     
     def get_list_link(self):
         return self.resource.get_resource_link()

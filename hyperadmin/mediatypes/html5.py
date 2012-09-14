@@ -24,7 +24,7 @@ class Html5MediaType(MediaType):
     def convert_item(self, item):
         result = self.links_for_item(item)
         result['data'] = self.convert_form(item.form)
-        result['prompt'] = item.prompt
+        result['prompt'] = item.get_prompt()
         return result
     
     def convert_form(self, form):
@@ -40,7 +40,7 @@ class Html5MediaType(MediaType):
         context = {'form_link':form_link,
                    'meta':meta,}
         
-        resource_item = form_link.resource_item
+        resource_item = form_link.item
         
         items = [self.convert_item(item) for item in resource_item.get_resource_items()]
         context['items'] = items

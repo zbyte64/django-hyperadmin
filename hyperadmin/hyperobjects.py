@@ -97,8 +97,8 @@ class Link(object):
     
     def get_idempotent_links(self):
         if self.state:
-            return self.state.get_idempotant_links()
-        return self.resource.get_idempotant_links(self.state)
+            return self.state.get_idempotent_links()
+        return self.resource.get_idempotent_links(self.state)
     
     def get_resource_items(self):
         if self.item is not None:
@@ -128,7 +128,7 @@ class ResourceItem(object):
         return self.resource.get_item_ln_links(self)
     
     def get_idempotent_links(self):
-        return self.resource.get_item_idempotant_links(self)
+        return self.resource.get_item_idempotent_links(self)
     
     def get_absolute_url(self):
         return self.resource.get_item_url(self)
@@ -152,6 +152,12 @@ class ResourceItem(object):
         form = form_cls(**kwargs)
         return form
     
+    @property
+    def form(self):
+        if not hasattr(self, '_form'):
+            self._form = self.get_form()
+        return self._form
+    
     def get_prompt(self):
         return self.resource.get_item_prompt(self)
     
@@ -166,4 +172,22 @@ class CollectionResourceItem(ResourceItem):
     def get_resource_items(self):
         #TODO this seems to require some state
         return self.resource.get_resource_items(user=None, filter_params=self.filter_params)
+    
+    def get_embedded_links(self):
+        return []
+    
+    def get_outbound_links(self):
+        return []
+    
+    def get_templated_queries(self):
+        return []
+    
+    def get_ln_links(self):
+        return []
+    
+    def get_idempotent_links(self):
+        return []
+    
+    def get_absolute_url(self):
+        return []
 

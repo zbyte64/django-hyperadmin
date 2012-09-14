@@ -16,7 +16,7 @@ class SiteResource(BaseResource):
         self.auth_resource = auth_resource(site=site)
         self.parent = None
     
-    def prompt(self):
+    def get_prompt(self):
         return self.site.name
     
     def get_app_name(self):
@@ -44,6 +44,9 @@ class SiteResource(BaseResource):
             )
         return urlpatterns
     
+    def get_item_prompt(self, item):
+        return item.instance.get_prompt()
+    
     def get_items(self, user):
         applications = self.applications.items()
         apps = [entry[1] for entry in sorted(applications, key=lambda x: x[0])]
@@ -57,14 +60,14 @@ class SiteResource(BaseResource):
         resource_item = CollectionResourceItem(self, None, filter_params=filter_params)
         return resource_item
     
-    def get_instance_url(self, instance):
-        if hasattr(instance, 'get_absolute_url'):
-            return instance.get_absolute_url()
+    def get_item_url(self, item):
+        if hasattr(item.instance, 'get_absolute_url'):
+            return item.instance.get_absolute_url()
     
-    def get_embedded_links(self, instance=None):
+    def get_item_embedded_links(self, item):
         #relationships go here
-        if instance and hasattr(instance, 'get_child_resource_links'): #AKA application resource
-            return instance.get_child_resource_links()
+        if hasattr(item.instance, 'get_child_resource_links'): #AKA application resource
+            return item.instance.get_child_resource_links()
         return []
     
     def get_absolute_url(self):

@@ -114,6 +114,10 @@ class ModelResource(CRUDResource):
         kwargs['model'] = self.resource_adaptor
         return kwargs
     
+    def get_resource_items(self, user, filter_params=None):
+        #TODO
+        return [self.get_resource_item(instance) for instance in self.resource_adaptor.objects.all()]
+    
     def get_changelist(self, user, filter_params=None):
         changelist_cls = self.changelist
         kwargs = {'model':self.resource_adaptor,
@@ -223,14 +227,14 @@ class InlineModelResource(ModelResource):
     fk_name = None
     rel_name = None
     
-    def __init__(self, parent_resource):
+    def __init__(self, parent):
         self.resource_adaptor = self.model
-        self.site = parent_resource.site
-        self.parent_resource = parent_resource
+        self.site = parent.site
+        self.parent = parent
         
         from django.db.models.fields.related import RelatedObject
         from django.forms.models import _get_foreign_key
-        self.fk = _get_foreign_key(self.parent_resource.resource_adaptor, self.model, self.fk_name)
+        self.fk = _get_foreign_key(self.parent.resource_adaptor, self.model, self.fk_name)
         if self.rel_name is None:
             self.rel_name = RelatedObject(self.fk.rel.to, self.model, self.fk).get_accessor_name()
         self.inline_instances = []
@@ -243,7 +247,7 @@ class InlineModelResource(ModelResource):
         return queryset
     
     def get_base_url_name(self):
-        return '%s_%s_%s_' % (self.parent_resource.app_name, self.parent_resource.resource_name, self.rel_name)
+        return '%s_%s_%s_' % (self.parent.app_name, self.parent.resource_name, self.rel_name)
     
     def get_urls(self):
         def wrap(view, cacheable=False):
@@ -288,7 +292,7 @@ class InlineModelResource(ModelResource):
     
     def get_absolute_url(self, instance=None):
         if not instance:
-            return self.parent_resource.get_absolute_url()
+            return self.parent.get_absolute_url()
         return None
     
     def get_changelist(self, parent, user, filter_params=None):
