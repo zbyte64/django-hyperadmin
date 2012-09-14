@@ -1,6 +1,6 @@
 from django.conf.urls.defaults import patterns, url, include
 
-from hyperadmin.hyperobjects import Link, ResourceItem
+from hyperadmin.hyperobjects import Link, ResourceItem, CollectionResourceItem
 from hyperadmin.resources import BaseResource
 from hyperadmin.resources.applications import views
 
@@ -39,21 +39,13 @@ class ApplicationResource(BaseResource):
         key = resource.get_resource_name()
         self.resource_adaptor[key] = resource
     
-    def get_items(self, request):
+    def get_items(self, user):
         #TODO sort by name
         return self.resource_adaptor.values()
     
     def get_embedded_links(self, instance=None):
         #relationships go here
         return []
-    
-    def get_outbound_links(self, instance=None):
-        if instance:
-            return []
-        else:
-            site_link = Link(url=self.reverse('index'), rel='breadcrumb', prompt='root')
-            app_link = Link(url=self.get_absolute_url(), rel='breadcrumb', prompt=self.app_name)
-            return [site_link, app_link]
     
     def get_instance_url(self, instance):
         if hasattr(instance, 'get_absolute_url'):
@@ -62,12 +54,22 @@ class ApplicationResource(BaseResource):
     def get_absolute_url(self):
         return self.reverse(self.app_name)
     
+    def get_resource_items(self, user, filter_params=None):
+        return [self.get_resource_item(item) for item in self.get_items(user)]
+    
+    def get_resource_link_item(self, filter_params=None):
+        resource_item = CollectionResourceItem(self, None, filter_params=filter_params)
+        return resource_item
+    
     def get_child_resource_links(self):
         links = list()
         for key, resource in self.resource_adaptor.iteritems():
-            resource_link = Link(url=resource.get_absolute_url(), rel='child-resource', prompt=resource.resource_name)
+            resource_link = Link(url=resource.get_absolute_url(), resource=resource, resource_item=self.get_resource_item(resource), rel='child-resource', prompt=resource.resource_name)
             links.append(resource_link)
         return links
+    
+    def prompt(self):
+        return self.app_name
     
     def __unicode__(self):
         return u'App Resource: %s' % self.app_name

@@ -1,4 +1,5 @@
 from django.core.files import File
+from django import http
 
 BUILTIN_MEDIA_TYPES = dict()
 
@@ -15,7 +16,20 @@ class MediaType(object):
     def site(self):
         return self.resource.site
     
-    def serialize(self, content_type, instance=None, form_link=None, meta=None):
+    def handle_redirect(self, link):
+        if self.request.method != 'GET':
+            response = http.HttpResponse(link.url, status=303)
+            response['Location'] = link.url
+        else:
+            response = http.HttpResponseRedirect(link.url)
+        return response
+    
+    def detect_redirect(self, link):
+        if link.url != self.request.path and False:
+            return True
+        return False
+    
+    def serialize(self, content_type, link, meta=None):
         raise NotImplementedError
     
     def deserialize(self):

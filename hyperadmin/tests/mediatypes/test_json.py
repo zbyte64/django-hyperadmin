@@ -27,7 +27,7 @@ class JsonTestCase(unittest.TestCase):
         items = ContentType.objects.all()
         view = JsonMockResourceView(items)
         adaptor = JSON(view)
-        response = adaptor.serialize(content_type='application/json')
+        response = adaptor.serialize(content_type='application/json', )
         data = json.loads(response.content)
         self.assertEqual(len(data), len(items))
     
@@ -35,7 +35,7 @@ class JsonTestCase(unittest.TestCase):
         items = [ContentType.objects.all()[0]]
         view = JsonMockResourceView(items)
         adaptor = JSON(view)
-        response = adaptor.serialize(instance=items[0], content_type='application/json')
+        response = adaptor.serialize(content_type='application/json')
         data = json.loads(response.content)
         assert data, str(data)
         #self.assertEqual(len(json_items), 1)
@@ -54,7 +54,7 @@ class JsonpTestCase(unittest.TestCase):
         items = [ContentType.objects.all()[0]]
         view = JsonpMockResourceView(items)
         adaptor = JSONP(view)
-        response = adaptor.serialize(instance=items[0], content_type='text/javascript')
+        response = adaptor.serialize(content_type='text/javascript')
         self.assertTrue(response.content.startswith('jscallback('))
         #data = json.loads(response.content)
         #assert data, str(data)

@@ -15,9 +15,10 @@ class BaseResource(object):
     resource_item_class = ResourceItem
     form_class = EmptyForm
     
-    def __init__(self, resource_adaptor, site):
+    def __init__(self, resource_adaptor, site, parent_resource=None):
         self.resource_adaptor = resource_adaptor
         self.site = site
+        self.parent = parent_resource
     
     def get_app_name(self):
         raise NotImplementedError
@@ -73,9 +74,8 @@ class BaseResource(object):
     def get_form_kwargs(self, **kwargs):
         return kwargs
     
-    def generate_response(self, media_type, content_type, instance=None, form_link=None, meta=None):
-        #content_type = view.get_response_type()
-        return media_type.serialize(content_type=content_type, instance=instance, form_link=form_link, meta=meta)
+    def generate_response(self, media_type, content_type, link=None, meta=None):
+        return media_type.serialize(content_type=content_type, link=link, meta=meta)
     
     def get_related_resource_from_field(self, field):
         return self.site.get_related_resource_from_field(field)
@@ -95,12 +95,31 @@ class BaseResource(object):
     def get_prompt(self, instance):
         return unicode(instance)
     
-    def get_resource_link(self):
-        resource_link = Link(url=self.get_absolute_url(),
-                             #resource_item=self.get_resource_item(),
-                             rel='self',
-                             prompt=unicode(self.resource_adaptor),)
+    def get_resource_link_item(self, filter_params=None):
+        return None
+    
+    def get_resource_link(self, **kwargs):
+        link_kwargs = {'url':self.get_absolute_url(),
+                       'resource':self,
+                       'resource_item':self.get_resource_link_item(),
+                       'rel':'self',
+                       'prompt':self.prompt(),}
+        link_kwargs.update(kwargs)
+        resource_link = Link(**link_kwargs)
         return resource_link
+    
+    def get_breadcrumb(self):
+        return self.get_resource_link(rel='breadcrumb')
+    
+    def get_breadcrumbs(self):
+        breadcrumbs = []
+        if self.parent:
+            breadcrumbs = self.parent.get_breadcrumbs()
+        breadcrumbs.append(self.get_breadcrumb())
+        return breadcrumbs
+    
+    def prompt(self):
+        return unicode(self)
 
 class CRUDResource(BaseResource):
     resource_class = 'crudresource'
@@ -117,6 +136,9 @@ class CRUDResource(BaseResource):
     def get_resource_name(self):
         raise NotImplementedError
     resource_name = property(get_resource_name)
+    
+    def prompt(self):
+        return self.resource_name
     
     def get_urls(self):
         def wrap(view, cacheable=False):
@@ -157,6 +179,7 @@ class CRUDResource(BaseResource):
     def get_item_link(self, instance):
         resource_item = self.get_resource_item(instance)
         item_link = Link(url=resource_item.get_absolute_url(),
+                         resource=self,
                          rsource_item=resource_item,
                          rel='item',
                          prompt=self.get_prompt(instance),)
@@ -166,6 +189,7 @@ class CRUDResource(BaseResource):
         if form_class is None:
             form_class = self.get_form_class()
         create_link = Link(url=self.get_add_url(),
+                           resource=self,
                            on_submit=self.handle_create_submission,
                            method='POST',
                            form=form,
@@ -179,6 +203,7 @@ class CRUDResource(BaseResource):
         if form_class is None:
             form_class = self.get_form_class()
         update_link = Link(url=self.get_instance_url(form_kwargs['instance']),
+                           resource=self,
                            on_submit=self.handle_update_submission,
                            resource_item=self.get_resource_item(form_kwargs['instance']),
                            method='POST',
@@ -191,6 +216,7 @@ class CRUDResource(BaseResource):
     
     def get_delete_link(self, form_kwargs, form_class=None):
         delete_link = Link(url=self.get_delete_url(form_kwargs['instance']),
+                           resource=self,
                            resource_item=self.get_resource_item(form_kwargs['instance']),
                            on_submit=self.handle_delete_submission,
                            rel='delete',
@@ -253,19 +279,16 @@ class CRUDResource(BaseResource):
     
     def get_embedded_links(self, instance=None):
         if instance:
-            delete_link = Link(url=self.get_delete_url(instance), rel='delete', prompt='Delete')
+            delete_link = Link(url=self.get_delete_url(instance), resource=self, rel='delete', prompt='Delete')
             return [delete_link]
-        add_link = Link(url=self.get_add_url(), rel='add', prompt='Add')
+        add_link = Link(url=self.get_add_url(), resource=self, rel='add', prompt='Add')
         return [add_link]
     
     def get_outbound_links(self, instance=None):
         if instance:
             return []
         else:
-            site_link = Link(url=self.reverse('index'), rel='breadcrumb', prompt='root')
-            app_link = Link(url=self.reverse(self.app_name), rel='breadcrumb', prompt=self.app_name)
-            resource_list = Link(url=self.get_absolute_url(), rel='breadcrumb', prompt=self.resource_name)
-            return [site_link, app_link, resource_list]
+            return self.get_breadcrumbs()
     
     def get_templated_queries(self):
         #search and filter goes here

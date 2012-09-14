@@ -27,13 +27,13 @@ class AuthenticationResourceView(ResourceViewMixin, generic.View):
     
     def get(self, request, *args, **kwargs):
         self.object = self.get_object()
-        return self.resource.generate_response(self.get_response_media_type(), self.get_response_type(), instance=self.object, form_link=self.get_active_link())
+        return self.resource.generate_response(self.get_response_media_type(), self.get_response_type(), self.get_active_link())
     
     def post(self, request, *args, **kwargs):
         self.object = self.get_object()
         form_kwargs = self.get_request_form_kwargs()
         form_link = self.get_active_link(**form_kwargs)
-        return self.resource.generate_update_response(self.get_response_media_type(), self.get_response_type(), instance=self.object, form_link=form_link)
+        return self.resource.generate_update_response(self.get_response_media_type(), self.get_response_type(), form_link)
     
     def delete(self, request, *args, **kwargs):
         logout(request)
@@ -45,6 +45,7 @@ class AuthenticationResourceView(ResourceViewMixin, generic.View):
         form = form_class(**form_kwargs)
         
         login_link = Link(url=self.request.path,
+                          resource=self.resource,
                           method='POST', #TODO should this be put?
                           form=form,
                           prompt='authenticate',
@@ -53,6 +54,7 @@ class AuthenticationResourceView(ResourceViewMixin, generic.View):
     
     def get_logout_link(self, **form_kwargs):
         logout_link = Link(url=self.request.path,
+                           resource=self.resource,
                                method='DELETE',
                                prompt='logout',
                                rel='delete',)

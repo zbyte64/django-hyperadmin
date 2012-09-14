@@ -54,29 +54,32 @@ class StorageResourceViewMixin(ResourceViewMixin, generic.edit.FormMixin):
             kwargs.update(form_kwargs)
             form = self.get_form(**kwargs)
             link_params = {'url':self.request.path,
+                           'resource':self.resource,
                            'method':'POST',
                            'form':form,}
             if form.instance:
                 link_params['prompt'] = 'update'
                 link_params['rel'] = 'update'
+                link_params['resource_item'] = self.resource.get_resource_item(form.instance)
             else:
                 link_params['prompt'] = 'create'
                 link_params['rel'] = 'create'
+                link_params['resource_item'] = self.resource.get_resource_link_item()
             return Link(**link_params)
 
 class StorageListResourceView(StorageResourceViewMixin, generic.View): #generic.UpdateView
     view_class = 'change_list'
     
     def get(self, request, *args, **kwargs):
-        return self.resource.generate_response(self.get_response_media_type(), self.get_response_type(), form_link=self.get_upload_link())
+        return self.resource.generate_response(self.get_response_media_type(), self.get_response_type(), self.get_upload_link())
     
     def post(self, request, *args, **kwargs):
         form_kwargs = self.get_request_form_kwargs()
         form_link = self.get_upload_link(**form_kwargs)
-        return self.resource.generate_create_response(self.get_response_media_type(), self.get_response_type(), form_link=form_link)
+        response_link = form_link.submit()
+        return self.resource.generate_create_response(self.get_response_media_type(), self.get_response_type(), response_link)
     
     def get_ln_links(self, instance=None):
-        form = self.get_form(**self.get_form_kwargs(instance=instance))
         update_link = self.get_upload_link(instance=instance)
         return [update_link] + super(StorageListResourceView, self).get_ln_links(instance)
     
@@ -101,13 +104,14 @@ class StorageDetailResourceView(StorageResourceViewMixin, generic.View): #generi
     
     def get(self, request, *args, **kwargs):
         self.object = self.get_object()
-        return self.resource.generate_response(self.get_response_media_type(), self.get_response_type(), instance=self.object, form_link=self.get_upload_link(instance=self.object))
+        return self.resource.generate_response(self.get_response_media_type(), self.get_response_type(), self.get_upload_link(instance=self.object))
     
     def post(self, request, *args, **kwargs):
         self.object = self.get_object()
         form_kwargs = self.get_request_form_kwargs()
         form_link = self.get_upload_link(instance=self.object, **form_kwargs)
-        return self.resource.generate_update_response(self.get_response_media_type(), self.get_response_type(), instance=self.object, form_link=form_link)
+        response_link = form_link.submit()
+        return self.resource.generate_update_response(self.get_response_media_type(), self.get_response_type(), response_link)
     
     def delete(self, request, *args, **kwargs):
         self.object = self.get_object()

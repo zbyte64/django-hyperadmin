@@ -1,6 +1,6 @@
 from django.conf.urls.defaults import patterns, url, include
 
-from hyperadmin.hyperobjects import Link, ResourceItem
+from hyperadmin.hyperobjects import Link, ResourceItem, CollectionResourceItem
 from hyperadmin.resources import BaseResource
 from hyperadmin.resources.applications import views
 
@@ -14,6 +14,9 @@ class SiteResource(BaseResource):
             from hyperadmin.resources.auth.auth import AuthResource
             auth_resource = AuthResource
         self.auth_resource = auth_resource(site=site)
+    
+    def prompt(self):
+        return self.site.name
     
     def get_app_name(self):
         return self.site.name
@@ -40,11 +43,18 @@ class SiteResource(BaseResource):
             )
         return urlpatterns
     
-    def get_items(self, request):
+    def get_items(self, user):
         applications = self.applications.items()
         apps = [entry[1] for entry in sorted(applications, key=lambda x: x[0])]
         apps.append(self.auth_resource)
         return apps
+    
+    def get_resource_items(self, user, filter_params=None):
+        return [self.get_resource_item(item) for item in self.get_items(user)]
+    
+    def get_resource_link_item(self, filter_params=None):
+        resource_item = CollectionResourceItem(self, None, filter_params=filter_params)
+        return resource_item
     
     def get_instance_url(self, instance):
         if hasattr(instance, 'get_absolute_url'):

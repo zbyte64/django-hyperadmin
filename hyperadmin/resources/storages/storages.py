@@ -95,6 +95,8 @@ class StorageResource(CRUDResource):
         links = super(StorageResource, self).get_embedded_links(instance=instance)
         if instance:
             link = Link(url=instance.url,
+                        resource=self,
+                        resource_item=self.get_resource_item(instance),
                         prompt='Absolute Url',
                         rel='storage-url',)
             links.append(link)

@@ -3,8 +3,6 @@ from django.utils import simplejson as json
 from django.utils.encoding import force_unicode
 from django import http
 
-from hyperadmin.resources import BaseResource
-
 from common import MediaType, BUILTIN_MEDIA_TYPES
 
 class CollectionJSON(MediaType):
@@ -13,20 +11,20 @@ class CollectionJSON(MediaType):
                  "prompt": force_unicode(field.label)}
         return entry
     
-    def links_for_instance(self, instance):
+    def links_for_item(self, item):
         result = dict()
         links = list()
-        links.extend(instance.get_embedded_links())
-        links.extend(instance.get_outbound_links())
+        links.extend(item.get_embedded_links())
+        links.extend(item.get_outbound_links())
         result["links"] = [self.convert_link(link) for link in links]
-        result["href"] = instance.get_absolute_url()
+        result["href"] = item.get_absolute_url()
         return result
     
-    def convert_instance(self, instance):
-        result = self.links_for_instance(instance)
-        form = instance.get_form()
+    def convert_item(self, item):
+        result = self.links_for_item(item)
+        form = item.get_form()
         result['data'] = self.convert_form(form)
-        result['prompt'] = instance.get_prompt()
+        result['prompt'] = item.get_prompt()
         return result
     
     def convert_form(self, form):
@@ -61,14 +59,17 @@ class CollectionJSON(MediaType):
                    'message':str(errors),}
         return error_r
     
-    def prepare_collection(self, content_type, instance=None, form_link=None, meta=None):
-        items = [self.convert_instance(item) for item in self.view.get_resource_items()]
+    def prepare_collection(self, form_link, meta=None):
+        resource_item = form_link.resource_item
+        resource = form_link.resource_state
+        
+        items = [self.convert_item(item) for item in resource_item.get_resource_items()]
         
         #the following maps hfactor to this media type
         links = list()
-        links.extend(self.view.get_embedded_links())
-        links.extend(self.view.get_outbound_links())
-        queries = self.view.get_templated_queries()
+        links.extend(resource.get_embedded_links())
+        links.extend(resource.get_outbound_links())
+        queries = resource.get_templated_queries()
         
         data = {
             "links": [self.convert_link(link) for link in links],
@@ -84,11 +85,13 @@ class CollectionJSON(MediaType):
         if form_link:
             data['template'] = self.convert_link(form_link)
         
-        data.update(href=self.request.get_full_path(), version="1.0", meta=meta)
+        data.update(href=form_link.url, version="1.0", meta=meta)
         return data
     
-    def serialize(self, content_type, instance=None, form_link=None, meta=None):
-        data = self.prepare_collection(content_type, instance=instance, form_link=form_link, meta=meta)
+    def serialize(self, content_type, link, meta=None):
+        if self.detect_redirect(link):
+            return self.handle_redirect(link)
+        data = self.prepare_collection(link, meta=meta)
         content = json.dumps({"collection":data}, cls=DjangoJSONEncoder)
         return http.HttpResponse(content, content_type)
     
@@ -170,16 +173,17 @@ class CollectionHyperAdminJSON(CollectionNextJSON):
         item_r['prompt'] = unicode(resource)
         return item_r
     
-    def prepare_collection(self, content_type, instance=None, form_link=None, meta=None):
-        data = super(CollectionHyperAdminJSON, self).prepare_collection(content_type, instance=instance, form_link=form_link, meta=meta)
+    def prepare_collection(self, form_link, meta=None):
+        data = super(CollectionHyperAdminJSON, self).prepare_collection(form_link, meta=meta)
+        resource_item = form_link.resource_item
         
-        update_links = self.view.get_ln_links(instance=instance) + self.view.get_li_links(instance=instance)
+        update_links = resource_item.get_ln_links() + resource_item.get_li_links()
         #get_non_idempotent_updates
         #get_idempotent_updates
         if len(update_links):
             data['templates'] = [self.convert_link(link) for link in update_links]
         
-        data['resource_class'] = self.view.resource.resource_class
+        data['resource_class'] = form_link.resource.resource_class
         #TODO power this by meta
         if meta and 'display_fields' in meta:
             data['display_fields'] = meta.pop('display_fields')

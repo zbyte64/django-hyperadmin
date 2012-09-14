@@ -2,44 +2,30 @@ from django.core.serializers.json import DjangoJSONEncoder
 from django.utils import simplejson as json
 from django import http
 
-from hyperadmin.resources import BaseResource
-
 from common import MediaType, BUILTIN_MEDIA_TYPES
 
 class JSON(MediaType):
-    def convert_resource(self, resource):
-        return {}
+    def convert_item(self, item):
+        return self.get_form_instance_values(item.form)
     
-    def convert_instance(self, instance):
-        #instance may be: ApplicationResource or CRUDResource
-        result = dict()
-        if isinstance(instance, BaseResource):
-            result.update(self.convert_resource(instance))
-        return result
-    
-    def convert_form(self, form):
-        return self.get_form_instance_values(form)
-    
-    def convert_item_form(self, form):
-        return self.convert_form(form)
-    
-    def get_payload(self, instance=None, form_link=None, meta=None):
-        #CONSIDER a better inferface
-        if hasattr(self.view, 'get_items_forms'):
-            items = [self.convert_item_form(form) for form in self.view.get_items_forms()]
-        else:
-            items = [self.convert_instance(item) for item in self.view.get_items()]
-        #TODO errors
-        if instance:
-            return items[0]
+    def get_payload(self, form_link, meta=None):
+        resource_item = form_link.resource_item
+        
+        items = [self.convert_item(item) for item in resource_item.get_resource_items()]
+        
+        #TODO if not collection resource item
+        #if instance:
+        #    return items[0]
         return items
     
-    def serialize(self, content_type, instance=None, form_link=None, meta=None):
-        data = self.get_payload(instance=instance, form_link=form_link, meta=meta)
+    def serialize(self, content_type, link, meta=None):
+        if self.detect_redirect(link):
+            return self.handle_redirect(link)
+        data = self.get_payload(link, meta=meta)
         content = json.dumps(data, cls=DjangoJSONEncoder)
         return http.HttpResponse(content, content_type)
     
-    def deserialize(self, form_class, instance=None):
+    def deserialize(self):
         if hasattr(self.request, 'body'):
             payload = self.request.body
         else:
@@ -55,8 +41,8 @@ class JSONP(JSON):
         #TODO make configurable
         return self.view.request.GET['callback']
     
-    def serialize(self, content_type, instance=None, form_link=None, meta=None):
-        data = self.get_payload(instance=instance, form_link=form_link, meta=meta)
+    def serialize(self, content_type, link, meta=None):
+        data = self.get_payload(link, meta=meta)
         content = json.dumps(data, cls=DjangoJSONEncoder)
         callback = self.get_jsonp_callback()
         return http.HttpResponse(u'%s(%s)' % (callback, content), content_type)

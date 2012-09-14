@@ -1,7 +1,7 @@
 from copy import copy
 
 class Link(object):
-    def __init__(self, url, method='GET', resource_item=None, form=None, form_class=None, form_kwargs=None,
+    def __init__(self, url, resource, method='GET', resource_state=None, resource_item=None, form=None, form_class=None, form_kwargs=None,
                  classes=[], descriptors=None, rel=None, prompt=None, cu_headers=None, cr_headers=None, on_submit=None):
         '''
         fields = dictionary of django fields describing the accepted data
@@ -10,6 +10,8 @@ class Link(object):
         '''
         self.url = url
         self.method = str(method).upper() #CM
+        self.resource = resource
+        self.resource_state = resource_state or resource
         self.resource_item = resource_item
         self._form = form
         self.form_class = form_class
@@ -122,6 +124,9 @@ class ResourceItem(object):
     
     def get_prompt(self):
         return self.resource.get_prompt(self.instance)
+    
+    def get_resource_items(self):
+        return [self]
 
 class CollectionResourceItem(ResourceItem):
     def __init__(self, resource, instance, filter_params=None):
@@ -129,5 +134,6 @@ class CollectionResourceItem(ResourceItem):
         self.filter_params = filter_params #oject constructed by the resource that instructs how to filter
     
     def get_resource_items(self):
-        return self.resource.get_resource_items(filter_params=self.filter_params)
+        #TODO this seems to require some state
+        return self.resource.get_resource_items(user=None, filter_params=self.filter_params)
 

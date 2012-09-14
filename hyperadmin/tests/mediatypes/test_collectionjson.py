@@ -33,7 +33,7 @@ class CollectionJsonTestCase(unittest.TestCase):
         view = CollectionMockResourceView(items)
         adaptor = CollectionJSON(view)
         return
-        response = adaptor.serialize(instance=items[0], content_type='application/vnd.Collection.next+JSON')
+        response = adaptor.serialize(content_type='application/vnd.Collection.next+JSON')
         data = json.loads(response.content)
         json_items = data['collection']['items']
         self.assertEqual(len(json_items), 1)

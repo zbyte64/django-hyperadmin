@@ -126,6 +126,9 @@ class ModelResource(CRUDResource):
         return self.opts.module_name
     resource_name = property(get_resource_name)
     
+    def prompt(self):
+        return self.resource_name
+    
     def get_urls(self):
         urlpatterns = super(ModelResource, self).get_urls()
         for inline in self.inline_instances:
@@ -177,23 +180,23 @@ class ModelResource(CRUDResource):
         """
         return self.ordering or ()  # otherwise we might try to *None, which is bad ;)
     
-    def get_queryset(self, request):
+    def get_queryset(self, user):
         queryset = self.resource_adaptor.objects.all()
-        if not self.has_change_permission(request):
+        if not self.has_change_permission(user):
             queryset = queryset.none()
         return queryset
 
-    def has_add_permission(self, request):
+    def has_add_permission(self, user):
         if self.opts.auto_created:
             # We're checking the rights to an auto-created intermediate model,
             # which doesn't have its own individual permissions. The user needs
             # to have the change permission for the related model in order to
             # be able to do anything with the intermediate model.
-            return self.has_change_permission(request)
-        return request.user.has_perm(
+            return self.has_change_permission(user)
+        return user.has_perm(
             self.opts.app_label + '.' + self.opts.get_add_permission())
 
-    def has_change_permission(self, request, obj=None):
+    def has_change_permission(self, user, obj=None):
         opts = self.opts
         if opts.auto_created and hasattr(self, 'parent_model'):
             # The model was auto-created as intermediary for a
@@ -202,17 +205,17 @@ class ModelResource(CRUDResource):
                 if field.rel and field.rel.to != self.parent_model:
                     opts = field.rel.to._meta
                     break
-        return request.user.has_perm(
+        return user.has_perm(
             opts.app_label + '.' + opts.get_change_permission())
 
-    def has_delete_permission(self, request, obj=None):
+    def has_delete_permission(self, user, obj=None):
         if self.opts.auto_created:
             # We're checking the rights to an auto-created intermediate model,
             # which doesn't have its own individual permissions. The user needs
             # to have the change permission for the related model in order to
             # be able to do anything with the intermediate model.
-            return self.has_change_permission(request, obj)
-        return request.user.has_perm(
+            return self.has_change_permission(user, obj)
+        return user.has_perm(
             self.opts.app_label + '.' + self.opts.get_delete_permission())
     
     def get_form_class(self):
@@ -235,6 +238,8 @@ class ModelResource(CRUDResource):
                 #url = self.reverse('%s_%s_%s_list' % (self.app_name, self.resource_name, inline.rel_name), pk=instance.pk)
                 url = self.get_instance_url(instance) + inline.rel_name + '/'
                 link = Link(url=url,
+                            resource=inline,
+                            resource_item=inline.get_resource_link_item(),
                             prompt='inlines: %s' % inline.rel_name,
                             rel='inline-%s' % inline.rel_name,)
                 inline_links.append(link)

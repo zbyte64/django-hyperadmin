@@ -69,6 +69,6 @@ class AuthResource(CRUDResource):
         return response
     
     def get_embedded_links(self, instance=None):
-        logout_link = Link(url=self.reverse('logout'), rel='delete', prompt='Logout')
+        logout_link = Link(url=self.reverse('logout'), resource=self, rel='delete', prompt='Logout')
         return [logout_link]
 

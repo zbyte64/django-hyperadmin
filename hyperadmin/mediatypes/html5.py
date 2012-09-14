@@ -1,8 +1,6 @@
 from django.template.response import TemplateResponse
 from django.middleware.csrf import CsrfViewMiddleware
 
-from hyperadmin.resources import BaseResource
-
 from common import MediaType, BUILTIN_MEDIA_TYPES
 
 class Html5MediaType(MediaType):
@@ -16,21 +14,17 @@ class Html5MediaType(MediaType):
                  "prompt": unicode(field.label)}
         return entry
     
-    def convert_resource(self, resource):
-        return {'prompt':unicode(resource)}
-    
-    def links_for_instance(self, instance):
+    def links_for_item(self, item):
         result = dict()
-        result['embedded_links'] = self.view.get_embedded_links(instance)
-        result['outbound_links'] = self.view.get_outbound_links(instance)
-        result['href'] = self.view.get_instance_url(instance)
+        result['embedded_links'] = item.get_embedded_links()
+        result['outbound_links'] = item.get_outbound_links()
+        result['href'] = item.get_absolute_url()
         return result
     
-    def convert_instance(self, instance):
-        #instance may be: ApplicationResource or CRUDResource
-        result = self.links_for_instance(instance)
-        if isinstance(instance, BaseResource):
-            result.update(self.convert_resource(instance))
+    def convert_item(self, item):
+        result = self.links_for_item(item)
+        result['data'] = self.convert_form(item.form)
+        result['prompt'] = item.prompt
         return result
     
     def convert_form(self, form):
@@ -42,28 +36,21 @@ class Html5MediaType(MediaType):
             data.append(entry)
         return data
     
-    def convert_item_form(self, form):
-        item_r = self.links_for_instance(form.instance)
-        item_r['data'] = self.convert_form(form)
-        item_r['prompt'] = unicode(form.instance)
-        return item_r
-    
-    def get_context_data(self, instance=None, form_link=None, meta=None):
-        context = {'instance':instance,
-                   'form_link':form_link,
+    def get_context_data(self, form_link, meta=None):
+        context = {'form_link':form_link,
                    'meta':meta,}
         
-        if hasattr(self.view, 'get_items_forms'):
-            items = [self.convert_item_form(form) for form in self.view.get_items_forms()]
-        else:
-            items = [self.convert_instance(item) for item in self.view.get_items()]
+        resource_item = form_link.resource_item
+        resource = form_link.resource_state
+        
+        items = [self.convert_item(item) for item in resource_item.get_resource_items()]
         context['items'] = items
         
-        context['embedded_links'] = self.view.get_embedded_links()
-        context['outbound_links'] = self.view.get_outbound_links()
-        context['templated_queries'] = self.view.get_templated_queries()
-        context['non_idempotent_updates'] = self.view.get_ln_links(instance=instance)
-        context['idempotent_updates'] = self.view.get_li_links(instance=instance)
+        context['embedded_links'] = resource.get_embedded_links()
+        context['outbound_links'] = resource.get_outbound_links()
+        context['templated_queries'] = resource.get_templated_queries()
+        context['non_idempotent_updates'] = resource_item.get_ln_links()
+        context['idempotent_updates'] = resource_item.get_li_links()
         
         if meta and 'display_fields' in meta:
             context['display_fields'] = meta['display_fields']
@@ -87,8 +74,10 @@ class Html5MediaType(MediaType):
         
         return names
     
-    def serialize(self, content_type, instance=None, form_link=None, meta=None):
-        context = self.get_context_data(instance=instance, form_link=form_link, meta=meta)
+    def serialize(self, content_type, link, meta=None):
+        if self.detect_redirect(link):
+            return self.handle_redirect(link)
+        context = self.get_context_data(form_link=link, meta=meta)
         response = self.response_class(request=self.request, template=self.get_template_names(), context=context)
         response['Content-Type'] = 'text/html'
         return response
