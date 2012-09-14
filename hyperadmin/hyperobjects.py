@@ -101,7 +101,9 @@ class Link(object):
         return self.resource.get_idempotant_links(self.state)
     
     def get_resource_items(self):
-        return self.item.get_resource_items()
+        if self.item is not None:
+            return self.item.get_resource_items()
+        return []
 
 class ResourceItem(object):
     '''
