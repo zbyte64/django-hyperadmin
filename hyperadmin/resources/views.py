@@ -56,6 +56,15 @@ class ResourceViewMixin(ConditionalAccessMixin):
     def get_meta(self):
         return {}
     
+    def get_state(self):
+        return None
+    
+    @property
+    def state(self):
+        if not hasattr(self, '_state'):
+            self._state = self.get_state()
+        return self._state
+    
     def get_form_kwargs(self):
         return {}
 
@@ -72,15 +81,15 @@ class CRUDResourceViewMixin(ResourceViewMixin):
     def get_create_link(self, **form_kwargs):
         form_class = self.get_form_class()
         form_kwargs.update(self.get_form_kwargs())
-        return self.resource.get_create_link(form_class=form_class, form_kwargs=form_kwargs)
+        return self.resource.get_create_link(form_class=form_class, form_kwargs=form_kwargs, state=self.state)
     
-    def get_update_link(self, **form_kwargs):
+    def get_update_link(self, item, **form_kwargs):
         form_class = self.get_form_class()
         form_kwargs.update(self.get_form_kwargs())
-        return self.resource.get_update_link(form_class=form_class, form_kwargs=form_kwargs)
+        return self.resource.get_update_link(item=item, form_class=form_class, form_kwargs=form_kwargs, state=self.state)
     
-    def get_delete_link(self, **form_kwargs):
-        return self.resource.get_delete_link(form_kwargs=form_kwargs)
+    def get_delete_link(self, item, **form_kwargs):
+        return self.resource.get_delete_link(item=item, form_kwargs=form_kwargs, state=self.state)
     
     def get_list_link(self):
         return self.resource.get_resource_link()

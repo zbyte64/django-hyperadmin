@@ -14,6 +14,7 @@ class SiteResource(BaseResource):
             from hyperadmin.resources.auth.auth import AuthResource
             auth_resource = AuthResource
         self.auth_resource = auth_resource(site=site)
+        self.parent = None
     
     def prompt(self):
         return self.site.name

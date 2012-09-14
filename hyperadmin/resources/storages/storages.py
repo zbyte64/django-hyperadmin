@@ -80,25 +80,26 @@ class StorageResource(CRUDResource):
             links.append(link)
         return links, items
     
-    def get_form_kwargs(self, **kwargs):
-        kwargs = super(StorageResource, self).get_form_kwargs(**kwargs)
+    def get_form_kwargs(self, item=None, **kwargs):
+        kwargs = super(StorageResource, self).get_form_kwargs(item, **kwargs)
         kwargs['storage'] = self.resource_adaptor
         return kwargs
     
-    def get_instance_url(self, instance):
+    def get_item_url(self, item):
+        instance = item.instance
         return self.reverse('%s_%s_detail' % (self.app_name, self.resource_name), path=instance.name)
     
-    def get_delete_url(self, instance):
+    def get_delete_url(self, item):
+        instance = item.instance
         return self.reverse('%s_%s_delete' % (self.app_name, self.resource_name), path=instance.name)
     
-    def get_embedded_links(self, instance=None):
-        links = super(StorageResource, self).get_embedded_links(instance=instance)
-        if instance:
-            link = Link(url=instance.url,
-                        resource=self,
-                        resource_item=self.get_resource_item(instance),
-                        prompt='Absolute Url',
-                        rel='storage-url',)
-            links.append(link)
+    def get_item_embedded_links(self, item):
+        links = super(StorageResource, self).get_item_embedded_links(item)
+        link = Link(url=item.instance.url,
+                    resource=self,
+                    item=item,
+                    prompt='Absolute Url',
+                    rel='storage-url',)
+        links.append(link)
         return links
 

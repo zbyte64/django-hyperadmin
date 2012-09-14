@@ -97,7 +97,7 @@ class ModelResource(CRUDResource):
         return self.opts.module_name
     resource_name = property(get_resource_name)
     
-    def prompt(self):
+    def get_prompt(self):
         return self.resource_name
     
     def get_urls(self):
@@ -193,20 +193,19 @@ class ModelResource(CRUDResource):
                 #TODO fields
         return AdminForm
     
-    def get_embedded_links(self, instance=None):
-        links = super(ModelResource, self).get_embedded_links(instance=instance)
+    def get_item_embedded_links(self, item):
+        links = super(ModelResource, self).get_item_embedded_links(item=item)
         inline_links = list()
-        if instance:
-            for inline in self.inline_instances:
-                #TODO why doesn't this resolve?
-                #url = self.reverse('%s_%s_%s_list' % (self.app_name, self.resource_name, inline.rel_name), pk=instance.pk)
-                url = self.get_instance_url(instance) + inline.rel_name + '/'
-                link = Link(url=url,
-                            resource=inline,
-                            resource_item=inline.get_resource_link_item(),
-                            prompt='inlines: %s' % inline.rel_name,
-                            rel='inline-%s' % inline.rel_name,)
-                inline_links.append(link)
+        for inline in self.inline_instances:
+            #TODO why doesn't this resolve?
+            #url = self.reverse('%s_%s_%s_list' % (self.app_name, self.resource_name, inline.rel_name), pk=instance.pk)
+            url = self.get_item_url(item) + inline.rel_name + '/'
+            link = Link(url=url,
+                        resource=inline,
+                        item=inline.get_resource_link_item(),
+                        prompt='inlines: %s' % inline.rel_name,
+                        rel='inline-%s' % inline.rel_name,)
+            inline_links.append(link)
         return links + inline_links
     
     def get_resource_item(self, instance, from_list=False):
@@ -277,11 +276,13 @@ class InlineModelResource(ModelResource):
         #TODO i need parent resource in order to work
         return './add/'
     
-    def get_delete_url(self, instance):
+    def get_delete_url(self, item):
+        instance = item.instance
         pk = getattr(instance, self.fk.name).pk
         return self.reverse('%sdelete' % self.get_base_url_name(), pk=pk, inline_pk=instance.pk)
     
-    def get_instance_url(self, instance):
+    def get_instance_url(self, item):
+        instance = item.instance
         pk = getattr(instance, self.fk.name).pk
         return self.reverse('%sdetail' % self.get_base_url_name(), pk=pk, inline_pk=instance.pk)
     

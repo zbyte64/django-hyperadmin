@@ -1,4 +1,3 @@
-from django import http
 from django import forms
 from django.conf.urls.defaults import patterns, url
 
@@ -48,30 +47,49 @@ class BaseResource(object):
         return {'resource':self,
                 'resource_site':self.site,}
     
-    def get_embedded_links(self, instance=None):
+    def get_embedded_links(self, state):
         return []
     
-    def get_outbound_links(self, instance=None):
+    def get_item_embedded_links(self, item):
         return []
     
-    def get_templated_queries(self):
+    def get_outbound_links(self, state):
+        return self.get_breadcrumbs(state)
+    
+    def get_item_outbound_links(self, item):
+        return []
+    
+    def get_templated_queries(self, state):
+        return []
+    
+    def get_item_templated_queries(self, item):
         return []
     
     #TODO find a better name
-    def get_ln_links(self, instance=None):
+    def get_ln_links(self, state):
         return []
     
     #TODO find a better name
-    def get_li_links(self, instance=None):
+    def get_item_ln_links(self, item):
         return []
     
-    def get_instance_url(self, instance):
+    #TODO find a better name
+    def get_idempotent_links(self, state):
+        return []
+    
+    #TODO find a better name
+    def get_item_idempotent_links(self, item):
+        return []
+    
+    def get_item_url(self, item):
         return None
     
-    def get_form_class(self, instance=None):
+    def get_form_class(self):
         return self.form_class
     
-    def get_form_kwargs(self, **kwargs):
+    def get_form_kwargs(self, item=None, **kwargs):
+        if item is not None:
+            kwargs.setdefault('instance', item.instance)
         return kwargs
     
     def generate_response(self, media_type, content_type, link=None, meta=None):
@@ -92,18 +110,15 @@ class BaseResource(object):
     def get_resource_item(self, instance):
         return self.resource_item_class(resource=self, instance=instance)
     
-    def get_prompt(self, instance):
-        return unicode(instance)
-    
     def get_resource_link_item(self, filter_params=None):
         return None
     
     def get_resource_link(self, **kwargs):
         link_kwargs = {'url':self.get_absolute_url(),
                        'resource':self,
-                       'resource_item':self.get_resource_link_item(),
+                       'item':self.get_resource_link_item(),
                        'rel':'self',
-                       'prompt':self.prompt(),}
+                       'prompt':self.get_prompt(),}
         link_kwargs.update(kwargs)
         resource_link = Link(**link_kwargs)
         return resource_link
@@ -111,15 +126,26 @@ class BaseResource(object):
     def get_breadcrumb(self):
         return self.get_resource_link(rel='breadcrumb')
     
-    def get_breadcrumbs(self):
+    def get_breadcrumbs(self, state):
         breadcrumbs = []
         if self.parent:
-            breadcrumbs = self.parent.get_breadcrumbs()
+            breadcrumbs = self.parent.get_breadcrumbs(state=None)
         breadcrumbs.append(self.get_breadcrumb())
         return breadcrumbs
     
-    def prompt(self):
+    def get_prompt(self):
         return unicode(self)
+    
+    def get_item_prompt(self, item):
+        return unicode(item.instance)
+    
+    def get_item_link(self, item):
+        item_link = Link(url=item.get_absolute_url(),
+                         resource=self,
+                         item=item,
+                         rel='item',
+                         prompt=item.get_prompt(),)
+        return item_link
 
 class CRUDResource(BaseResource):
     resource_class = 'crudresource'
@@ -137,7 +163,7 @@ class CRUDResource(BaseResource):
         raise NotImplementedError
     resource_name = property(get_resource_name)
     
-    def prompt(self):
+    def get_prompt(self):
         return self.resource_name
     
     def get_urls(self):
@@ -167,76 +193,84 @@ class CRUDResource(BaseResource):
     def get_add_url(self):
         return self.reverse('%s_%s_add' % (self.app_name, self.resource_name))
     
-    def get_instance_url(self, instance):
-        return self.reverse('%s_%s_detail' % (self.app_name, self.resource_name), pk=instance.pk)
+    def get_item_url(self, item):
+        return self.reverse('%s_%s_detail' % (self.app_name, self.resource_name), pk=item.instance.pk)
     
-    def get_delete_url(self, instance):
-        return self.reverse('%s_%s_delete' % (self.app_name, self.resource_name), pk=instance.pk)
+    def get_delete_url(self, item):
+        return self.reverse('%s_%s_delete' % (self.app_name, self.resource_name), pk=item.instance.pk)
     
     def get_absolute_url(self):
         return self.reverse('%s_%s_list' % (self.app_name, self.resource_name))
     
-    def get_item_link(self, instance):
-        resource_item = self.get_resource_item(instance)
-        item_link = Link(url=resource_item.get_absolute_url(),
-                         resource=self,
-                         resource_item=resource_item,
-                         rel='item',
-                         prompt=self.get_prompt(instance),)
-        return item_link
-    
-    def get_create_link(self, form_kwargs, form_class=None, form=None):
-        if form_class is None:
-            form_class = self.get_form_class()
-        create_link = Link(url=self.get_add_url(),
-                           resource=self,
-                           on_submit=self.handle_create_submission,
-                           method='POST',
-                           form=form,
-                           form_class=form_class,
-                           form_kwargs=form_kwargs,
-                           prompt='create',
-                           rel='create',)
+    def get_create_link(self, form_kwargs=None, **kwargs):
+        if form_kwargs is None:
+            form_kwargs = {}
+        form_kwargs = self.get_form_kwargs(**form_kwargs)
+        
+        link_kwargs = {'url':self.get_add_url(),
+                       'resource':self,
+                       'on_submit':self.handle_create_submission,
+                       'method':'POST',
+                       'form_kwargs':form_kwargs,
+                       'form_class': self.get_form_class(),
+                       'prompt':'create',
+                       'rel':'create',}
+        link_kwargs.update(kwargs)
+        create_link = Link(**link_kwargs)
         return create_link
     
-    def get_update_link(self, form_kwargs, form_class=None, form=None):
-        if form_class is None:
-            form_class = self.get_form_class()
-        update_link = Link(url=self.get_instance_url(form_kwargs['instance']),
-                           resource=self,
-                           on_submit=self.handle_update_submission,
-                           resource_item=self.get_resource_item(form_kwargs['instance']),
-                           method='POST',
-                           form=form,
-                           form_class=form_class,
-                           form_kwargs=form_kwargs,
-                           prompt='update',
-                           rel='update',)
+    def get_restful_create_link(self, **kwargs):
+        kwargs['url'] = self.get_absolute_url()
+        return self.get_create_link(**kwargs)
+    
+    def get_update_link(self, item, form_kwargs=None, **kwargs):
+        if form_kwargs is None:
+            form_kwargs = {}
+        form_kwargs = self.get_form_kwargs(item, **form_kwargs)
+        link_kwargs = {'url':item.get_absolute_url(),
+                       'resource':self,
+                       'on_submit':self.handle_update_submission,
+                       'item':item,
+                       'method':'POST',
+                       'form_class':self.get_form_class(),
+                       'form_kwargs':form_kwargs,
+                       'prompt':'update',
+                       'rel':'update',}
+        update_link = Link(**link_kwargs)
         return update_link
     
-    def get_delete_link(self, form_kwargs, form_class=None):
-        delete_link = Link(url=self.get_delete_url(form_kwargs['instance']),
-                           resource=self,
-                           resource_item=self.get_resource_item(form_kwargs['instance']),
-                           on_submit=self.handle_delete_submission,
-                           rel='delete',
-                           prompt='delete',
-                           method='POST')
+    def get_delete_link(self, item, **kwargs):
+        link_kwargs = {'url':self.get_delete_url(item),
+                       'resource':self,
+                       'item':item,
+                       'on_submit':self.handle_delete_submission,
+                       'rel':'delete',
+                       'prompt':'delete',
+                       'method':'POST'}
+        link_kwargs.update(kwargs)
+        delete_link = Link(**link_kwargs)
         return delete_link
+    
+    def get_restful_delete_link(self, item, **kwargs):
+        kwargs['url'] = item.get_absolute_url()
+        kwargs['method'] = 'DELETE'
+        return self.get_item_link(item, **kwargs)
     
     def handle_create_submission(self, link, submit_kwargs):
         form = link.get_form(**submit_kwargs)
         if form.is_valid():
             instance = form.save()
-            return self.get_item_link(instance=instance)
+            resource_item = self.get_resource_item(instance)
+            return self.get_item_link(resource_item)
         return self.get_create_link(form_kwargs=link.form_kwargs, form=form)
     
     def handle_update_submission(self, link, submit_kwargs):
         form = link.get_form(**submit_kwargs)
         if form.is_valid():
             instance = form.save()
-            return self.get_item_link(instance=instance)
-        return self.get_update_link(form_kwargs=link.form_kwargs, form=form)
+            resource_item = self.get_resource_item(instance)
+            return self.get_item_link(resource_item)
+        return self.get_update_link(link.item, form_kwargs=link.form_kwargs, form=form)
     
     def handle_delete_submission(self, link, submit_kwargs):
         instance = link.resource_item.instance
@@ -252,22 +286,25 @@ class CRUDResource(BaseResource):
     def has_delete_permission(self, user, obj=None):
         return True
     
-    def get_embedded_links(self, instance=None):
-        if instance:
-            delete_link = self.get_delete_link(form_kwargs={'instance':instance})
-            return [delete_link]
-        add_link = self.get_create_link({})
-        return [add_link]
+    def get_embedded_links(self, state):
+        create_link = self.get_create_link()
+        return [create_link]
     
-    def get_outbound_links(self, instance=None):
-        if instance:
-            return []
-        else:
-            return self.get_breadcrumbs()
+    def get_item_embedded_links(self, item):
+        delete_link = self.get_delete_link(item=item)
+        return [delete_link]
     
-    def get_templated_queries(self):
-        #search and filter goes here
-        return []
+    def get_ln_links(self, state):
+        create_link = self.get_restful_create_link()
+        return [create_link]
+    
+    def get_item_ln_links(self, item):
+        update_link = self.get_update_link(item=item)
+        return [update_link]
+    
+    def get_item_idempotent_links(self, item):
+        delete_link = self.get_restful_delete_link(item=item)
+        return [delete_link]
     
     def get_actions(self, request):
         actions = self.site.get_actions(request)

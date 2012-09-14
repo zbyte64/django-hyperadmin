@@ -71,7 +71,7 @@ class AuthResource(BaseResource):
         form = form_class(**form_kwargs)
         
         login_link = Link(url=self.reverse('authentication'),
-                          resource_item=self.get_resource_item(form_kwargs['request']),
+                          item=self.get_resource_item(form_kwargs['request']),
                           on_submit=self.handle_login_submission,
                           resource=self,
                           method='POST', #TODO should this be put?
@@ -83,7 +83,7 @@ class AuthResource(BaseResource):
     def get_logout_link(self, **form_kwargs):
         logout_link = Link(url=self.reverse('logout'),
                            resource=self,
-                           resource_item=self.get_resource_item(form_kwargs['request']),
+                           item=self.get_resource_item(form_kwargs['request']),
                            on_submit=self.handle_logout_submission,
                            method='POST',
                            prompt='logout',

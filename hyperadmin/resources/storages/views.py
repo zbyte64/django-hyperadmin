@@ -30,13 +30,7 @@ class StorageResourceViewMixin(CRUDResourceViewMixin, generic.edit.FormMixin):
         return self.get_links_and_items()[1]
     
     def get_items_forms(self, **kwargs):
-        return [self.get_form(**self.get_form_kwargs(instance=item)) for item in self.get_items()]
-    
-    def get_form_kwargs(self, **defaults):
-        kwargs = dict(defaults)
-        kwargs.update(CRUDResourceViewMixin.get_form_kwargs(self))
-        kwargs['storage'] = self.resource.resource_adaptor
-        return kwargs
+        return [self.get_form(**self.get_form_kwargs(item)) for item in self.get_items()]
 
 class StorageListResourceView(StorageResourceViewMixin, generic.View): #generic.UpdateView
     view_class = 'change_list'
@@ -49,10 +43,6 @@ class StorageListResourceView(StorageResourceViewMixin, generic.View): #generic.
         form_link = self.get_create_link(**form_kwargs)
         response_link = form_link.submit()
         return self.resource.generate_response(self.get_response_media_type(), self.get_response_type(), response_link)
-    
-    def get_ln_links(self, instance=None):
-        update_link = self.get_upload_link(instance=instance)
-        return [update_link] + super(StorageListResourceView, self).get_ln_links(instance)
     
     def get_templated_queries(self):
         links = super(StorageListResourceView, self).get_templated_queries()
@@ -73,14 +63,21 @@ class StorageDetailResourceView(StorageResourceViewMixin, generic.View): #generi
             self.object = self.get_object()
         return [self.object]
     
+    def get_resource_item(self):
+        if not getattr(self, 'object', None):
+            self.object = self.get_object()
+        return self.resource.get_resource_item(self.object)
+    
     def get(self, request, *args, **kwargs):
         self.object = self.get_object()
-        return self.resource.generate_response(self.get_response_media_type(), self.get_response_type(), self.get_update_link(instance=self.object))
+        item = self.get_resource_item()
+        return self.resource.generate_response(self.get_response_media_type(), self.get_response_type(), self.get_update_link(item))
     
     def post(self, request, *args, **kwargs):
         self.object = self.get_object()
+        item = self.get_resource_item()
         form_kwargs = self.get_request_form_kwargs()
-        form_link = self.get_update_link(instance=self.object, **form_kwargs)
+        form_link = self.get_update_link(item, **form_kwargs)
         response_link = form_link.submit()
         return self.resource.generate_response(self.get_response_media_type(), self.get_response_type(), response_link)
     
@@ -88,9 +85,9 @@ class StorageDetailResourceView(StorageResourceViewMixin, generic.View): #generi
         self.object = self.get_object()
         if not self.can_delete():
             return http.HttpResponseForbidden(_(u"You may not delete that object"))
-        
+        item = self.get_resource_item()
         form_kwargs = self.get_request_form_kwargs()
-        form_link = self.get_delete_link(instance=self.object, **form_kwargs)
+        form_link = self.get_delete_link(item, **form_kwargs)
         response_link = form_link.submit()
         
         return self.resource.generate_response(self.get_response_media_type(), self.get_response_type(), response_link)

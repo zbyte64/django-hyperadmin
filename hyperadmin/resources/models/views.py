@@ -45,10 +45,6 @@ class ModelCreateResourceView(ModelResourceViewMixin, generic.CreateView):
         form_link = self.get_create_link(**form_kwargs)
         response_link = form_link.submit()
         return self.resource.generate_response(self.get_response_media_type(), self.get_response_type(), response_link, meta=self.get_meta())
-    
-    def get_ln_links(self, instance=None):
-        create_link = self.get_create_link()
-        return [create_link] + super(ModelCreateResourceView, self).get_ln_links(instance)
 
 class ModelListResourceView(ModelCreateResourceView):
     view_class = 'change_list'
@@ -153,9 +149,15 @@ class ModelDetailMixin(object):
             self.object = self.get_object()
         return [self.object]
     
+    def get_resource_item(self):
+        if not getattr(self, 'object', None):
+            self.object = self.get_object()
+        return self.resource.get_resource_item(self.object)
+    
     def get(self, request, *args, **kwargs):
         self.object = self.get_object()
-        return self.resource.generate_response(self.get_response_media_type(), self.get_response_type(), self.get_update_link(instance=self.object), meta=self.get_meta())
+        resource_item = self.get_resource_item()
+        return self.resource.generate_response(self.get_response_media_type(), self.get_response_type(), self.get_update_link(resource_item), meta=self.get_meta())
 
 class ModelDeleteResourceView(ModelDetailMixin, ModelResourceViewMixin, generic.DeleteView):
     view_class = 'delete_confirmation'
@@ -165,31 +167,29 @@ class ModelDeleteResourceView(ModelDetailMixin, ModelResourceViewMixin, generic.
         if not self.can_delete(self.object):
             return http.HttpResponseForbidden(_(u"You may not delete that object"))
         
-        form_link = self.get_delete_link(instance=self.object)
+        resource_item = self.get_resource_item()
+        
+        form_link = self.get_delete_link(resource_item)
         response_link = form_link.submit()
         
         return self.resource.generate_response(self.get_response_media_type(), self.get_response_type(), response_link)
-    
-    def get_li_links(self, instance=None):
-        if instance and self.can_delete(instance):
-            delete_link = self.get_delete_link(instance=instance)
-            return [delete_link]
-        return []
-
 
 class ModelDetailResourceView(ModelDetailMixin, ModelResourceViewMixin, generic.UpdateView):
     view_class = 'change_form'
     
     def get(self, request, *args, **kwargs):
         self.object = self.get_object()
-        return self.resource.generate_response(self.get_response_media_type(), self.get_response_type(), self.get_update_link(instance=self.object), meta=self.get_meta())
+        resource_item = self.get_resource_item()
+        return self.resource.generate_response(self.get_response_media_type(), self.get_response_type(), self.get_update_link(resource_item), meta=self.get_meta())
     
     def post(self, request, *args, **kwargs):
         self.object = self.get_object()
         if not self.can_change(self.object):
             return http.HttpResponseForbidden(_(u"You may not modify that object"))
+        
+        resource_item = self.get_resource_item()
         form_kwargs = self.get_request_form_kwargs()
-        form_link = self.get_update_link(instance=self.object, **form_kwargs)
+        form_link = self.get_update_link(resource_item, **form_kwargs)
         response_link = form_link.submit()
         return self.resource.generate_response(self.get_response_media_type(), self.get_response_type(), response_link, meta=self.get_meta())
     
@@ -198,33 +198,10 @@ class ModelDetailResourceView(ModelDetailMixin, ModelResourceViewMixin, generic.
         if not self.can_delete(self.object):
             return http.HttpResponseForbidden(_(u"You may not delete that object"))
         
-        form_link = self.get_delete_link(instance=self.object)
+        resource_item = self.get_resource_item()
+        form_link = self.get_delete_link(resource_item)
         response_link = form_link.submit()
         return self.resource.generate_response(self.get_response_media_type(), self.get_response_type(), response_link)
-    
-    def get_ln_links(self, instance=None):
-        links = super(ModelDetailResourceView, self).get_ln_links(instance)
-        assert instance
-        if instance and self.can_change(instance):
-            update_link = self.get_update_link(instance=instance)
-            return [update_link] + links
-        return links
-    
-    def get_li_links(self, instance=None):
-        if instance and self.can_delete(instance):
-            delete_link = Link(url=self.get_instance_url(instance),
-                               rel='delete',
-                               prompt='delete',
-                               method='DELETE')
-            return [delete_link]
-        return []
-    
-    def get_outbound_links(self, instance=None):
-        links = super(ModelDetailResourceView, self).get_outbound_links(instance=instance)
-        if instance is None:
-            detail_link = Link(url=self.resource.get_instance_url(self.object), rel='breadcrumb', prompt=unicode(self.object))
-            links.append(detail_link)
-        return links
 
 class InlineModelMixin(object):
     def get_changelist_links(self):

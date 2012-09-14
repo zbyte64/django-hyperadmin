@@ -1,7 +1,7 @@
 from copy import copy
 
 class Link(object):
-    def __init__(self, url, resource, method='GET', resource_state=None, resource_item=None, form=None, form_class=None, form_kwargs=None,
+    def __init__(self, url, resource, method='GET', state=None, item=None, form=None, form_class=None, form_kwargs=None,
                  classes=[], descriptors=None, rel=None, prompt=None, cu_headers=None, cr_headers=None, on_submit=None):
         '''
         fields = dictionary of django fields describing the accepted data
@@ -11,8 +11,8 @@ class Link(object):
         self.url = url
         self.method = str(method).upper() #CM
         self.resource = resource
-        self.resource_state = resource_state or resource
-        self.resource_item = resource_item
+        self.state = state
+        self.item = item
         self._form = form
         self.form_class = form_class
         self.form_kwargs = form_kwargs
@@ -74,6 +74,34 @@ class Link(object):
         on_submit = self.on_submit
         
         return on_submit(link=self, submit_kwargs=kwargs)
+    
+    def get_embedded_links(self):
+        if self.state:
+            return self.state.get_embedded_links()
+        return self.resource.get_embedded_links(self.state)
+    
+    def get_outbound_links(self):
+        if self.state:
+            return self.state.get_outbound_links()
+        return self.resource.get_outbound_links(self.state)
+    
+    def get_templated_queries(self):
+        if self.state:
+            return self.state.get_templated_queries()
+        return self.resource.get_templated_queries(self.state)
+    
+    def get_ln_links(self):
+        if self.state:
+            return self.state.get_ln_links()
+        return self.resource.get_ln_links(self.state)
+    
+    def get_idempotent_links(self):
+        if self.state:
+            return self.state.get_idempotant_links()
+        return self.resource.get_idempotant_links(self.state)
+    
+    def get_resource_items(self):
+        return self.item.get_resource_items()
 
 class ResourceItem(object):
     '''
@@ -86,22 +114,22 @@ class ResourceItem(object):
         self.instance = instance
     
     def get_embedded_links(self):
-        return self.resource.get_embedded_links(instance=self.instance)
+        return self.resource.get_item_embedded_links(self)
     
     def get_outbound_links(self):
-        return self.resource.get_outbound_links(instance=self.instance)
+        return self.resource.get_item_outbound_links(self)
     
     def get_templated_queries(self):
-        return self.resource.get_templated_queries(instance=self.instance)
+        return self.resource.get_item_templated_queries(self)
     
     def get_ln_links(self):
-        return self.resource.get_ln_links(instance=self.instance)
+        return self.resource.get_item_ln_links(self)
     
-    def get_li_links(self):
-        return self.resource.get_li_links(instance=self.instance)
+    def get_idempotent_links(self):
+        return self.resource.get_item_idempotant_links(self)
     
     def get_absolute_url(self):
-        return self.resource.get_instance_url(instance=self.instance)
+        return self.resource.get_item_url(self)
     
     def get_form_class(self):
         if self.form_class is not None:
@@ -123,7 +151,7 @@ class ResourceItem(object):
         return form
     
     def get_prompt(self):
-        return self.resource.get_prompt(self.instance)
+        return self.resource.get_item_prompt(self)
     
     def get_resource_items(self):
         return [self]

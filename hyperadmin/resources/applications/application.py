@@ -12,6 +12,7 @@ class ApplicationResource(BaseResource):
         self._app_name = app_name
         self.resource_adaptor = dict() #TODO OrderedDict
         self.site = site
+        self.parent = site.site_resource
     
     def get_app_name(self):
         return self._app_name

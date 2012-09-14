@@ -60,16 +60,13 @@ class CollectionJSON(MediaType):
         return error_r
     
     def prepare_collection(self, form_link, meta=None):
-        resource_item = form_link.resource_item
-        resource = form_link.resource_state
-        
-        items = [self.convert_item(item) for item in resource_item.get_resource_items()]
+        items = [self.convert_item(item) for item in form_link.get_resource_items()]
         
         #the following maps hfactor to this media type
         links = list()
-        links.extend(resource.get_embedded_links())
-        links.extend(resource.get_outbound_links())
-        queries = resource.get_templated_queries()
+        links.extend(form_link.get_embedded_links())
+        links.extend(form_link.get_outbound_links())
+        queries = form_link.get_templated_queries()
         
         data = {
             "links": [self.convert_link(link) for link in links],
@@ -177,7 +174,7 @@ class CollectionHyperAdminJSON(CollectionNextJSON):
         data = super(CollectionHyperAdminJSON, self).prepare_collection(form_link, meta=meta)
         resource_item = form_link.resource_item
         
-        update_links = resource_item.get_ln_links() + resource_item.get_li_links()
+        update_links = resource_item.get_ln_links() + resource_item.get_idempotent_links()
         #get_non_idempotent_updates
         #get_idempotent_updates
         if len(update_links):

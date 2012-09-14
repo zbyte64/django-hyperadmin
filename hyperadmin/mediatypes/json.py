@@ -9,13 +9,7 @@ class JSON(MediaType):
         return self.get_form_instance_values(item.form)
     
     def get_payload(self, form_link, meta=None):
-        resource_item = form_link.resource_item
-        
-        items = [self.convert_item(item) for item in resource_item.get_resource_items()]
-        
-        #TODO if not collection resource item
-        #if instance:
-        #    return items[0]
+        items = [self.convert_item(item) for item in form_link.get_resource_items()]
         return items
     
     def serialize(self, content_type, link, meta=None):

@@ -41,16 +41,15 @@ class Html5MediaType(MediaType):
                    'meta':meta,}
         
         resource_item = form_link.resource_item
-        resource = form_link.resource_state
         
         items = [self.convert_item(item) for item in resource_item.get_resource_items()]
         context['items'] = items
         
-        context['embedded_links'] = resource.get_embedded_links()
-        context['outbound_links'] = resource.get_outbound_links()
-        context['templated_queries'] = resource.get_templated_queries()
+        context['embedded_links'] = form_link.get_embedded_links()
+        context['outbound_links'] = form_link.get_outbound_links()
+        context['templated_queries'] = form_link.get_templated_queries()
         context['non_idempotent_updates'] = resource_item.get_ln_links()
-        context['idempotent_updates'] = resource_item.get_li_links()
+        context['idempotent_updates'] = resource_item.get_idempotent_links()
         
         if meta and 'display_fields' in meta:
             context['display_fields'] = meta['display_fields']
