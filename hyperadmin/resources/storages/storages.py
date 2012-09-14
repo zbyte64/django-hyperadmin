@@ -76,7 +76,7 @@ class StorageResource(CRUDResource):
         links = list()
         for directory in dirs:
             url = '%s?%s' % (request.path, urllib.urlencode({'path':directory}))
-            link = Link(url=url, prompt=u"Directory: %s" % directory, classes=['filter', 'directory'], rel="filter")
+            link = Link(url=url, resource=self, prompt=u"Directory: %s" % directory, classes=['filter', 'directory'], rel="filter")
             links.append(link)
         return links, items
     

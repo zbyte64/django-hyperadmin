@@ -180,7 +180,7 @@ class CRUDResource(BaseResource):
         resource_item = self.get_resource_item(instance)
         item_link = Link(url=resource_item.get_absolute_url(),
                          resource=self,
-                         rsource_item=resource_item,
+                         resource_item=resource_item,
                          rel='item',
                          prompt=self.get_prompt(instance),)
         return item_link
@@ -243,45 +243,20 @@ class CRUDResource(BaseResource):
         instance.delete()
         return self.get_resource_link()
     
-    def form_valid(self, form):
-        instance = form.save()
-        next_url = self.get_instance_url(instance)
-        response = http.HttpResponse(next_url, status=303)
-        response['Location'] = next_url
-        return response
-    
-    def generate_create_response(self, media_type, content_type, form_link, meta=None):
-        instance = None
-        if form_link.form.is_valid():
-            #TODO media type should have a protocol for redirects and instances
-            return self.form_valid(form_link.form)
-        return self.generate_response(media_type, content_type, instance=instance, form_link=form_link, meta=meta)
-    
-    def generate_update_response(self, media_type, content_type, instance, form_link, meta=None):
-        if form_link.form.is_valid():
-            return self.form_valid(form_link.form)
-        return self.generate_response(media_type, content_type, instance=instance, form_link=form_link, meta=meta)
-    
-    def generate_delete_response(self, media_type, content_type):
-        next_url = self.get_absolute_url()
-        response = http.HttpResponse(next_url, status=303)
-        response['Location'] = next_url
-        return response
-    
-    def has_add_permission(self, request):
+    def has_add_permission(self, user):
         return True
     
-    def has_change_permission(self, request, obj=None):
+    def has_change_permission(self, user, obj=None):
         return True
     
-    def has_delete_permission(self, request, obj=None):
+    def has_delete_permission(self, user, obj=None):
         return True
     
     def get_embedded_links(self, instance=None):
         if instance:
-            delete_link = Link(url=self.get_delete_url(instance), resource=self, rel='delete', prompt='Delete')
+            delete_link = self.get_delete_link(form_kwargs={'instance':instance})
             return [delete_link]
-        add_link = Link(url=self.get_add_url(), resource=self, rel='add', prompt='Add')
+        add_link = self.get_create_link({})
         return [add_link]
     
     def get_outbound_links(self, instance=None):

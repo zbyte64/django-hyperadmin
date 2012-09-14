@@ -1,13 +1,13 @@
 from django.conf.urls.defaults import patterns, url
-from django import http
+from django.contrib.auth import logout
 
 from hyperadmin.hyperobjects import Link, ResourceItem
-from hyperadmin.resources import CRUDResource
+from hyperadmin.resources import BaseResource
 from hyperadmin.resources.auth import views
 from hyperadmin.resources.auth.forms import AuthenticationResourceForm
 
 
-class AuthResource(CRUDResource):
+class AuthResource(BaseResource):
     form_class = AuthenticationResourceForm
     
     detail_view = views.AuthenticationResourceView
@@ -54,21 +54,39 @@ class AuthResource(CRUDResource):
     def get_absolute_url(self):
         return self.reverse('authentication')
     
-    def get_outbound_links(self, instance=None):
-        if instance:
-            return []
-        else:
-            site_link = Link(url=self.reverse('index'), rel='breadcrumb', prompt='root')
-            return [site_link]
+    def handle_login_submission(self, link, submit_kwargs):
+        form = link.get_form(**submit_kwargs)
+        if form.is_valid():
+            instance = form.save()
+            return self.site.site_resource.get_resource_link()
+        return self.get_login_link(form_kwargs=link.form_kwargs, form=form)
     
-    def form_valid(self, form):
-        instance = form.save()
-        next_url = self.site.site_resource.get_absolute_url()
-        response = http.HttpResponse(next_url, status=303)
-        response['Location'] = next_url
-        return response
+    def handle_logout_submission(self, link, submit_kwargs):
+        logout(link.resource_item.instance)
+        return self.get_login_link()
     
-    def get_embedded_links(self, instance=None):
-        logout_link = Link(url=self.reverse('logout'), resource=self, rel='delete', prompt='Logout')
-        return [logout_link]
+    def get_login_link(self, **form_kwargs):
+        form_class = self.get_form_class()
+        form_kwargs.update(self.get_form_kwargs())
+        form = form_class(**form_kwargs)
+        
+        login_link = Link(url=self.reverse('authentication'),
+                          resource_item=self.get_resource_item(form_kwargs['request']),
+                          on_submit=self.handle_login_submission,
+                          resource=self,
+                          method='POST', #TODO should this be put?
+                          form=form,
+                          prompt='authenticate',
+                          rel='login',)
+        return login_link
+    
+    def get_logout_link(self, **form_kwargs):
+        logout_link = Link(url=self.reverse('logout'),
+                           resource=self,
+                           resource_item=self.get_resource_item(form_kwargs['request']),
+                           on_submit=self.handle_logout_submission,
+                           method='POST',
+                           prompt='logout',
+                           rel='logout',)
+        return logout_link
 

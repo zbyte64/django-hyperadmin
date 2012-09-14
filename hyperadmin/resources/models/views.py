@@ -3,17 +3,13 @@ from django.views import generic
 from django import http
 
 from hyperadmin.hyperobjects import Link
-from hyperadmin.resources.views import ResourceViewMixin
+from hyperadmin.resources.views import CRUDResourceViewMixin
 
-class ModelResourceViewMixin(ResourceViewMixin, generic.edit.ModelFormMixin):
-    form_class = None
+class ModelResourceViewMixin(CRUDResourceViewMixin):
     model = None
     queryset = None
     
-    def get_meta(self):
-        return {}
-    
-    def get_queryset(self):
+    def get_queryset(self, filter_params=None):
         return self.resource.get_queryset(self.request.user)
     
     def get_items(self, **kwargs):
@@ -32,33 +28,6 @@ class ModelResourceViewMixin(ResourceViewMixin, generic.edit.ModelFormMixin):
         form_class = self.get_form_class(instance=kwargs.get('instance', None))
         form = form_class(**kwargs)
         return form
-    
-    #form_valid & form_invalid should not be used
-    
-    def can_add(self):
-        return self.resource.has_add_permission(self.request.user)
-    
-    def can_change(self, instance=None):
-        return self.resource.has_change_permission(self.request.user, instance)
-    
-    def can_delete(self, instance=None):
-        return self.resource.has_delete_permission(self.request.user, instance)
-    
-    def get_create_link(self, **form_kwargs):
-        form_class = self.get_form_class()
-        form_kwargs.update(self.get_form_kwargs())
-        return self.resource.get_create_link(form_class=form_class, form_kwargs=form_kwargs)
-    
-    def get_update_link(self, **form_kwargs):
-        form_class = self.get_form_class()
-        form_kwargs.update(self.get_form_kwargs())
-        return self.resource.get_update_link(form_class=form_class, form_kwargs=form_kwargs)
-    
-    def get_delete_link(self, **form_kwargs):
-        return self.resource.get_delete_link(form_kwargs=form_kwargs)
-    
-    def get_list_link(self):
-        return self.resource.get_resource_link()
 
 class ModelCreateResourceView(ModelResourceViewMixin, generic.CreateView):
     view_class = 'change_form'
@@ -101,7 +70,7 @@ class ModelListResourceView(ModelCreateResourceView):
     
     def get_changelist(self):
         if not hasattr(self, '_changelist'):
-            self._changelist = self.resource.get_changelist(self.request)
+            self._changelist = self.resource.get_changelist(self.request.user, filter_params=self.request.GET)
         return self._changelist
     
     def get_queryset(self):
@@ -262,12 +231,12 @@ class InlineModelMixin(object):
         return []
     
     def get_parent(self):
-        queryset = self.resource.parent_resource.get_queryset(self.request)
+        queryset = self.resource.parent_resource.get_queryset(self.request.user)
         parent = queryset.get(pk=self.kwargs['pk'])
         return parent
     
     def get_queryset(self):
-        return self.resource.get_queryset(self.request, instance=self.get_parent())
+        return self.resource.get_queryset(self.get_parent(), self.request.user)
 
 class InlineModelCreateResourceView(InlineModelMixin, ModelCreateResourceView):
     pass
@@ -275,7 +244,7 @@ class InlineModelCreateResourceView(InlineModelMixin, ModelCreateResourceView):
 class InlineModelListResourceView(InlineModelMixin, ModelListResourceView):
     def get_changelist(self):
         if not hasattr(self, '_changelist'):
-            self._changelist = self.resource.get_changelist(self.get_parent(), self.request)
+            self._changelist = self.resource.get_changelist(self.get_parent(), self.request.user, self.request.GET)
         return self._changelist
 
 class InlineModelDetailMixin(object):

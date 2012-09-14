@@ -1,5 +1,3 @@
-import inspect
-
 from django.conf.urls.defaults import patterns, url, include
 from django.utils.functional import update_wrapper
 from django.utils.encoding import force_unicode
@@ -9,35 +7,7 @@ from django import forms
 from hyperadmin.hyperobjects import Link, ResourceItem
 from hyperadmin.resources import CRUDResource
 from hyperadmin.resources.models import views
-
-class MockAdminModel(object):
-    def __init__(self, resource, model_admin=None):
-        self.resource = resource
-        if model_admin is None:
-            from django.contrib.admin.options import ModelAdmin
-            model_admin = ModelAdmin(resource.resource_adaptor, resource.site)
-        self.model_admin = model_admin
-    
-    def __getattr__(self, attr):
-        dct = object.__getattribute__(self, '__dict__')
-        if attr in dct:
-            return object.__getattribute__(self, attr)
-        model_admin = object.__getattribute__(self, 'model_admin')
-        resource = object.__getattribute__(self, 'resource')
-        if hasattr(resource, attr):
-            return getattr(resource, attr)
-        return getattr(model_admin, attr)
-    
-    def queryset(self, request):
-        return self.resource.get_queryset(request)
-
-class MockInlineAdminModel(MockAdminModel):
-    def __init__(self, parent, resource, model_admin=None):
-        self.parent = parent
-        super(MockInlineAdminModel, self).__init__(resource=resource, model_admin=model_admin)
-    
-    def queryset(self, request):
-        return self.resource.get_queryset(request, self.parent)
+from hyperadmin.resources.models.changelist import ChangeList
 
 class ListForm(forms.Form):
     '''
@@ -84,6 +54,7 @@ class ModelResource(CRUDResource):
     
     #save_as = False
     #save_on_top = False
+    changelist = ChangeList
     paginator = Paginator
     inlines = []
     
@@ -141,17 +112,14 @@ class ModelResource(CRUDResource):
     def get_view_kwargs(self):
         kwargs = super(ModelResource, self).get_view_kwargs()
         kwargs['model'] = self.resource_adaptor
-        kwargs['form_class'] = self.form_class
         return kwargs
     
-    def get_changelist(self, request):
-        from django.contrib.admin.views.main  import ChangeList
-        
-        admin_model = MockAdminModel(self)
-        
-        changelist_cls = ChangeList
-        kwargs = {'request':request,
-                  'model':self.resource_adaptor,
+    def get_changelist(self, user, filter_params=None):
+        changelist_cls = self.changelist
+        kwargs = {'model':self.resource_adaptor,
+                  'root_query_set': self.get_queryset(user),
+                  'user':user,
+                  'filter_params':filter_params or dict(),
                   'list_display':self.list_display,
                   'list_display_links':self.list_display_links,
                   'list_filter':self.list_filter,
@@ -161,20 +129,16 @@ class ModelResource(CRUDResource):
                   'list_per_page':self.list_per_page,
                   'list_max_show_all':self.list_max_show_all,
                   'list_editable':self.list_editable,
-                  'model_admin':admin_model,}
-        argspec = inspect.getargspec(changelist_cls.__init__)
-        for key in kwargs.keys():
-            if key not in argspec.args:
-                del kwargs[key]
+                  'resource':self,}
         return changelist_cls(**kwargs)
     
-    def get_paginator(self, request, queryset, per_page, orphans=0, allow_empty_first_page=True):
+    def get_paginator(self, queryset, per_page, orphans=0, allow_empty_first_page=True):
         return self.paginator(queryset, per_page, orphans, allow_empty_first_page)
     
     def lookup_allowed(self, lookup, value):
         return True #TODO
     
-    def get_ordering(self, request):
+    def get_ordering(self):
         """
         Hook for specifying field ordering.
         """
@@ -272,10 +236,10 @@ class InlineModelResource(ModelResource):
             self.rel_name = RelatedObject(self.fk.rel.to, self.model, self.fk).get_accessor_name()
         self.inline_instances = []
     
-    def get_queryset(self, request, instance):
+    def get_queryset(self, parent, user, filter_params):
         queryset = self.resource_adaptor.objects.all()
-        queryset = queryset.filter(**{self.fk.name:instance})
-        if not self.has_change_permission(request):
+        queryset = queryset.filter(**{self.fk.name:parent})
+        if not self.has_change_permission(user):
             queryset = queryset.none()
         return queryset
     
@@ -326,14 +290,12 @@ class InlineModelResource(ModelResource):
             return self.parent_resource.get_absolute_url()
         return None
     
-    def get_changelist(self, parent, request):
-        from django.contrib.admin.views.main  import ChangeList
-        
-        admin_model = MockInlineAdminModel(parent, self)
-        
-        changelist_cls = ChangeList
-        kwargs = {'request':request,
-                  'model':self.resource_adaptor,
+    def get_changelist(self, parent, user, filter_params=None):
+        changelist_cls = self.changelist
+        kwargs = {'model':self.resource_adaptor,
+                  'root_query_set': self.get_queryset(parent, user, filter_params or dict()),
+                  'user':user,
+                  'filter_params':filter_params or dict(),
                   'list_display':self.list_display,
                   'list_display_links':self.list_display_links,
                   'list_filter':self.list_filter,
@@ -343,10 +305,6 @@ class InlineModelResource(ModelResource):
                   'list_per_page':self.list_per_page,
                   'list_max_show_all':self.list_max_show_all,
                   'list_editable':self.list_editable,
-                  'model_admin':admin_model,}
-        argspec = inspect.getargspec(changelist_cls.__init__)
-        for key in kwargs.keys():
-            if key not in argspec.args:
-                del kwargs[key]
+                  'resource':self,}
         return changelist_cls(**kwargs)
 

@@ -53,38 +53,35 @@ class ResourceViewMixin(ConditionalAccessMixin):
         form_kwargs = media_type.deserialize()
         return form_kwargs
     
-    def get_embedded_links(self, instance=None):
-        return self.resource.get_embedded_links(instance)
-    
-    def get_outbound_links(self, instance=None):
-        return self.resource.get_outbound_links(instance)
-    
-    def get_templated_queries(self):
-        return self.resource.get_templated_queries()
-    
-    #TODO find a better name
-    def get_ln_links(self, instance=None):
-        return self.resource.get_ln_links(instance)
-    
-    #TODO find a better name
-    def get_li_links(self, instance=None):
-        return self.resource.get_li_links(instance)
-    
-    def get_instance_url(self, instance):
-        return self.resource.get_instance_url(instance)
-    
-    def get_items(self):
-        return []
-    
-    def get_resource_item(self, instance):
-        return self.resource.get_resource_item(instance)
-    
-    def get_resource_items(self):
-        return [self.get_resource_item(item) for item in self.get_items()]
-    
-    def get_form_class(self, instance=None):
-        return None
+    def get_meta(self):
+        return {}
     
     def get_form_kwargs(self):
         return {}
+
+class CRUDResourceViewMixin(ResourceViewMixin):
+    def can_add(self):
+        return self.resource.has_add_permission(self.request.user)
+    
+    def can_change(self, instance=None):
+        return self.resource.has_change_permission(self.request.user, instance)
+    
+    def can_delete(self, instance=None):
+        return self.resource.has_delete_permission(self.request.user, instance)
+    
+    def get_create_link(self, **form_kwargs):
+        form_class = self.get_form_class()
+        form_kwargs.update(self.get_form_kwargs())
+        return self.resource.get_create_link(form_class=form_class, form_kwargs=form_kwargs)
+    
+    def get_update_link(self, **form_kwargs):
+        form_class = self.get_form_class()
+        form_kwargs.update(self.get_form_kwargs())
+        return self.resource.get_update_link(form_class=form_class, form_kwargs=form_kwargs)
+    
+    def get_delete_link(self, **form_kwargs):
+        return self.resource.get_delete_link(form_kwargs=form_kwargs)
+    
+    def get_list_link(self):
+        return self.resource.get_resource_link()
 
