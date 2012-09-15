@@ -36,13 +36,13 @@ class StorageListResourceView(StorageResourceViewMixin, generic.View): #generic.
     view_class = 'change_list'
     
     def get(self, request, *args, **kwargs):
-        return self.resource.generate_response(self.get_response_media_type(), self.get_response_type(), self.get_list_link())
+        return self.resource.generate_response(self.get_response_media_type(), self.get_response_type(), self.get_list_link(), self.state)
     
     def post(self, request, *args, **kwargs):
         form_kwargs = self.get_request_form_kwargs()
         form_link = self.get_create_link(**form_kwargs)
-        response_link = form_link.submit()
-        return self.resource.generate_response(self.get_response_media_type(), self.get_response_type(), response_link)
+        response_link = form_link.submit(self.state)
+        return self.resource.generate_response(self.get_response_media_type(), self.get_response_type(), response_link, self.state)
     
     def get_templated_queries(self):
         links = super(StorageListResourceView, self).get_templated_queries()
@@ -71,15 +71,15 @@ class StorageDetailResourceView(StorageResourceViewMixin, generic.View): #generi
     def get(self, request, *args, **kwargs):
         self.object = self.get_object()
         item = self.get_resource_item()
-        return self.resource.generate_response(self.get_response_media_type(), self.get_response_type(), self.get_update_link(item))
+        return self.resource.generate_response(self.get_response_media_type(), self.get_response_type(), self.get_update_link(item), self.state)
     
     def post(self, request, *args, **kwargs):
         self.object = self.get_object()
         item = self.get_resource_item()
         form_kwargs = self.get_request_form_kwargs()
         form_link = self.get_update_link(item, **form_kwargs)
-        response_link = form_link.submit()
-        return self.resource.generate_response(self.get_response_media_type(), self.get_response_type(), response_link)
+        response_link = form_link.submit(self.state)
+        return self.resource.generate_response(self.get_response_media_type(), self.get_response_type(), response_link, self.state)
     
     def delete(self, request, *args, **kwargs):
         self.object = self.get_object()
@@ -88,9 +88,9 @@ class StorageDetailResourceView(StorageResourceViewMixin, generic.View): #generi
         item = self.get_resource_item()
         form_kwargs = self.get_request_form_kwargs()
         form_link = self.get_delete_link(item, **form_kwargs)
-        response_link = form_link.submit()
+        response_link = form_link.submit(self.state)
         
-        return self.resource.generate_response(self.get_response_media_type(), self.get_response_type(), response_link)
+        return self.resource.generate_response(self.get_response_media_type(), self.get_response_type(), response_link, self.state)
 
 StorageDeleteResourceView = StorageDetailResourceView
 

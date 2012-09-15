@@ -29,7 +29,7 @@ class MediaType(object):
             return True
         return False
     
-    def serialize(self, content_type, link, meta=None):
+    def serialize(self, content_type, link, state):
         raise NotImplementedError
     
     def deserialize(self):

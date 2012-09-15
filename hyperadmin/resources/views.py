@@ -2,6 +2,9 @@ from django import http
 
 import mimeparse
 
+from hyperadmin.hyperobjects import State
+
+
 class ConditionalAccessMixin(object):
     etag_function = None
     
@@ -53,13 +56,19 @@ class ResourceViewMixin(ConditionalAccessMixin):
         form_kwargs = media_type.deserialize()
         return form_kwargs
     
+    def get_item(self):
+        return None
+    
     def get_meta(self):
         return {}
     
     def get_state(self):
-        return {'auth':self.request.user,
-                'resource':self.resource,
-                'view_class':self.view_class,}
+        return State(self.resource,
+                     self.get_meta(),
+                     {'auth':self.request.user,
+                      'resource':self.resource,
+                      'view_class':self.view_class,
+                      'item':self.get_item(),})
     
     @property
     def state(self):
@@ -90,24 +99,24 @@ class CRUDResourceViewMixin(ResourceViewMixin):
     def get_create_link(self, **form_kwargs):
         form_class = self.get_form_class()
         form_kwargs.update(self.get_form_kwargs())
-        return self.resource.get_create_link(form_class=form_class, form_kwargs=form_kwargs, state=self.state)
+        return self.resource.get_create_link(form_class=form_class, form_kwargs=form_kwargs)
     
     def get_restful_create_link(self, **form_kwargs):
         form_class = self.get_form_class()
         form_kwargs.update(self.get_form_kwargs())
-        return self.resource.get_restful_create_link(form_class=form_class, form_kwargs=form_kwargs, state=self.state)
+        return self.resource.get_restful_create_link(form_class=form_class, form_kwargs=form_kwargs)
     
     def get_update_link(self, item, **form_kwargs):
         form_class = self.get_form_class()
         form_kwargs.update(self.get_form_kwargs())
-        return self.resource.get_update_link(item=item, form_class=form_class, form_kwargs=form_kwargs, state=self.state)
+        return self.resource.get_update_link(item=item, form_class=form_class, form_kwargs=form_kwargs)
     
     def get_delete_link(self, item, **form_kwargs):
-        return self.resource.get_delete_link(item=item, form_kwargs=form_kwargs, state=self.state)
+        return self.resource.get_delete_link(item=item, form_kwargs=form_kwargs)
     
     def get_restful_delete_link(self, item, **form_kwargs):
-        return self.resource.get_restful_delete_link(item=item, form_kwargs=form_kwargs, state=self.state)
+        return self.resource.get_restful_delete_link(item=item, form_kwargs=form_kwargs)
     
     def get_list_link(self):
-        return self.resource.get_resource_link(state=self.state)
+        return self.resource.get_resource_link()
 

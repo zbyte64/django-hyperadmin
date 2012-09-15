@@ -36,27 +36,27 @@ class Html5MediaType(MediaType):
             data.append(entry)
         return data
     
-    def get_context_data(self, form_link, meta=None):
+    def get_context_data(self, form_link, state):
         context = {'form_link':form_link,
-                   'meta':meta,}
+                   'meta':state.meta,}
         
-        resource_item = form_link.item
+        resource_item = state.item
         
-        items = [self.convert_item(item) for item in resource_item.get_resource_items()]
+        items = [self.convert_item(item) for item in state.get_resource_items()]
         context['items'] = items
         
-        context['embedded_links'] = form_link.get_embedded_links()
-        context['outbound_links'] = form_link.get_outbound_links()
-        context['templated_queries'] = form_link.get_templated_queries()
+        context['embedded_links'] = state.get_embedded_links()
+        context['outbound_links'] = state.get_outbound_links()
+        context['templated_queries'] = state.get_templated_queries()
         if resource_item:
             context['non_idempotent_updates'] = resource_item.get_ln_links()
             context['idempotent_updates'] = resource_item.get_idempotent_links()
         else:
-            context['non_idempotent_updates'] = form_link.get_ln_links()
-            context['idempotent_updates'] = form_link.get_idempotent_links()
+            context['non_idempotent_updates'] = state.get_ln_links()
+            context['idempotent_updates'] = state.get_idempotent_links()
         
-        if meta and 'display_fields' in meta:
-            context['display_fields'] = meta['display_fields']
+        if 'display_fields' in state.meta:
+            context['display_fields'] = state.meta['display_fields']
         
         return context
     

@@ -162,15 +162,15 @@ class ModelResource(CRUDResource):
                 prompt = unicode(header["text"])
                 classes = ["sortby"]
                 if "url" in header:
-                    links.append(self.get_resource_link(url=header["url"], state=state, prompt=prompt, classes=classes+["primary"], rel="sortby"))
+                    links.append(self.get_resource_link(url=header["url"], prompt=prompt, classes=classes+["primary"], rel="sortby"))
                 else:
                     if header["ascending"]:
                         classes.append("ascending")
                     if header["sorted"]:
                         classes.append("sorted")
-                    links.append(self.get_resource_link(url=header["url_primary"], state=state, prompt=prompt, classes=classes+["primary"], rel="sortby"))
-                    links.append(self.get_resource_link(url=header["url_remove"], state=state, prompt=prompt, classes=classes+["remove"], rel="sortby"))
-                    links.append(self.get_resource_link(url=header["url_toggle"], state=state, prompt=prompt, classes=classes+["toggle"], rel="sortby"))
+                    links.append(self.get_resource_link(url=header["url_primary"], prompt=prompt, classes=classes+["primary"], rel="sortby"))
+                    links.append(self.get_resource_link(url=header["url_remove"], prompt=prompt, classes=classes+["remove"], rel="sortby"))
+                    links.append(self.get_resource_link(url=header["url_toggle"], prompt=prompt, classes=classes+["toggle"], rel="sortby"))
         return links
     
     def get_changelist_filter_links(self, state):
@@ -186,7 +186,7 @@ class ModelResource(CRUDResource):
                 if callable(title):
                     title = title()
                 prompt = u"%s: %s" % (title, choice['display'])
-                links.append(self.get_resource_link(url=choice['query_string'], state=state, prompt=prompt, classes=classes, rel="filter"))
+                links.append(self.get_resource_link(url=choice['query_string'], prompt=prompt, classes=classes, rel="filter"))
         return links
     
     def get_search_link(self, state):
@@ -204,9 +204,9 @@ class ModelResource(CRUDResource):
             if page == '.':
                 continue
             url = changelist.get_query_string({PAGE_VAR: page})
-            links.append(self.get_resource_link(url=url, state=state, prompt=u"%s" % page, classes=classes, rel="pagination"))
+            links.append(self.get_resource_link(url=url, prompt=u"%s" % page, classes=classes, rel="pagination"))
         if ctx["show_all_url"]:
-            links.append(self.get_resource_link(url=ctx["show_all_url"], state=state, prompt="show all", classes=classes, rel="pagination"))
+            links.append(self.get_resource_link(url=ctx["show_all_url"], prompt="show all", classes=classes, rel="pagination"))
         return links
     
     def lookup_allowed(self, lookup, value):
@@ -276,8 +276,7 @@ class ModelResource(CRUDResource):
             url = self.get_item_url(item) + inline.rel_name + '/'
             link = Link(url=url,
                         resource=inline,
-                        item=inline.get_resource_link_item(),
-                        prompt='inlines: %s' % inline.rel_name,
+                        prompt='inlines: %s' % inline.get_prompt(),
                         rel='inline-%s' % inline.rel_name,)
             inline_links.append(link)
         return links + inline_links

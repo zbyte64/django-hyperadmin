@@ -24,19 +24,19 @@ class AuthenticationResourceView(AuthViewMixin, ResourceViewMixin, generic.View)
     view_class = 'login'
     
     def get(self, request, *args, **kwargs):
-        return self.resource.generate_response(self.get_response_media_type(), self.get_response_type(), self.get_active_link())
+        return self.resource.generate_response(self.get_response_media_type(), self.get_response_type(), self.get_active_link(), self.state)
     
     def post(self, request, *args, **kwargs):
         form_kwargs = self.get_request_form_kwargs()
         form_link = self.get_active_link(**form_kwargs)
-        response_link = form_link.submit()
-        return self.resource.generate_update_response(self.get_response_media_type(), self.get_response_type(), response_link)
+        response_link = form_link.submit(self.state)
+        return self.resource.generate_update_response(self.get_response_media_type(), self.get_response_type(), response_link, self.state)
     
     def delete(self, request, *args, **kwargs):
         form_kwargs = self.get_request_form_kwargs()
         form_link = self.get_logout_link(**form_kwargs)
-        response_link = form_link.submit()
-        return self.resource.generate_delete_response(self.get_response_media_type(), self.get_response_type(), response_link)
+        response_link = form_link.submit(self.state)
+        return self.resource.generate_delete_response(self.get_response_media_type(), self.get_response_type(), response_link, self.state)
     
     def get_ln_links(self, instance=None):
         links = super(AuthenticationResourceView, self).get_ln_links(instance)
@@ -49,6 +49,6 @@ class AuthenticationLogoutView(AuthViewMixin, ResourceViewMixin, generic.View):
     def get(self, request, *args, **kwargs):
         form_kwargs = self.get_request_form_kwargs()
         form_link = self.get_logout_link(**form_kwargs)
-        response_link = form_link.submit()
-        return self.resource.generate_delete_response(self.get_response_media_type(), self.get_response_type(), response_link)
+        response_link = form_link.submit(self.state)
+        return self.resource.generate_delete_response(self.get_response_media_type(), self.get_response_type(), response_link, self.state)
 

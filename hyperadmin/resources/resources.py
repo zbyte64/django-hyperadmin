@@ -92,8 +92,8 @@ class BaseResource(object):
             kwargs.setdefault('instance', item.instance)
         return kwargs
     
-    def generate_response(self, media_type, content_type, link=None, meta=None):
-        return media_type.serialize(content_type=content_type, link=link, meta=meta)
+    def generate_response(self, media_type, content_type, link, state):
+        return media_type.serialize(content_type=content_type, link=link, state=state)
     
     def get_related_resource_from_field(self, field):
         return self.site.get_related_resource_from_field(field)
@@ -119,7 +119,6 @@ class BaseResource(object):
     def get_resource_link(self, **kwargs):
         link_kwargs = {'url':self.get_absolute_url(),
                        'resource':self,
-                       'item':self.get_resource_link_item(),
                        'rel':'self',
                        'prompt':self.get_prompt(),}
         link_kwargs.update(kwargs)
@@ -145,7 +144,6 @@ class BaseResource(object):
     def get_item_link(self, item):
         item_link = Link(url=item.get_absolute_url(),
                          resource=self,
-                         item=item,
                          rel='item',
                          prompt=item.get_prompt(),)
         return item_link
@@ -224,7 +222,6 @@ class CRUDResource(BaseResource):
     
     def get_restful_create_link(self, **kwargs):
         kwargs['url'] = self.get_absolute_url()
-        kwargs['item'] = self.get_resource_link_item()
         return self.get_create_link(**kwargs)
     
     def get_update_link(self, item, form_kwargs=None, **kwargs):
@@ -234,7 +231,6 @@ class CRUDResource(BaseResource):
         link_kwargs = {'url':item.get_absolute_url(),
                        'resource':self,
                        'on_submit':self.handle_update_submission,
-                       'item':item,
                        'method':'POST',
                        'form_class':self.get_form_class(),
                        'form_kwargs':form_kwargs,
@@ -246,7 +242,6 @@ class CRUDResource(BaseResource):
     def get_delete_link(self, item, **kwargs):
         link_kwargs = {'url':self.get_delete_url(item),
                        'resource':self,
-                       'item':item,
                        'on_submit':self.handle_delete_submission,
                        'rel':'delete',
                        'prompt':'delete',
@@ -260,7 +255,7 @@ class CRUDResource(BaseResource):
         kwargs['method'] = 'DELETE'
         return self.get_delete_link(item, **kwargs)
     
-    def handle_create_submission(self, link, submit_kwargs):
+    def handle_create_submission(self, state, link, submit_kwargs):
         form = link.get_form(**submit_kwargs)
         if form.is_valid():
             instance = form.save()
@@ -268,16 +263,16 @@ class CRUDResource(BaseResource):
             return self.get_item_link(resource_item)
         return self.get_create_link(form_kwargs=link.form_kwargs, form=form)
     
-    def handle_update_submission(self, link, submit_kwargs):
+    def handle_update_submission(self, state, link, submit_kwargs):
         form = link.get_form(**submit_kwargs)
         if form.is_valid():
             instance = form.save()
             resource_item = self.get_resource_item(instance)
             return self.get_item_link(resource_item)
-        return self.get_update_link(link.item, form_kwargs=link.form_kwargs, form=form)
+        return self.get_update_link(state.item, form_kwargs=link.form_kwargs, form=form)
     
-    def handle_delete_submission(self, link, submit_kwargs):
-        instance = link.resource_item.instance
+    def handle_delete_submission(self, state, link, submit_kwargs):
+        instance = state.item.instance
         instance.delete()
         return self.get_resource_link()
     

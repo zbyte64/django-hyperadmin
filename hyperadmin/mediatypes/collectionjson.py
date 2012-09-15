@@ -36,11 +36,6 @@ class CollectionJSON(MediaType):
             data.append(entry)
         return data
     
-    def convert_item_form(self, form):
-        item_r = self.links_for_instance(form.instance)
-        item_r['data'] = self.convert_form(form)
-        return item_r
-    
     def convert_link(self, link):
         link_r = {"href":link.url,
                   "rel":link.rel,
@@ -59,14 +54,14 @@ class CollectionJSON(MediaType):
                    'message':str(errors),}
         return error_r
     
-    def prepare_collection(self, form_link, meta=None):
-        items = [self.convert_item(item) for item in form_link.get_resource_items()]
+    def prepare_collection(self, form_link, state):
+        items = [self.convert_item(item) for item in state.get_resource_items()]
         
         #the following maps hfactor to this media type
         links = list()
-        links.extend(form_link.get_embedded_links())
-        links.extend(form_link.get_outbound_links())
-        queries = form_link.get_templated_queries()
+        links.extend(state.get_embedded_links())
+        links.extend(state.get_outbound_links())
+        queries = state.get_templated_queries()
         
         data = {
             "links": [self.convert_link(link) for link in links],
@@ -79,16 +74,16 @@ class CollectionJSON(MediaType):
         
         #get_non_idempotent_updates
         #get_idempotent_updates
-        if form_link:
+        if form_link.form:
             data['template'] = self.convert_link(form_link)
         
-        data.update(href=form_link.url, version="1.0", meta=meta)
+        data.update(href=form_link.url, version="1.0", meta=state.meta)
         return data
     
-    def serialize(self, content_type, link, meta=None):
+    def serialize(self, content_type, link, state):
         if self.detect_redirect(link):
             return self.handle_redirect(link)
-        data = self.prepare_collection(link, meta=meta)
+        data = self.prepare_collection(link, state)
         content = json.dumps({"collection":data}, cls=DjangoJSONEncoder)
         return http.HttpResponse(content, content_type)
     
@@ -160,24 +155,14 @@ class CollectionHyperAdminJSON(CollectionNextJSON):
         #TODO upload to
         return entry
     
-    def convert_item_form(self, form):
-        item_r = super(CollectionHyperAdminJSON, self).convert_item_form(form)
-        item_r['prompt'] = unicode(form.instance)
-        return item_r
-    
-    def convert_resource(self, resource):
-        item_r = super(CollectionHyperAdminJSON, self).convert_resource(resource)
-        item_r['prompt'] = unicode(resource)
-        return item_r
-    
-    def prepare_collection(self, form_link, meta=None):
-        data = super(CollectionHyperAdminJSON, self).prepare_collection(form_link, meta=meta)
-        resource_item = form_link.item
+    def prepare_collection(self, form_link, state):
+        data = super(CollectionHyperAdminJSON, self).prepare_collection(form_link, state)
+        resource_item = state.item
         
         if resource_item:
             update_links = resource_item.get_ln_links() + resource_item.get_idempotent_links()
         else:
-            update_links = form_link.get_ln_links() + form_link.get_idempotent_links()
+            update_links = state.get_ln_links() + state.get_idempotent_links()
         #get_non_idempotent_updates
         #get_idempotent_updates
         if len(update_links):
@@ -185,8 +170,8 @@ class CollectionHyperAdminJSON(CollectionNextJSON):
         
         data['resource_class'] = form_link.resource.resource_class
         #TODO power this by meta
-        if meta and 'display_fields' in meta:
-            data['display_fields'] = meta.pop('display_fields')
+        if 'display_fields' in state.meta:
+            data['display_fields'] = state.meta['display_fields']
         return data
 
 BUILTIN_MEDIA_TYPES['application/vnd.Collection.hyperadmin+JSON'] = CollectionHyperAdminJSON

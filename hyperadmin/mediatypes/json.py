@@ -8,14 +8,14 @@ class JSON(MediaType):
     def convert_item(self, item):
         return self.get_form_instance_values(item.form)
     
-    def get_payload(self, form_link, meta=None):
-        items = [self.convert_item(item) for item in form_link.get_resource_items()]
+    def get_payload(self, form_link, state):
+        items = [self.convert_item(item) for item in state.get_resource_items()]
         return items
     
-    def serialize(self, content_type, link, meta=None):
+    def serialize(self, content_type, link, state):
         if self.detect_redirect(link):
             return self.handle_redirect(link)
-        data = self.get_payload(link, meta=meta)
+        data = self.get_payload(link, state)
         content = json.dumps(data, cls=DjangoJSONEncoder)
         return http.HttpResponse(content, content_type)
     
@@ -35,8 +35,8 @@ class JSONP(JSON):
         #TODO make configurable
         return self.view.request.GET['callback']
     
-    def serialize(self, content_type, link, meta=None):
-        data = self.get_payload(link, meta=meta)
+    def serialize(self, content_type, link, state):
+        data = self.get_payload(link, state)
         content = json.dumps(data, cls=DjangoJSONEncoder)
         callback = self.get_jsonp_callback()
         return http.HttpResponse(u'%s(%s)' % (callback, content), content_type)

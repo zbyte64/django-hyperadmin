@@ -13,21 +13,23 @@ class ModelResourceView(CRUDResourceViewMixin, View):
         return self.resource.get_queryset(self.request.user)
     
     def get_changelist(self):
-        return self.resource.get_changelist(self.request.user, self.request.GET)
+        if not hasattr(self, '_changelist'):
+            self._changelist = self.resource.get_changelist(self.request.user, self.request.GET)
+        return self._changelist
 
 class ModelCreateResourceView(ModelResourceView):
     view_class = 'change_form'
     
     def get(self, request, *args, **kwargs):
-        return self.resource.generate_response(self.get_response_media_type(), self.get_response_type(), self.get_create_link(), meta=self.get_meta())
+        return self.resource.generate_response(self.get_response_media_type(), self.get_response_type(), self.get_create_link(), self.state)
     
     def post(self, request, *args, **kwargs):
         if not self.can_add():
             return http.HttpResponseForbidden(_(u"You may add an object"))
         form_kwargs = self.get_request_form_kwargs()
         form_link = self.get_create_link(**form_kwargs)
-        response_link = form_link.submit()
-        return self.resource.generate_response(self.get_response_media_type(), self.get_response_type(), response_link, meta=self.get_meta())
+        response_link = form_link.submit(self.state)
+        return self.resource.generate_response(self.get_response_media_type(), self.get_response_type(), response_link, self.state)
 
 class ModelListResourceView(ModelCreateResourceView):
     view_class = 'change_list'
@@ -38,7 +40,7 @@ class ModelListResourceView(ModelCreateResourceView):
         return state
     
     def get(self, request, *args, **kwargs):
-        return self.resource.generate_response(self.get_response_media_type(), self.get_response_type(), self.get_restful_create_link(), meta=self.get_meta())
+        return self.resource.generate_response(self.get_response_media_type(), self.get_response_type(), self.get_restful_create_link(), self.state)
     
     def get_meta(self):
         resource_item = self.resource.get_resource_item(None, from_list=True)
@@ -47,7 +49,7 @@ class ModelListResourceView(ModelCreateResourceView):
         data['display_fields'] = list()
         for field in form:
             data['display_fields'].append({'prompt':field.label})
-        changelist = self.state['changelist']
+        changelist = self.get_changelist()
         data['object_count'] = changelist.paginator.count
         data['number_of_pages'] = changelist.paginator.num_pages
         return data
@@ -56,15 +58,15 @@ class ModelListResourceView(ModelCreateResourceView):
         return self.resource.get_resource_item(instance, from_list=True)
 
 class ModelDetailMixin(SingleObjectMixin):
-    def get_resource_item(self):
+    def get_item(self):
         if not getattr(self, 'object', None):
             self.object = self.get_object()
         return self.resource.get_resource_item(self.object)
     
     def get(self, request, *args, **kwargs):
         self.object = self.get_object()
-        resource_item = self.get_resource_item()
-        return self.resource.generate_response(self.get_response_media_type(), self.get_response_type(), self.get_update_link(resource_item), meta=self.get_meta())
+        resource_item = self.get_item()
+        return self.resource.generate_response(self.get_response_media_type(), self.get_response_type(), self.get_update_link(resource_item), self.state)
 
 class ModelDeleteResourceView(ModelDetailMixin, ModelResourceView):
     view_class = 'delete_confirmation'
@@ -77,38 +79,38 @@ class ModelDeleteResourceView(ModelDetailMixin, ModelResourceView):
         resource_item = self.get_resource_item()
         
         form_link = self.get_delete_link(resource_item)
-        response_link = form_link.submit()
+        response_link = form_link.submit(self.state)
         
-        return self.resource.generate_response(self.get_response_media_type(), self.get_response_type(), response_link)
+        return self.resource.generate_response(self.get_response_media_type(), self.get_response_type(), response_link, self.state)
 
 class ModelDetailResourceView(ModelDetailMixin, ModelResourceView):
     view_class = 'change_form'
     
     def get(self, request, *args, **kwargs):
         self.object = self.get_object()
-        resource_item = self.get_resource_item()
-        return self.resource.generate_response(self.get_response_media_type(), self.get_response_type(), self.get_update_link(resource_item), meta=self.get_meta())
+        resource_item = self.get_item()
+        return self.resource.generate_response(self.get_response_media_type(), self.get_response_type(), self.get_update_link(resource_item), self.state)
     
     def post(self, request, *args, **kwargs):
         self.object = self.get_object()
         if not self.can_change(self.object):
             return http.HttpResponseForbidden(_(u"You may not modify that object"))
         
-        resource_item = self.get_resource_item()
+        resource_item = self.get_item()
         form_kwargs = self.get_request_form_kwargs()
         form_link = self.get_update_link(resource_item, **form_kwargs)
-        response_link = form_link.submit()
-        return self.resource.generate_response(self.get_response_media_type(), self.get_response_type(), response_link, meta=self.get_meta())
+        response_link = form_link.submit(self.state)
+        return self.resource.generate_response(self.get_response_media_type(), self.get_response_type(), response_link, self.state)
     
     def delete(self, request, *args, **kwargs):
         self.object = self.get_object()
         if not self.can_delete(self.object):
             return http.HttpResponseForbidden(_(u"You may not delete that object"))
         
-        resource_item = self.get_resource_item()
+        resource_item = self.get_item()
         form_link = self.get_delete_link(resource_item)
-        response_link = form_link.submit()
-        return self.resource.generate_response(self.get_response_media_type(), self.get_response_type(), response_link)
+        response_link = form_link.submit(self.state)
+        return self.resource.generate_response(self.get_response_media_type(), self.get_response_type(), response_link, self.state)
 
 class InlineModelMixin(object):
     def get_changelist_links(self):

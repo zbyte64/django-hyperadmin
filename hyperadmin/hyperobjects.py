@@ -1,7 +1,7 @@
 from copy import copy
 
 class Link(object):
-    def __init__(self, url, resource, method='GET', state=None, item=None, form=None, form_class=None, form_kwargs=None,
+    def __init__(self, url, resource, method='GET', form=None, form_class=None, form_kwargs=None,
                  classes=[], descriptors=None, rel=None, prompt=None, cu_headers=None, cr_headers=None, on_submit=None):
         '''
         fields = dictionary of django fields describing the accepted data
@@ -11,8 +11,6 @@ class Link(object):
         self.url = url
         self.method = str(method).upper() #CM
         self.resource = resource
-        self.state = state
-        self.item = item
         self._form = form
         self.form_class = form_class
         self.form_kwargs = form_kwargs
@@ -65,7 +63,7 @@ class Link(object):
             return self.form.errors
         return None
     
-    def submit(self, **kwargs):
+    def submit(self, state, **kwargs):
         '''
         Returns a link representing the action
         The resource_item of the link may represent the updated/created object
@@ -73,27 +71,41 @@ class Link(object):
         '''
         on_submit = self.on_submit
         
-        return on_submit(link=self, submit_kwargs=kwargs)
+        return on_submit(state=state, link=self, submit_kwargs=kwargs)
+
+class State(dict):
+    def __init__(self, resource, meta, *args, **kwargs):
+        self.resource = resource
+        self.meta = meta
+        super(State, self).__init__(*args, **kwargs)
     
     def get_embedded_links(self):
-        return self.resource.get_embedded_links(self.state)
+        return self.resource.get_embedded_links(self)
     
     def get_outbound_links(self):
-        return self.resource.get_outbound_links(self.state)
+        return self.resource.get_outbound_links(self)
     
     def get_templated_queries(self):
-        return self.resource.get_templated_queries(self.state)
+        return self.resource.get_templated_queries(self)
     
     def get_ln_links(self):
-        return self.resource.get_ln_links(self.state)
+        return self.resource.get_ln_links(self)
     
     def get_idempotent_links(self):
-        return self.resource.get_idempotent_links(self.state)
+        return self.resource.get_idempotent_links(self)
+    
+    def set_item(self, val):
+        self['item'] = val
+    
+    def get_item(self):
+        return self.get('item', None)
+    
+    item = property(get_item, set_item)
     
     def get_resource_items(self):
         if self.item is not None:
             return self.item.get_resource_items()
-        return self.resource.get_resource_items(state=self.state)
+        return self.resource.get_resource_items(state=self)
 
 class ResourceItem(object):
     '''
