@@ -77,10 +77,10 @@ class Html5MediaType(MediaType):
         
         return names
     
-    def serialize(self, content_type, link, meta=None):
+    def serialize(self, content_type, link, state):
         if self.detect_redirect(link):
             return self.handle_redirect(link)
-        context = self.get_context_data(form_link=link, meta=meta)
+        context = self.get_context_data(form_link=link, state=state)
         response = self.response_class(request=self.request, template=self.get_template_names(), context=context)
         response['Content-Type'] = 'text/html'
         return response

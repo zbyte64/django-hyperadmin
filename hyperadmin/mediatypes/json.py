@@ -33,7 +33,7 @@ BUILTIN_MEDIA_TYPES['application/json'] = JSON
 class JSONP(JSON):
     def get_jsonp_callback(self):
         #TODO make configurable
-        return self.view.request.GET['callback']
+        return self.request.GET['callback']
     
     def serialize(self, content_type, link, state):
         data = self.get_payload(link, state)

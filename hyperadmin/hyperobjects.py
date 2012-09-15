@@ -72,6 +72,13 @@ class Link(object):
         on_submit = self.on_submit
         
         return on_submit(state=state, link=self, submit_kwargs=kwargs)
+    
+    def clone(self, **kwargs):
+        a_clone = copy(self)
+        a_clone._form = kwargs.pop('form', self._form)
+        for key, value in kwargs.iteritems():
+            setattr(a_clone, key, value)
+        return a_clone
 
 class State(dict):
     def __init__(self, resource, meta, *args, **kwargs):

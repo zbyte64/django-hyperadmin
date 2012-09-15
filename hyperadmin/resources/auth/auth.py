@@ -27,6 +27,9 @@ class AuthResource(BaseResource):
         return self._resource_name
     resource_name = property(get_resource_name)
     
+    def get_prompt(self):
+        return self.resource_name
+    
     def get_urls(self):
         def wrap(view, cacheable=False):
             return self.as_nonauthenticated_view(view, cacheable)
@@ -54,37 +57,63 @@ class AuthResource(BaseResource):
     def get_absolute_url(self):
         return self.reverse('authentication')
     
-    def handle_login_submission(self, link, submit_kwargs):
+    def handle_login_submission(self, state, link, submit_kwargs):
         form = link.get_form(**submit_kwargs)
         if form.is_valid():
-            instance = form.save()
+            form.save()
+            state['authenticated'] = True
             return self.site.site_resource.get_resource_link()
-        return self.get_login_link(form_kwargs=link.form_kwargs, form=form)
+        return link.clone(form=form)
     
-    def handle_logout_submission(self, link, submit_kwargs):
-        logout(link.resource_item.instance)
+    def handle_logout_submission(self, state, link, submit_kwargs):
+        logout(state['request'])
+        state['authenticated'] = False
         return self.get_login_link()
     
-    def get_login_link(self, **form_kwargs):
-        form_class = self.get_form_class()
-        form_kwargs.update(self.get_form_kwargs())
-        form = form_class(**form_kwargs)
+    def get_login_link(self, form_kwargs=None, **kwargs):
+        if form_kwargs is None:
+            form_kwargs = {}
+        form_kwargs = self.get_form_kwargs(**form_kwargs)
         
-        login_link = Link(url=self.reverse('authentication'),
-                          on_submit=self.handle_login_submission,
-                          resource=self,
-                          method='POST', #TODO should this be put?
-                          form=form,
-                          prompt='authenticate',
-                          rel='login',)
+        link_kwargs = {'url':self.reverse('authentication'),
+                       'resource':self,
+                       'on_submit':self.handle_login_submission,
+                       'method':'POST',
+                       'form_kwargs':form_kwargs,
+                       'form_class': self.get_form_class(),
+                       'prompt':'Login',
+                       'rel':'login',}
+        link_kwargs.update(kwargs)
+        login_link = Link(**link_kwargs)
         return login_link
     
-    def get_logout_link(self, **form_kwargs):
-        logout_link = Link(url=self.reverse('logout'),
-                           resource=self,
-                           on_submit=self.handle_logout_submission,
-                           method='POST',
-                           prompt='logout',
-                           rel='logout',)
-        return logout_link
+    def get_logout_link(self, form_kwargs=None, **kwargs):
+        link_kwargs = {'url':self.reverse('logout'),
+                       'resource':self,
+                       'on_submit':self.handle_logout_submission,
+                       'method':'POST',
+                       'prompt':'Logout',
+                       'rel':'logout',}
+        link_kwargs.update(kwargs)
+        login_link = Link(**link_kwargs)
+        return login_link
+    
+    def get_restful_logout_link(self, form_kwargs=None, **kwargs):
+        kwargs['url'] = self.reverse('authentication')
+        kwargs['method'] = 'DELETE'
+        return self.get_logout_link(form_kwargs, **kwargs)
+    
+    def get_idempotent_links(self, state):
+        links = super(AuthResource, self).get_idempotent_links(state)
+        if state.get('authenticated', False):
+            links.append(self.get_restful_logout_link())
+        else:
+            links.append(self.get_login_link())
+        return links
+    
+    def get_embedded_links(self, state):
+        links = super(AuthResource, self).get_embedded_links(state)
+        if state.get('authenticated', False):
+            links.append(self.get_logout_link())
+        return links
 

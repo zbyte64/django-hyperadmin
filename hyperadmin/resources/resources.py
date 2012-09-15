@@ -1,7 +1,7 @@
 from django import forms
 from django.conf.urls.defaults import patterns, url
 
-from hyperadmin.hyperobjects import Link, ResourceItem
+from hyperadmin.hyperobjects import Link, ResourceItem, State
 
 
 class EmptyForm(forms.Form):
@@ -12,6 +12,7 @@ class EmptyForm(forms.Form):
 class BaseResource(object):
     resource_class = '' #hint to the client how this resource is used
     resource_item_class = ResourceItem
+    state_class = State
     form_class = EmptyForm
     
     def __init__(self, resource_adaptor, site, parent_resource=None):
@@ -83,6 +84,9 @@ class BaseResource(object):
     
     def get_item_url(self, item):
         return None
+    
+    def get_state_class(self):
+        return self.state_class
     
     def get_form_class(self):
         return self.form_class
@@ -261,7 +265,7 @@ class CRUDResource(BaseResource):
             instance = form.save()
             resource_item = self.get_resource_item(instance)
             return self.get_item_link(resource_item)
-        return self.get_create_link(form_kwargs=link.form_kwargs, form=form)
+        return link.clone(form=form)
     
     def handle_update_submission(self, state, link, submit_kwargs):
         form = link.get_form(**submit_kwargs)
@@ -269,7 +273,7 @@ class CRUDResource(BaseResource):
             instance = form.save()
             resource_item = self.get_resource_item(instance)
             return self.get_item_link(resource_item)
-        return self.get_update_link(state.item, form_kwargs=link.form_kwargs, form=form)
+        return link.clone(form=form)
     
     def handle_delete_submission(self, state, link, submit_kwargs):
         instance = state.item.instance

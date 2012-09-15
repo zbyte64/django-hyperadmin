@@ -1,4 +1,3 @@
-from django.utils import unittest
 from django.contrib.contenttypes.models import ContentType
 from django.test.client import FakePayload
 from django.utils import simplejson as json
@@ -8,86 +7,87 @@ from hyperadmin.resources.applications.site import SiteResource
 from hyperadmin.resources.applications.application import ApplicationResource
 from hyperadmin.sites import site
 
-from common import BaseMockResourceView
+from common import MediaTypeTestCase
 
-class MockResourceView(BaseMockResourceView):
-    content_type='application/vnd.Collection.next+JSON'
-
-class CollectionMockResourceView(MockResourceView):
-    def get_items_forms(self, **kwargs):
-        return [self.get_form(instance=item) for item in self.get_items()]
-
-class CollectionJsonTestCase(unittest.TestCase):
+class CollectionJsonTestCase(MediaTypeTestCase):
+    content_type = 'application/vnd.Collection+JSON'
+    
+    def get_adaptor(self):
+        class MockView(object):
+            resource = self.resource
+            request = self.factory.get('/')
+        return CollectionJSON(MockView())
+    
     def test_queryset_serialize(self):
-        items = ContentType.objects.all()
-        view = CollectionMockResourceView(items)
-        adaptor = CollectionJSON(view)
-        return
-        response = adaptor.serialize(content_type='application/vnd.Collection.next+JSON')
+        link = self.resource.get_resource_link()
+        state = self.resource.get_state_class()(self.resource, {})
+        
+        response = self.adaptor.serialize(content_type=self.content_type, link=link, state=state)
         data = json.loads(response.content)
         json_items = data['collection']['items']
-        self.assertEqual(len(json_items), len(items))
+        self.assertEqual(len(json_items), len(ContentType.objects.all()))
     
     def test_model_instance_serialize(self):
-        items = [ContentType.objects.all()[0]]
-        view = CollectionMockResourceView(items)
-        adaptor = CollectionJSON(view)
-        return
-        response = adaptor.serialize(content_type='application/vnd.Collection.next+JSON')
+        instance = ContentType.objects.all()[0]
+        item = self.resource.get_resource_item(instance)
+        link = self.resource.get_item_link(item)
+        state = self.resource.get_state_class()(self.resource, {})
+        
+        response = self.adaptor.serialize(content_type=self.content_type, link=link, state=state)
         data = json.loads(response.content)
         json_items = data['collection']['items']
         self.assertEqual(len(json_items), 1)
     
     def test_site_resource_serialize(self):
         site_resource = SiteResource(site=site)
-        items = [site_resource]
-        view = CollectionMockResourceView(items)
-        adaptor = CollectionJSON(view)
-        return #skip test
-        response = adaptor.serialize(content_type='application/vnd.Collection.next+JSON')
+        link = site_resource.get_resource_link()
+        state = site_resource.get_state_class()(site_resource, {})
+        
+        response = self.adaptor.serialize(content_type=self.content_type, link=link, state=state)
         data = json.loads(response.content)
         json_items = data['collection']['items']
         #assert False, str(json_items)
     
     def test_application_resource_serialize(self):
         app_resource = ApplicationResource(site=site, app_name='testapp')
-        items = [app_resource]
-        view = CollectionMockResourceView(items)
-        adaptor = CollectionJSON(view)
-        return #skip test
-        response = adaptor.serialize(content_type='application/vnd.Collection.next+JSON')
+        link = app_resource.get_resource_link()
+        state = app_resource.get_state_class()(app_resource, {})
+        
+        response = self.adaptor.serialize(content_type=self.content_type, link=link, state=state)
         data = json.loads(response.content)
         json_items = data['collection']['items']
         #assert False, str(json_items)
     
     def test_model_instance_deserialize(self):
-        items = [ContentType.objects.all()[0]]
-        payload = '''{"data":{}}'''
-        view = CollectionMockResourceView(items)
-        return
-        view.request = view.factory.post('/', **{'wsgi.input':FakePayload(payload), 'CONTENT_LENGTH':len(payload)})
-        adaptor = CollectionJSON(view)
-        data = adaptor.deserialize()
+        pass
+        #items = [ContentType.objects.all()[0]]
+        #payload = '''{"data":{}}'''
+        #return
+        #view.request = view.factory.post('/', **{'wsgi.input':FakePayload(payload), 'CONTENT_LENGTH':len(payload)})
+        #adaptor = CollectionJSON(view)
+        #data = adaptor.deserialize()
         #json_items = data['collection']['items']
 
-class CollectionNextJsonTestCase(unittest.TestCase):
+class CollectionNextJsonTestCase(MediaTypeTestCase):
+    def get_adaptor(self):
+        class MockView(object):
+            resource = self.resource
+            request = self.factory.get('/')
+        return CollectionNextJSON(MockView())
+    
     def test_convert_field(self):
-        view = CollectionMockResourceView([])
-        form_class = view.get_form_class()
+        form_class = self.resource.get_form_class()
         form = form_class()
         fields = list(form)
         field = fields[0]
-        adaptor = CollectionNextJSON(view)
-        field_r = adaptor.convert_field(field)
+        field_r = self.adaptor.convert_field(field)
         self.assertEqual(field_r['required'], field.field.required)
     
     def test_convert_errors(self):
-        view = CollectionMockResourceView([])
-        form_class = view.get_form_class()
+        form_class = self.resource.get_form_class()
         form = form_class(data={})
         assert form.errors
-        adaptor = CollectionNextJSON(view)
-        error_r = adaptor.convert_errors(form.errors)
+        error_r = self.adaptor.convert_errors(form.errors)
         self.assertEqual(len(error_r['messages']), len(form.errors))
         
 

@@ -2,14 +2,15 @@ from StringIO import StringIO
 
 from django.utils import unittest
 from django.contrib.auth.models import User, Group
-from django.test.client import FakePayload
-from django.utils import simplejson as json
 from django.core.files.base import ContentFile
 
 from hyperadmin.resources.models.models import ModelResource, InlineModelResource
 from hyperadmin.sites import ResourceSite
 
 from common import GenericURLResolver, SuperUserRequestFactory
+
+from mock import MagicMock
+
 
 class GroupsInline(InlineModelResource):
     model = User.groups.through
@@ -21,7 +22,7 @@ class UserResource(ModelResource):
     list_filter = ['is_active', 'is_staff', 'is_superuser']
     date_hierarchy = 'date_joined'
     search_fields = ['email', 'username']
-
+    
 class ResourceTestCase(unittest.TestCase):
     def setUp(self):
         self.site = ResourceSite()
@@ -29,7 +30,8 @@ class ResourceTestCase(unittest.TestCase):
         
         self.user = User.objects.get_or_create(username='superuser', is_staff=True, is_active=True, is_superuser=True)[0]
         self.resource = self.register_resource()
-        self.factory = SuperUserRequestFactory(user=self.user, HTTP_ACCEPT='application/vnd.Collection+JSON')
+        self.resource.generate_response = MagicMock()
+        self.factory = SuperUserRequestFactory(user=self.user, HTTP_ACCEPT='text/html')
         
         self.resolver = GenericURLResolver(r'^', self.site.get_urls())
         
@@ -51,30 +53,25 @@ class ModelResourceTestCase(ResourceTestCase):
         view_kwargs = self.resource.get_view_kwargs()
         view = self.resource.list_view.as_view(**view_kwargs)
         request = self.factory.get('/')
-        response = view(request)
-        data = json.loads(response.content)
-        data = data['collection']
+        view(request)
         
-        self.assertTrue('template' in data)
-        self.assertTrue('items' in data)
-        self.assertTrue('queries' in data)
+        media_type, response_type, link, state = self.resource.generate_response.call_args[0]
         
-        #assert False, response.content
+        self.assertEqual(len(state.get_resource_items()), User.objects.count())
+        
     
     def test_get_detail(self):
         instance = self.user
         view_kwargs = self.resource.get_view_kwargs()
         view = self.resource.detail_view.as_view(**view_kwargs)
         request = self.factory.get('/')
-        response = view(request, pk=instance.pk)
-        data = json.loads(response.content)
-        data = data['collection']
+        view(request, pk=instance.pk)
         
-        self.assertTrue('template' in data)
-        self.assertTrue('items' in data)
-        self.assertEqual(len(data['items']), 1)
+        media_type, response_type, link, state = self.resource.generate_response.call_args[0]
         
-        #assert False, response.content
+        self.assertEqual(len(state.get_resource_items()), 1)
+        self.assertTrue(state.item)
+        self.assertEqual(state.item.instance, instance)
     
     def test_post_list(self):
         view_kwargs = self.resource.get_view_kwargs()
@@ -83,17 +80,13 @@ class ModelResourceTestCase(ResourceTestCase):
             'username': 'normaluser',
             'email': 'z@z.com',
         }
-        payload = json.dumps({'data':update_data})
-        request = self.factory.post('/', **{'wsgi.input':FakePayload(payload), 'CONTENT_LENGTH':len(payload)})
-        response = view(request)
-        data = json.loads(response.content)
-        data = data['collection']
+        request = self.factory.post('/', update_data)
+        view(request)
         
-        self.assertTrue('template' in data)
-        self.assertTrue('error' in data)
-        self.assertTrue('items' in data)
+        media_type, response_type, link, state = self.resource.generate_response.call_args[0]
         
-        #assert False, response.content
+        self.assertTrue(link.form)
+        self.assertTrue(link.form.errors)
     
     def test_post_detail(self):
         instance = self.user
@@ -102,18 +95,16 @@ class ModelResourceTestCase(ResourceTestCase):
         update_data = {
             'email': 'z@z.com',
         }
-        payload = json.dumps({'data':update_data})
-        request = self.factory.post('/', **{'wsgi.input':FakePayload(payload), 'CONTENT_LENGTH':len(payload)})
-        response = view(request, pk=instance.pk)
-        data = json.loads(response.content)
-        data = data['collection']
+        request = self.factory.post('/', update_data)
+        view(request, pk=instance.pk)
         
-        self.assertTrue('template' in data, str(view))
-        self.assertTrue('error' in data)
-        self.assertTrue('items' in data)
-        self.assertEqual(len(data['items']), 1)
+        media_type, response_type, link, state = self.resource.generate_response.call_args[0]
         
-        #assert False, response.content
+        self.assertTrue(link.form)
+        self.assertTrue(link.form.errors)
+        
+        self.assertTrue(state.item)
+        self.assertEqual(state.item.instance, instance)
 
 class InlineModelResourceTestCase(ResourceTestCase):
     def register_resource(self):
@@ -127,53 +118,40 @@ class InlineModelResourceTestCase(ResourceTestCase):
         view_kwargs = self.resource.get_view_kwargs()
         view = self.resource.list_view.as_view(**view_kwargs)
         request = self.factory.get('/')
-        response = view(request, pk=self.user.pk)
-        data = json.loads(response.content)
-        data = data['collection']
+        view(request, pk=self.user.pk)
         
-        self.assertTrue('template' in data)
-        self.assertTrue('items' in data)
-        self.assertEqual(len(data['items']), 1)
+        media_type, response_type, link, state = self.resource.generate_response.call_args[0]
         
-        #assert False, response.content
+        self.assertEqual(len(state.get_resource_items()), self.user.groups.all().count())
     
     #TODO
     def test_get_detail(self):
         return
+        group = Group.objects.get_or_create(name='testgroup')[0]
+        self.user.groups.add(group)
+        
         instance = self.user
         view_kwargs = self.resource.get_view_kwargs()
         view = self.resource.detail_view.as_view(**view_kwargs)
         request = self.factory.get('/')
-        response = view(request, pk=instance.pk)
-        data = json.loads(response.content)
-        data = data['collection']
+        view(request, pk=instance.pk)
         
-        self.assertTrue('template' in data)
-        self.assertTrue('items' in data)
-        self.assertEqual(len(data['items']), 1)
-        
-        #assert False, response.content
-    
+        media_type, response_type, link, state = self.resource.generate_response.call_args[0]
+            
     #TODO
     def test_post_list(self):
         return
+        instance = self.user
         view_kwargs = self.resource.get_view_kwargs()
         view = self.resource.list_view.as_view(**view_kwargs)
         update_data = {
             'username': 'normaluser',
             'email': 'z@z.com',
         }
-        payload = json.dumps({'data':update_data})
-        request = self.factory.post('/', **{'wsgi.input':FakePayload(payload), 'CONTENT_LENGTH':len(payload)})
-        response = view(request)
-        data = json.loads(response.content)
-        data = data['collection']
+        request = self.factory.post('/', update_data)
+        view(request, pk=instance.pk)
         
-        self.assertTrue('template' in data)
-        self.assertTrue('error' in data)
-        self.assertTrue('items' in data)
-        
-        #assert False, response.content
+        media_type, response_type, link, state = self.resource.generate_response.call_args[0]
     
     #TODO
     def test_post_detail(self):
@@ -184,18 +162,10 @@ class InlineModelResourceTestCase(ResourceTestCase):
         update_data = {
             'email': 'z@z.com',
         }
-        payload = json.dumps({'data':update_data})
-        request = self.factory.post('/', **{'wsgi.input':FakePayload(payload), 'CONTENT_LENGTH':len(payload)})
-        response = view(request, pk=instance.pk)
-        data = json.loads(response.content)
-        data = data['collection']
+        request = self.factory.post('/', update_data)
+        view(request, pk=instance.pk)
         
-        self.assertTrue('template' in data, str(view))
-        self.assertTrue('error' in data)
-        self.assertTrue('items' in data)
-        self.assertEqual(len(data['items']), 1)
-        
-        #assert False, response.content
+        media_type, response_type, link, state = self.resource.generate_response.call_args[0]
 
 class SiteResourceTestCase(ResourceTestCase):
     def register_resource(self):
@@ -215,10 +185,11 @@ class SiteResourceTestCase(ResourceTestCase):
         view_kwargs = self.resource.get_view_kwargs()
         view = self.resource.list_view.as_view(**view_kwargs)
         request = self.factory.get('/')
-        response = view(request)
-        data = json.loads(response.content)
+        view(request)
         
-        self.assertEqual(data['collection']['items'][0]['href'], "auth/")
+        media_type, response_type, link, state = self.resource.generate_response.call_args[0]
+        
+        self.assertTrue(state.get_resource_items())
 
 class ApplicationResourceTestCase(ResourceTestCase):
     def register_resource(self):
@@ -229,10 +200,11 @@ class ApplicationResourceTestCase(ResourceTestCase):
         view_kwargs = self.resource.get_view_kwargs()
         view = self.resource.list_view.as_view(**view_kwargs)
         request = self.factory.get('/')
-        response = view(request)
-        data = json.loads(response.content)
+        view(request)
         
-        self.assertEqual(data['collection']['items'][0]['href'], "auth/user/")
+        media_type, response_type, link, state = self.resource.generate_response.call_args[0]
+        
+        self.assertTrue(state.get_resource_items())
 
 class StorageResourceTestCase(ResourceTestCase):
     def register_resource(self):
@@ -253,9 +225,10 @@ class StorageResourceTestCase(ResourceTestCase):
         view_kwargs = self.resource.get_view_kwargs()
         view = self.resource.list_view.as_view(**view_kwargs)
         request = self.factory.get('/')
-        response = view(request)
-        data = json.loads(response.content)
-        self.assertEqual(len(data['collection']['items']), 1)
+        view(request)
+        
+        media_type, response_type, link, state = self.resource.generate_response.call_args[0]
+        self.assertEqual(len(state.get_resource_items()), 1)
     
     def test_get_detail(self):
         self.resource.resource_adaptor.save('test.txt', ContentFile('foobar'))
@@ -263,15 +236,14 @@ class StorageResourceTestCase(ResourceTestCase):
         view_kwargs = self.resource.get_view_kwargs()
         view = self.resource.detail_view.as_view(**view_kwargs)
         request = self.factory.get('/')
-        response = view(request, path='test.txt')
-        data = json.loads(response.content)
-        data = data['collection']
+        view(request, path='test.txt')
         
-        self.assertTrue('template' in data)
-        self.assertTrue('items' in data)
-        self.assertEqual(len(data['items']), 1)
+        media_type, response_type, link, state = self.resource.generate_response.call_args[0]
+        self.assertEqual(len(state.get_resource_items()), 1)
         
-        self.assertEqual(data['items'][0]['href'], '-storages/media/test.txt/')
+        item = state.get_resource_items()[0]
+        
+        self.assertEqual(item.instance.url, '-storages/media/test.txt/')
     
     def test_post_list(self):
         view_kwargs = self.resource.get_view_kwargs()
@@ -281,19 +253,13 @@ class StorageResourceTestCase(ResourceTestCase):
             'upload': StringIO('test2'),
         }
         update_data['upload'].name = 'test.txt'
-        request = self.factory.post('/', update_data, HTTP_ACCEPT='application/vnd.Collection+JSON')
-        response = view(request)
-        #TODO this returns a redirect, we need to test a failure
-        '''
-        data = json.loads(response.content)
-        data = data['collection']
+        request = self.factory.post('/', update_data)
+        view(request)
         
-        self.assertTrue('template' in data)
-        self.assertTrue('error' in data)
-        self.assertTrue('items' in data)
+        media_type, response_type, link, state = self.resource.generate_response.call_args[0]
         
-        #assert False, response.content
-        '''
+        self.assertTrue(link.form)
+        self.assertTrue(link.form.errors)
     
     def test_post_detail(self):
         self.resource.resource_adaptor.save('test.txt', ContentFile('foobar'))
@@ -304,20 +270,13 @@ class StorageResourceTestCase(ResourceTestCase):
             'upload': StringIO('test2'),
         }
         update_data['upload'].name = 'test.txt'
-        request = self.factory.post('/', update_data, HTTP_ACCEPT='application/vnd.Collection+JSON')
-        response = view(request, path='test.txt')
-        '''
-        assert False, response.content
-        data = json.loads(response.content)
-        data = data['collection']
+        request = self.factory.post('/', update_data)
+        view(request, path='test.txt')
         
-        self.assertTrue('template' in data, str(view))
-        self.assertTrue('error' in data)
-        self.assertTrue('items' in data)
-        self.assertEqual(len(data['items']), 1)
+        media_type, response_type, link, state = self.resource.generate_response.call_args[0]
         
-        #assert False, response.content
-        '''
+        self.assertTrue(link.form)
+        self.assertTrue(link.form.errors)
 
 class AuthenticationResourceTestCase(ResourceTestCase):
     def register_resource(self):
@@ -327,16 +286,18 @@ class AuthenticationResourceTestCase(ResourceTestCase):
         view_kwargs = self.resource.get_view_kwargs()
         view = self.resource.detail_view.as_view(**view_kwargs)
         request = self.factory.get('/')
-        response = view(request)
-        data = json.loads(response.content)
+        view(request)
+        
+        media_type, response_type, link, state = self.resource.generate_response.call_args[0]
+        self.assertTrue(state.get_embedded_links()) #TODO logout link?
+        self.assertTrue(state['authenticated'])
     
     def test_logout(self):
         view_kwargs = self.resource.get_view_kwargs()
         view = self.resource.detail_view.as_view(**view_kwargs)
         request = self.factory.delete('/')
-        response = view(request)
-        #assert False, response.content
-        #data = json.loads(response.content)
+        view(request)
         
-        #assert False, str(data)
+        media_type, response_type, link, state = self.resource.generate_response.call_args[0]
+        self.assertFalse(state['authenticated'])
 

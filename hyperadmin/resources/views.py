@@ -2,8 +2,6 @@ from django import http
 
 import mimeparse
 
-from hyperadmin.hyperobjects import State
-
 
 class ConditionalAccessMixin(object):
     etag_function = None
@@ -62,8 +60,12 @@ class ResourceViewMixin(ConditionalAccessMixin):
     def get_meta(self):
         return {}
     
+    def get_state_class(self):
+        return self.resource.get_state_class()
+    
     def get_state(self):
-        return State(self.resource,
+        state_cls = self.get_state_class()
+        return state_cls(self.resource,
                      self.get_meta(),
                      {'auth':self.request.user,
                       'resource':self.resource,

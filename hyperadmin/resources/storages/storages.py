@@ -71,7 +71,7 @@ class StorageResource(CRUDResource):
         
         items = list()
         for file_name in files:
-            items.append(BoundFile(self.resource_adaptor, file_name))
+            items.append(self.get_resource_item(BoundFile(self.resource_adaptor, file_name)))
         
         links = list()
         for directory in dirs:
@@ -79,6 +79,17 @@ class StorageResource(CRUDResource):
             link = Link(url=url, resource=self, prompt=u"Directory: %s" % directory, classes=['filter', 'directory'], rel="filter")
             links.append(link)
         return links, items
+    
+    def get_templated_queries(self, state):
+        links = super(StorageResource, self).get_templated_queries(state)
+        if 'links' in state:
+            links += state['links']
+        return links
+    
+    def get_resource_items(self, state):
+        if 'items' in state:
+            return state['items']
+        return []
     
     def get_form_kwargs(self, item=None, **kwargs):
         kwargs = super(StorageResource, self).get_form_kwargs(item, **kwargs)
@@ -97,7 +108,6 @@ class StorageResource(CRUDResource):
         links = super(StorageResource, self).get_item_embedded_links(item)
         link = Link(url=item.instance.url,
                     resource=self,
-                    item=item,
                     prompt='Absolute Url',
                     rel='storage-url',)
         links.append(link)
