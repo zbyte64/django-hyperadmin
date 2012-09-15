@@ -174,7 +174,10 @@ class CollectionHyperAdminJSON(CollectionNextJSON):
         data = super(CollectionHyperAdminJSON, self).prepare_collection(form_link, meta=meta)
         resource_item = form_link.item
         
-        update_links = resource_item.get_ln_links() + resource_item.get_idempotent_links()
+        if resource_item:
+            update_links = resource_item.get_ln_links() + resource_item.get_idempotent_links()
+        else:
+            update_links = form_link.get_ln_links() + form_link.get_idempotent_links()
         #get_non_idempotent_updates
         #get_idempotent_updates
         if len(update_links):

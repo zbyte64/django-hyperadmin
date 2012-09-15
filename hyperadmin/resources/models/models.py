@@ -114,9 +114,10 @@ class ModelResource(CRUDResource):
         kwargs['model'] = self.resource_adaptor
         return kwargs
     
-    def get_resource_items(self, user, filter_params=None):
-        #TODO
-        return [self.get_resource_item(instance) for instance in self.resource_adaptor.objects.all()]
+    def get_resource_items(self, state):
+        if state and 'changelist' in state:
+            return [self.get_resource_item(instance, from_list=True) for instance in state['changelist'].result_list]
+        return [self.get_resource_item(instance, from_list=True) for instance in self.resource_adaptor.objects.all()]
     
     def get_changelist(self, user, filter_params=None):
         changelist_cls = self.changelist
@@ -138,6 +139,75 @@ class ModelResource(CRUDResource):
     
     def get_paginator(self, queryset, per_page, orphans=0, allow_empty_first_page=True):
         return self.paginator(queryset, per_page, orphans, allow_empty_first_page)
+    
+    def get_templated_queries(self, state):
+        links = super(ModelResource, self).get_templated_queries(state)
+        if state and 'changelist' in state:
+            links += self.get_changelist_links(state)
+        return links
+    
+    def get_changelist_links(self, state):
+        links = self.get_changelist_sort_links(state)
+        links += self.get_changelist_filter_links(state)
+        links += self.get_pagination_links(state)
+        #links.append(self.get_search_link())
+        return links
+    
+    def get_changelist_sort_links(self, state):
+        links = list()
+        changelist = state['changelist']
+        from django.contrib.admin.templatetags.admin_list import result_headers
+        for header in result_headers(changelist):
+            if header.get("sortable", False):
+                prompt = unicode(header["text"])
+                classes = ["sortby"]
+                if "url" in header:
+                    links.append(self.get_resource_link(url=header["url"], state=state, prompt=prompt, classes=classes+["primary"], rel="sortby"))
+                else:
+                    if header["ascending"]:
+                        classes.append("ascending")
+                    if header["sorted"]:
+                        classes.append("sorted")
+                    links.append(self.get_resource_link(url=header["url_primary"], state=state, prompt=prompt, classes=classes+["primary"], rel="sortby"))
+                    links.append(self.get_resource_link(url=header["url_remove"], state=state, prompt=prompt, classes=classes+["remove"], rel="sortby"))
+                    links.append(self.get_resource_link(url=header["url_toggle"], state=state, prompt=prompt, classes=classes+["toggle"], rel="sortby"))
+        return links
+    
+    def get_changelist_filter_links(self, state):
+        links = list()
+        changelist = state['changelist']
+        for spec in changelist.filter_specs:
+            choices = spec.choices(changelist)
+            for choice in choices:
+                classes = ["filter"]
+                if choice['selected']:
+                    classes.append("selected")
+                title = spec.title
+                if callable(title):
+                    title = title()
+                prompt = u"%s: %s" % (title, choice['display'])
+                links.append(self.get_resource_link(url=choice['query_string'], state=state, prompt=prompt, classes=classes, rel="filter"))
+        return links
+    
+    def get_search_link(self, state):
+        pass
+    
+    def get_pagination_links(self, state):
+        links = list()
+        changelist = state['changelist']
+        paginator, page_num = changelist.paginator, changelist.page_num
+        from django.contrib.admin.templatetags.admin_list import pagination
+        from django.contrib.admin.views.main import PAGE_VAR
+        ctx = pagination(changelist)
+        classes = ["pagination"]
+        for page in ctx["page_range"]:
+            if page == '.':
+                continue
+            url = changelist.get_query_string({PAGE_VAR: page})
+            links.append(self.get_resource_link(url=url, state=state, prompt=u"%s" % page, classes=classes, rel="pagination"))
+        if ctx["show_all_url"]:
+            links.append(self.get_resource_link(url=ctx["show_all_url"], state=state, prompt="show all", classes=classes, rel="pagination"))
+        return links
     
     def lookup_allowed(self, lookup, value):
         return True #TODO

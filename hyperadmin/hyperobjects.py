@@ -76,34 +76,24 @@ class Link(object):
         return on_submit(link=self, submit_kwargs=kwargs)
     
     def get_embedded_links(self):
-        if self.state:
-            return self.state.get_embedded_links()
         return self.resource.get_embedded_links(self.state)
     
     def get_outbound_links(self):
-        if self.state:
-            return self.state.get_outbound_links()
         return self.resource.get_outbound_links(self.state)
     
     def get_templated_queries(self):
-        if self.state:
-            return self.state.get_templated_queries()
         return self.resource.get_templated_queries(self.state)
     
     def get_ln_links(self):
-        if self.state:
-            return self.state.get_ln_links()
         return self.resource.get_ln_links(self.state)
     
     def get_idempotent_links(self):
-        if self.state:
-            return self.state.get_idempotent_links()
         return self.resource.get_idempotent_links(self.state)
     
     def get_resource_items(self):
         if self.item is not None:
             return self.item.get_resource_items()
-        return []
+        return self.resource.get_resource_items(state=self.state)
 
 class ResourceItem(object):
     '''
@@ -163,31 +153,4 @@ class ResourceItem(object):
     
     def get_resource_items(self):
         return [self]
-
-class CollectionResourceItem(ResourceItem):
-    def __init__(self, resource, instance, filter_params=None):
-        super(CollectionResourceItem, self).__init__(resource, instance)
-        self.filter_params = filter_params #oject constructed by the resource that instructs how to filter
-    
-    def get_resource_items(self):
-        #TODO this seems to require some state
-        return self.resource.get_resource_items(user=None, filter_params=self.filter_params)
-    
-    def get_embedded_links(self):
-        return []
-    
-    def get_outbound_links(self):
-        return []
-    
-    def get_templated_queries(self):
-        return []
-    
-    def get_ln_links(self):
-        return []
-    
-    def get_idempotent_links(self):
-        return []
-    
-    def get_absolute_url(self):
-        return []
 

@@ -1,7 +1,7 @@
 from django import forms
 from django.conf.urls.defaults import patterns, url
 
-from hyperadmin.hyperobjects import Link, ResourceItem, CollectionResourceItem
+from hyperadmin.hyperobjects import Link, ResourceItem
 
 
 class EmptyForm(forms.Form):
@@ -110,11 +110,11 @@ class BaseResource(object):
     def get_resource_item(self, instance):
         return self.resource_item_class(resource=self, instance=instance)
     
-    def get_resource_items(self, user, filter_params):
+    def get_resource_items(self, state):
         return []
     
-    def get_resource_link_item(self, filter_params=None):
-        return CollectionResourceItem(self, None, filter_params)
+    def get_resource_link_item(self):
+        return None
     
     def get_resource_link(self, **kwargs):
         link_kwargs = {'url':self.get_absolute_url(),

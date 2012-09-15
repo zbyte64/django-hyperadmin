@@ -48,8 +48,12 @@ class Html5MediaType(MediaType):
         context['embedded_links'] = form_link.get_embedded_links()
         context['outbound_links'] = form_link.get_outbound_links()
         context['templated_queries'] = form_link.get_templated_queries()
-        context['non_idempotent_updates'] = resource_item.get_ln_links()
-        context['idempotent_updates'] = resource_item.get_idempotent_links()
+        if resource_item:
+            context['non_idempotent_updates'] = resource_item.get_ln_links()
+            context['idempotent_updates'] = resource_item.get_idempotent_links()
+        else:
+            context['non_idempotent_updates'] = form_link.get_ln_links()
+            context['idempotent_updates'] = form_link.get_idempotent_links()
         
         if meta and 'display_fields' in meta:
             context['display_fields'] = meta['display_fields']

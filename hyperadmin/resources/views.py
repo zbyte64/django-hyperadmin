@@ -57,18 +57,27 @@ class ResourceViewMixin(ConditionalAccessMixin):
         return {}
     
     def get_state(self):
-        return None
+        return {'auth':self.request.user,
+                'resource':self.resource,
+                'view_class':self.view_class,}
     
     @property
     def state(self):
         if not hasattr(self, '_state'):
             self._state = self.get_state()
         return self._state
+
+class CRUDResourceViewMixin(ResourceViewMixin):
+    form_class = None
+    
+    def get_form_class(self):
+        if self.form_class:
+            return self.form_class
+        return self.resource.get_form_class()
     
     def get_form_kwargs(self):
         return {}
-
-class CRUDResourceViewMixin(ResourceViewMixin):
+    
     def can_add(self):
         return self.resource.has_add_permission(self.request.user)
     
@@ -100,5 +109,5 @@ class CRUDResourceViewMixin(ResourceViewMixin):
         return self.resource.get_restful_delete_link(item=item, form_kwargs=form_kwargs, state=self.state)
     
     def get_list_link(self):
-        return self.resource.get_resource_link()
+        return self.resource.get_resource_link(state=self.state)
 

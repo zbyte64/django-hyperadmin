@@ -1,39 +1,22 @@
 from django.utils.translation import ugettext as _
-from django.views import generic
+from django.views.generic import View
+from django.views.generic.detail import SingleObjectMixin
 from django import http
 
-from hyperadmin.hyperobjects import Link
 from hyperadmin.resources.views import CRUDResourceViewMixin
 
-class ModelResourceViewMixin(CRUDResourceViewMixin):
+class ModelResourceView(CRUDResourceViewMixin, View):
     model = None
     queryset = None
     
-    def get_queryset(self, filter_params=None):
+    def get_queryset(self):
         return self.resource.get_queryset(self.request.user)
     
-    def get_items(self, **kwargs):
-        return self.get_queryset()
-    
-    def get_items_forms(self, **kwargs):
-        return [self.get_form(instance=item) for item in self.get_items()]
-    
-    def get_form_class(self, instance=None):
-        return generic.edit.ModelFormMixin.get_form_class(self)
-    
-    def get_form_kwargs(self):
-        return {}
-    
-    def get_form(self, **kwargs):
-        form_class = self.get_form_class(instance=kwargs.get('instance', None))
-        form = form_class(**kwargs)
-        return form
+    def get_changelist(self):
+        return self.resource.get_changelist(self.request.user, self.request.GET)
 
-class ModelCreateResourceView(ModelResourceViewMixin, generic.CreateView):
+class ModelCreateResourceView(ModelResourceView):
     view_class = 'change_form'
-    
-    def get_queryset(self):
-        return []
     
     def get(self, request, *args, **kwargs):
         return self.resource.generate_response(self.get_response_media_type(), self.get_response_type(), self.get_create_link(), meta=self.get_meta())
@@ -49,6 +32,11 @@ class ModelCreateResourceView(ModelResourceViewMixin, generic.CreateView):
 class ModelListResourceView(ModelCreateResourceView):
     view_class = 'change_list'
     
+    def get_state(self):
+        state = super(ModelListResourceView, self).get_state()
+        state['changelist'] = self.get_changelist()
+        return state
+    
     def get(self, request, *args, **kwargs):
         return self.resource.generate_response(self.get_response_media_type(), self.get_response_type(), self.get_restful_create_link(), meta=self.get_meta())
     
@@ -59,96 +47,15 @@ class ModelListResourceView(ModelCreateResourceView):
         data['display_fields'] = list()
         for field in form:
             data['display_fields'].append({'prompt':field.label})
-        changelist = self.get_changelist()
+        changelist = self.state['changelist']
         data['object_count'] = changelist.paginator.count
         data['number_of_pages'] = changelist.paginator.num_pages
         return data
     
-    def get_changelist(self):
-        if not hasattr(self, '_changelist'):
-            self._changelist = self.resource.get_changelist(self.request.user, filter_params=self.request.GET)
-        return self._changelist
-    
-    def get_queryset(self):
-        return self.get_changelist().result_list
-    
-    def get_templated_queries(self):
-        links = super(ModelListResourceView, self).get_templated_queries()
-        links += self.get_changelist_links()
-        return links
-    
-    def get_changelist_links(self):
-        links = self.get_changelist_sort_links()
-        links += self.get_changelist_filter_links()
-        links += self.get_pagination_links()
-        #links.append(self.get_search_link())
-        return links
-    
-    def get_changelist_sort_links(self):
-        links = list()
-        changelist = self.get_changelist()
-        from django.contrib.admin.templatetags.admin_list import result_headers
-        for header in result_headers(changelist):
-            if header.get("sortable", False):
-                prompt = unicode(header["text"])
-                classes = ["sortby"]
-                if "url" in header:
-                    links.append(Link(url=header["url"], prompt=prompt, classes=classes+["primary"], rel="sortby"))
-                else:
-                    if header["ascending"]:
-                        classes.append("ascending")
-                    if header["sorted"]:
-                        classes.append("sorted")
-                    links.append(Link(url=header["url_primary"], prompt=prompt, classes=classes+["primary"], rel="sortby"))
-                    links.append(Link(url=header["url_remove"], prompt=prompt, classes=classes+["remove"], rel="sortby"))
-                    links.append(Link(url=header["url_toggle"], prompt=prompt, classes=classes+["toggle"], rel="sortby"))
-        return links
-    
-    def get_changelist_filter_links(self):
-        links = list()
-        changelist = self.get_changelist()
-        for spec in changelist.filter_specs:
-            choices = spec.choices(changelist)
-            for choice in choices:
-                classes = ["filter"]
-                if choice['selected']:
-                    classes.append("selected")
-                title = spec.title
-                if callable(title):
-                    title = title()
-                prompt = u"%s: %s" % (title, choice['display'])
-                links.append(Link(url=choice['query_string'], prompt=prompt, classes=classes, rel="filter"))
-        return links
-    
-    def get_search_link(self):
-        pass
-    
-    def get_pagination_links(self):
-        links = list()
-        changelist = self.get_changelist()
-        paginator, page_num = changelist.paginator, changelist.page_num
-        from django.contrib.admin.templatetags.admin_list import pagination
-        from django.contrib.admin.views.main import PAGE_VAR
-        ctx = pagination(changelist)
-        classes = ["pagination"]
-        for page in ctx["page_range"]:
-            if page == '.':
-                continue
-            url = changelist.get_query_string({PAGE_VAR: page})
-            links.append(Link(url=url, prompt=u"%s" % page, classes=classes, rel="pagination"))
-        if ctx["show_all_url"]:
-            links.append(Link(url=ctx["show_all_url"], prompt="show all", classes=classes, rel="pagination"))
-        return links
-    
     def get_resource_item(self, instance):
         return self.resource.get_resource_item(instance, from_list=True)
 
-class ModelDetailMixin(object):
-    def get_items(self, **kwargs):
-        if not getattr(self, 'object', None):
-            self.object = self.get_object()
-        return [self.object]
-    
+class ModelDetailMixin(SingleObjectMixin):
     def get_resource_item(self):
         if not getattr(self, 'object', None):
             self.object = self.get_object()
@@ -159,7 +66,7 @@ class ModelDetailMixin(object):
         resource_item = self.get_resource_item()
         return self.resource.generate_response(self.get_response_media_type(), self.get_response_type(), self.get_update_link(resource_item), meta=self.get_meta())
 
-class ModelDeleteResourceView(ModelDetailMixin, ModelResourceViewMixin, generic.DeleteView):
+class ModelDeleteResourceView(ModelDetailMixin, ModelResourceView):
     view_class = 'delete_confirmation'
     
     def delete(self, request, *args, **kwargs):
@@ -174,7 +81,7 @@ class ModelDeleteResourceView(ModelDetailMixin, ModelResourceViewMixin, generic.
         
         return self.resource.generate_response(self.get_response_media_type(), self.get_response_type(), response_link)
 
-class ModelDetailResourceView(ModelDetailMixin, ModelResourceViewMixin, generic.UpdateView):
+class ModelDetailResourceView(ModelDetailMixin, ModelResourceView):
     view_class = 'change_form'
     
     def get(self, request, *args, **kwargs):

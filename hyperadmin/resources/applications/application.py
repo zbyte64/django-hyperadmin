@@ -1,6 +1,5 @@
 from django.conf.urls.defaults import patterns, url, include
 
-from hyperadmin.hyperobjects import Link, ResourceItem, CollectionResourceItem
 from hyperadmin.resources import BaseResource
 from hyperadmin.resources.applications import views
 
@@ -40,7 +39,7 @@ class ApplicationResource(BaseResource):
         key = resource.get_resource_name()
         self.resource_adaptor[key] = resource
     
-    def get_items(self, user):
+    def get_items(self, state):
         #TODO sort by name
         return self.resource_adaptor.values()
     
@@ -54,13 +53,9 @@ class ApplicationResource(BaseResource):
     def get_absolute_url(self):
         return self.reverse(self.app_name)
     
-    def get_resource_items(self, user, filter_params=None):
-        return [self.get_resource_item(item) for item in self.get_items(user)]
-    
-    def get_resource_link_item(self, filter_params=None):
-        resource_item = CollectionResourceItem(self, None, filter_params=filter_params)
-        return resource_item
-    
+    def get_resource_items(self, state):
+        return [self.get_resource_item(item) for item in self.get_items(state)]
+        
     def get_child_resource_links(self):
         links = list()
         for key, resource in self.resource_adaptor.iteritems():
