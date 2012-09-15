@@ -272,6 +272,7 @@ class CRUDResource(BaseResource):
         if form.is_valid():
             instance = form.save()
             resource_item = self.get_resource_item(instance)
+            #or send the update link?
             return self.get_item_link(resource_item)
         return link.clone(form=form)
     

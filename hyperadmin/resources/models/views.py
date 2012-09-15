@@ -58,6 +58,11 @@ class ModelListResourceView(ModelCreateResourceView):
         return self.resource.get_resource_item(instance, from_list=True)
 
 class ModelDetailMixin(SingleObjectMixin):
+    def get_state(self):
+        state = super(ModelDetailMixin, self).get_state()
+        state.item = self.get_item()
+        return state
+    
     def get_item(self):
         if not getattr(self, 'object', None):
             self.object = self.get_object()

@@ -25,6 +25,7 @@ class JsonTestCase(MediaTypeTestCase):
         item = self.resource.get_resource_item(instance)
         link = self.resource.get_item_link(item)
         state = self.resource.get_state_class()(self.resource, {})
+        state.item = item
         
         response = self.adaptor.serialize(content_type='application/json', link=link, state=state)
         data = json.loads(response.content)
@@ -52,6 +53,7 @@ class JsonpTestCase(MediaTypeTestCase):
         item = self.resource.get_resource_item(instance)
         link = self.resource.get_item_link(item)
         state = self.resource.get_state_class()(self.resource, {})
+        state.item = item
         
         response = self.adaptor.serialize(content_type='text/javascript', link=link, state=state)
         self.assertTrue(response.content.startswith('jscallback('))
