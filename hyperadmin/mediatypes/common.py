@@ -25,7 +25,8 @@ class MediaType(object):
         return response
     
     def detect_redirect(self, link):
-        if link.url != self.request.path and False:
+        print link.url, self.request.path
+        if link.url != self.request.path:
             return True
         return False
     

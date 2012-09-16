@@ -76,7 +76,7 @@ class ModelDetailMixin(SingleObjectMixin):
 class ModelDeleteResourceView(ModelDetailMixin, ModelResourceView):
     view_class = 'delete_confirmation'
     
-    def delete(self, request, *args, **kwargs):
+    def post(self, request, *args, **kwargs):
         self.object = self.get_object()
         if not self.can_delete(self.object):
             return http.HttpResponseForbidden(_(u"You may not delete that object"))
@@ -113,7 +113,7 @@ class ModelDetailResourceView(ModelDetailMixin, ModelResourceView):
             return http.HttpResponseForbidden(_(u"You may not delete that object"))
         
         resource_item = self.get_item()
-        form_link = self.get_delete_link(resource_item)
+        form_link = self.get_restul_delete_link(resource_item)
         response_link = form_link.submit(self.state)
         return self.resource.generate_response(self.get_response_media_type(), self.get_response_type(), response_link, self.state)
 

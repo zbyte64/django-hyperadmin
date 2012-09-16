@@ -103,7 +103,7 @@ App.initUploadFile = function(field, options) {
     fileInput.hide()
     
     //TODO this is only necessary because forms insist on resaving and "upload to" is not communicated
-    data.formData = {'name':'hyperadmin-tmp/'+data.files[0].name}
+    data.formData = {'name':'hyperadmin-tmp/'+file.name}
     data.submit()
   }
   function progress(e, data) {
@@ -173,14 +173,13 @@ App.initUploadFile = function(field, options) {
         'type': 'POST',
         'url': '/hyper-admin/-storages/media/',
         'paramName': 'upload',
-        'data': 'json',
         'accepts': {
           'json': App.contentType, //custom media type defintion
         },
         'headers': {
             'Accept': App.contentType,
             //'Content-Type': 'multipart/form-data'
-            'Content-Type': 'text/html'
+            //'Content-Type': 'text/html'
         }
     }, options);
     field.fileupload(options);

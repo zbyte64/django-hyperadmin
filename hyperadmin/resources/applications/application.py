@@ -64,7 +64,7 @@ class ApplicationResource(BaseResource):
         return links
     
     def get_prompt(self):
-        return self.app_name
+        return self.app_name.replace('-',' ').replace('_', ' ')
     
     def __unicode__(self):
         return u'App Resource: %s' % self.app_name

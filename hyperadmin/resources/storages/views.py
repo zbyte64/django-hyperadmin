@@ -41,12 +41,21 @@ class StorageListResourceView(StorageResourceViewMixin, View):
     
     def post(self, request, *args, **kwargs):
         form_kwargs = self.get_request_form_kwargs()
-        form_link = self.get_create_link(**form_kwargs)
+        form_link = self.get_restful_create_link(**form_kwargs)
         response_link = form_link.submit(self.state)
         return self.resource.generate_response(self.get_response_media_type(), self.get_response_type(), response_link, self.state)
 
-#TODO
-StorageAddResourceView = StorageListResourceView
+class StorageAddResourceView(StorageResourceViewMixin, View):
+    view_class = 'change_list'
+    
+    def get(self, request, *args, **kwargs):
+        return self.resource.generate_response(self.get_response_media_type(), self.get_response_type(), self.get_create_link(), self.state)
+    
+    def post(self, request, *args, **kwargs):
+        form_kwargs = self.get_request_form_kwargs()
+        form_link = self.get_create_link(**form_kwargs)
+        response_link = form_link.submit(self.state)
+        return self.resource.generate_response(self.get_response_media_type(), self.get_response_type(), response_link, self.state)
 
 class StorageDetailResourceView(StorageResourceViewMixin, View):
     view_class = 'change_form'
@@ -83,10 +92,40 @@ class StorageDetailResourceView(StorageResourceViewMixin, View):
             return http.HttpResponseForbidden(_(u"You may not delete that object"))
         item = self.get_item()
         form_kwargs = self.get_request_form_kwargs()
-        form_link = self.get_delete_link(item, **form_kwargs)
+        form_link = self.get_restful_delete_link(item, **form_kwargs)
         response_link = form_link.submit(self.state)
         
         return self.resource.generate_response(self.get_response_media_type(), self.get_response_type(), response_link, self.state)
 
-StorageDeleteResourceView = StorageDetailResourceView
+class StorageDeleteResourceView(StorageResourceViewMixin, View):
+    view_class = 'delete_confirmation'
+    
+    def get_state(self):
+        state = super(StorageDetailResourceView, self).get_state()
+        state.item = self.get_item()
+        return state
+    
+    def get_object(self):
+        return BoundFile(self.resource.resource_adaptor, self.kwargs['path'])
+    
+    def get_item(self):
+        if not getattr(self, 'object', None):
+            self.object = self.get_object()
+        return self.resource.get_resource_item(self.object)
+    
+    def get(self, request, *args, **kwargs):
+        self.object = self.get_object()
+        item = self.get_item()
+        return self.resource.generate_response(self.get_response_media_type(), self.get_response_type(), self.get_delete_link(item), self.state)
+    
+    def post(self, request, *args, **kwargs):
+        self.object = self.get_object()
+        if not self.can_delete():
+            return http.HttpResponseForbidden(_(u"You may not delete that object"))
+        item = self.get_item()
+        form_kwargs = self.get_request_form_kwargs()
+        form_link = self.get_delete_link(item, **form_kwargs)
+        response_link = form_link.submit(self.state)
+        
+        return self.resource.generate_response(self.get_response_media_type(), self.get_response_type(), response_link, self.state)
 
