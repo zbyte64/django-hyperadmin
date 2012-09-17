@@ -1,42 +1,13 @@
 from django.conf.urls.defaults import patterns, url, include
 from django.utils.functional import update_wrapper
-from django.utils.encoding import force_unicode
 from django.core.paginator import Paginator
 from django import forms
 
-from hyperadmin.hyperobjects import Link, ResourceItem
+from hyperadmin.hyperobjects import Link
 from hyperadmin.resources.crud.crud import CRUDResource
 from hyperadmin.resources.models import views
 from hyperadmin.resources.models.changelist import ChangeList
 
-class ListForm(forms.Form):
-    '''
-    hyperadmin knows how to serialize forms, not models.
-    So for the list display we need a form
-    '''
-    
-    def __init__(self, **kwargs):
-        self.instance = kwargs.pop('instance', None)
-        self.resource = kwargs.pop('resource')
-        super(ListForm, self).__init__(**kwargs)
-        for display in self.resource.list_display:
-            label = display
-            if label == '__str__':
-                label = self.resource.resource_name
-            self.fields[display] = forms.CharField(label=label)
-            if self.instance:
-                val = getattr(self.instance, display)
-                if callable(val):
-                    val = val()
-                self.initial[display] = force_unicode(val)
-
-class ListResourceItem(ResourceItem):
-    form_class = ListForm
-    
-    def get_form_kwargs(self, **kwargs):
-        kwargs = super(ListResourceItem, self).get_form_kwargs(**kwargs)
-        kwargs['resource'] = self.resource
-        return kwargs
 
 class ModelResource(CRUDResource):
     #TODO support the following:
@@ -59,7 +30,6 @@ class ModelResource(CRUDResource):
     inlines = []
     
     #list display options
-    list_display = ('__str__',)
     list_display_links = ()
     list_filter = ()
     list_select_related = False
@@ -70,10 +40,10 @@ class ModelResource(CRUDResource):
     date_hierarchy = None
     ordering = None
     
-    list_view = views.ModelListResourceView
-    add_view = views.ModelCreateResourceView
-    detail_view = views.ModelDetailResourceView
-    delete_view = views.ModelDeleteResourceView
+    list_view = views.ModelListView
+    add_view = views.ModelCreateView
+    detail_view = views.ModelDetailView
+    delete_view = views.ModelDeleteView
     
     def __init__(self, *args, **kwargs):
         super(ModelResource, self).__init__(*args, **kwargs)
@@ -114,10 +84,10 @@ class ModelResource(CRUDResource):
         kwargs['model'] = self.resource_adaptor
         return kwargs
     
-    def get_resource_items(self, state):
-        if state and 'changelist' in state:
-            return [self.get_resource_item(instance, from_list=True) for instance in state['changelist'].result_list]
-        return [self.get_resource_item(instance, from_list=True) for instance in self.resource_adaptor.objects.all()]
+    def get_instances(self, state):
+        if 'changelist' in state:
+            return state['changelist'].result_list
+        return super(ModelResource, self).get_instances(state) #TODO power by get_queryset
     
     def get_changelist(self, user, filter_params=None):
         changelist_cls = self.changelist
@@ -280,17 +250,12 @@ class ModelResource(CRUDResource):
                         rel='inline-%s' % inline.rel_name,)
             inline_links.append(link)
         return links + inline_links
-    
-    def get_resource_item(self, instance, from_list=False):
-        if from_list:
-            return ListResourceItem(resource=self, instance=instance)
-        return super(ModelResource, self).get_resource_item(instance)
 
 class InlineModelResource(ModelResource):
-    list_view = views.InlineModelListResourceView
-    add_view = views.InlineModelCreateResourceView
-    detail_view = views.InlineModelDetailResourceView
-    delete_view = views.InlineModelDeleteResourceView
+    list_view = views.InlineModelListView
+    add_view = views.InlineModelCreateView
+    detail_view = views.InlineModelDetailView
+    delete_view = views.InlineModelDeleteView
     
     model = None
     fk_name = None

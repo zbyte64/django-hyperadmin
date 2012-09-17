@@ -1,10 +1,50 @@
 from django.conf.urls.defaults import patterns, url
+from django.utils.encoding import force_unicode
+from django import forms
 
-from hyperadmin.hyperobjects import Link
+from hyperadmin.hyperobjects import Link, ResourceItem
 from hyperadmin.resources.resources import BaseResource
+
+
+class ListForm(forms.Form):
+    '''
+    hyperadmin knows how to serialize forms, not models.
+    So for the list display we need a form
+    '''
+    
+    def __init__(self, **kwargs):
+        self.instance = kwargs.pop('instance', None)
+        self.resource = kwargs.pop('resource')
+        super(ListForm, self).__init__(**kwargs)
+        if self.resource.list_display:
+            for display in self.resource.list_display:
+                label = display
+                if label == '__str__':
+                    label = self.resource.resource_name
+                self.fields[display] = forms.CharField(label=label)
+                if self.instance:
+                    val = getattr(self.instance, display)
+                    if callable(val):
+                        val = val()
+                    self.initial[display] = force_unicode(val)
+        else:
+            pass
+            #TODO support all field listing as default
+
+class ListResourceItem(ResourceItem):
+    form_class = ListForm
+    
+    def get_form_kwargs(self, **kwargs):
+        kwargs = super(ListResourceItem, self).get_form_kwargs(**kwargs)
+        form_kwargs = {'instance':kwargs.get('instance', None),
+                       'resource':self.resource}
+        return form_kwargs
 
 class CRUDResource(BaseResource):
     resource_class = 'crudresource'
+    
+    list_display = ('__str__',) #TODO should list all field by default
+    list_resource_item_class = ListResourceItem
     
     #TODO support the following:
     actions = []
@@ -160,6 +200,24 @@ class CRUDResource(BaseResource):
     def get_item_idempotent_links(self, item):
         delete_link = self.get_restful_delete_link(item=item)
         return [delete_link]
+    
+    def get_list_resource_item_class(self):
+        return self.list_resource_item_class
+    
+    def get_list_resource_item(self, instance):
+        return self.get_list_resource_item_class()(resource=self, instance=instance)
+    
+    def get_instances(self, state):
+        '''
+        Returns a set of native objects for a given state
+        '''
+        return self.resource_adaptor.objects.all()
+    
+    def get_resource_items(self, state):
+        instances = self.get_instances(state)
+        if state.get('view_class', None) == 'change_list':
+            return [self.get_list_resource_item(instance) for instance in instances]
+        return [self.get_resource_item(instance) for instance in instances]
     
     def get_actions(self, request):
         actions = self.site.get_actions(request)

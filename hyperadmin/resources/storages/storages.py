@@ -9,16 +9,15 @@ from hyperadmin.resources.storages import views
 from hyperadmin.resources.storages.views import BoundFile
 from hyperadmin.resources.storages.forms import UploadForm
 
-#CONSIDER: post needs to be multipart
 
 class StorageResource(CRUDResource):
     #resource_adaptor = storage object
     form_class = UploadForm
     
-    list_view = views.StorageListResourceView
-    add_view = views.StorageAddResourceView
-    detail_view = views.StorageDetailResourceView
-    delete_view = views.StorageDeleteResourceView
+    list_view = views.StorageListView
+    add_view = views.StorageCreateView
+    detail_view = views.StorageDetailView
+    delete_view = views.StorageDeleteView
     
     def __init__(self, **kwargs):
         self._app_name = kwargs.pop('app_name', '-storages')
