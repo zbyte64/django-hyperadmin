@@ -2,7 +2,7 @@ from django.utils.translation import ugettext as _
 from django.views.generic import View
 
 from hyperadmin.hyperobjects import Link
-from hyperadmin.resources.views import CRUDResourceViewMixin
+from hyperadmin.resources.crud.views import CRUDResourceViewMixin
 
 class BoundFile(object):
     def __init__(self, storage, name):

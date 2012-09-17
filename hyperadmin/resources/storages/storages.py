@@ -4,7 +4,7 @@ from django.utils.functional import update_wrapper
 import urllib
 
 from hyperadmin.hyperobjects import Link
-from hyperadmin.resources import CRUDResource
+from hyperadmin.resources.crud.crud import CRUDResource
 from hyperadmin.resources.storages import views
 from hyperadmin.resources.storages.views import BoundFile
 from hyperadmin.resources.storages.forms import UploadForm

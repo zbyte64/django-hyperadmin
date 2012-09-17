@@ -3,7 +3,7 @@ from django.views.generic import View
 from django.views.generic.detail import SingleObjectMixin
 from django import http
 
-from hyperadmin.resources.views import CRUDResourceViewMixin
+from hyperadmin.resources.crud.views import CRUDResourceViewMixin
 
 class ModelResourceView(CRUDResourceViewMixin, View):
     model = None

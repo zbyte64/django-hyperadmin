@@ -5,7 +5,7 @@ from django.core.paginator import Paginator
 from django import forms
 
 from hyperadmin.hyperobjects import Link, ResourceItem
-from hyperadmin.resources import CRUDResource
+from hyperadmin.resources.crud.crud import CRUDResource
 from hyperadmin.resources.models import views
 from hyperadmin.resources.models.changelist import ChangeList
 
