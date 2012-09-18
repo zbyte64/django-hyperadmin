@@ -1,6 +1,5 @@
 from django.conf.urls.defaults import patterns, url, include
 from django.utils.functional import update_wrapper
-from django.core.paginator import Paginator
 from django import forms
 
 from hyperadmin.hyperobjects import Link
@@ -26,7 +25,6 @@ class ModelResource(CRUDResource):
     #save_as = False
     #save_on_top = False
     changelist = ChangeList
-    paginator = Paginator
     inlines = []
     
     #list display options
@@ -38,7 +36,6 @@ class ModelResource(CRUDResource):
     list_editable = ()
     search_fields = ()
     date_hierarchy = None
-    ordering = None
     
     list_view = views.ModelListView
     add_view = views.ModelCreateView
@@ -106,9 +103,6 @@ class ModelResource(CRUDResource):
                   'list_editable':self.list_editable,
                   'resource':self,}
         return changelist_cls(**kwargs)
-    
-    def get_paginator(self, queryset, per_page, orphans=0, allow_empty_first_page=True):
-        return self.paginator(queryset, per_page, orphans, allow_empty_first_page)
     
     def get_templated_queries(self, state):
         links = super(ModelResource, self).get_templated_queries(state)
@@ -181,12 +175,6 @@ class ModelResource(CRUDResource):
     
     def lookup_allowed(self, lookup, value):
         return True #TODO
-    
-    def get_ordering(self):
-        """
-        Hook for specifying field ordering.
-        """
-        return self.ordering or ()  # otherwise we might try to *None, which is bad ;)
     
     def get_queryset(self, user):
         queryset = self.resource_adaptor.objects.all()

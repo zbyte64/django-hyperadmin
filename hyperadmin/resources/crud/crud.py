@@ -1,5 +1,6 @@
 from django.conf.urls.defaults import patterns, url
 from django.utils.encoding import force_unicode
+from django.core.paginator import Paginator
 from django import forms
 
 from hyperadmin.hyperobjects import Link, ResourceItem
@@ -43,8 +44,10 @@ class ListResourceItem(ResourceItem):
 class CRUDResource(BaseResource):
     resource_class = 'crudresource'
     
+    ordering = None
     list_display = ('__str__',) #TODO should list all field by default
     list_resource_item_class = ListResourceItem
+    paginator_class = Paginator
     
     #TODO support the following:
     actions = []
@@ -218,6 +221,18 @@ class CRUDResource(BaseResource):
         if state.get('view_class', None) == 'change_list':
             return [self.get_list_resource_item(instance) for instance in instances]
         return [self.get_resource_item(instance) for instance in instances]
+    
+    def get_ordering(self):
+        """
+        Hook for specifying field ordering.
+        """
+        return self.ordering or ()  # otherwise we might try to *None, which is bad ;)
+    
+    def get_paginator_class(self):
+        return self.paginator_class
+    
+    def get_paginator(self, index, per_page, orphans=0, allow_empty_first_page=True):
+        return self.get_paginator_class()(index, per_page, orphans, allow_empty_first_page)
     
     def get_actions(self, request):
         actions = self.site.get_actions(request)

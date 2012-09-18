@@ -1,4 +1,6 @@
 from copy import copy
+from django.utils.http import urlencode
+
 
 class Link(object):
     def __init__(self, url, resource, method='GET', form=None, form_class=None, form_kwargs=None,
@@ -109,10 +111,34 @@ class State(dict):
     
     item = property(get_item, set_item)
     
+    @property
+    def params(self):
+        if 'params' in self:
+            return self['params']
+        if 'request' in self:
+            return self['request'].GET
+        return {}
+    
     def get_resource_items(self):
         if self.item is not None:
             return self.item.get_resource_items()
         return self.resource.get_resource_items(state=self)
+    
+    def get_query_string(self, new_params=None, remove=None):
+        if new_params is None: new_params = {}
+        if remove is None: remove = []
+        p = self.params.copy()
+        for r in remove:
+            for k in p.keys():
+                if k.startswith(r):
+                    del p[k]
+        for k, v in new_params.items():
+            if v is None:
+                if k in p:
+                    del p[k]
+            else:
+                p[k] = v
+        return '?%s' % urlencode(p)
 
 class ResourceItem(object):
     '''
