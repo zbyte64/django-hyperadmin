@@ -10,6 +10,7 @@ env:
 install:
   - pip install -q Django==$DJANGO_VERSION
   - pip install -q -r requirements.txt
+  - pip install -q pytz
   - python setup.py -q install
 script:
   - python setup.py test
