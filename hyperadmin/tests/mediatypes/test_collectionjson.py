@@ -21,6 +21,7 @@ class CollectionJsonTestCase(MediaTypeTestCase):
     def test_queryset_serialize(self):
         link = self.resource.get_resource_link()
         state = self.resource.get_state_class()(self.resource, {})
+        state['auth'] = self.user
         
         response = self.adaptor.serialize(content_type=self.content_type, link=link, state=state)
         data = json.loads(response.content)
