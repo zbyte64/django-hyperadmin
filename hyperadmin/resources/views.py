@@ -63,14 +63,18 @@ class ResourceViewMixin(ConditionalAccessMixin):
     def get_state_class(self):
         return self.resource.get_state_class()
     
+    def get_state_data(self):
+        return {'auth':self.request.user,
+                'resource':self.resource,
+                'view_class':self.view_class,
+                'item':self.get_item(),
+                'filter_params':self.request.GET.copy(),}
+    
     def get_state(self):
         state_cls = self.get_state_class()
         return state_cls(self.resource,
                      self.get_meta(),
-                     {'auth':self.request.user,
-                      'resource':self.resource,
-                      'view_class':self.view_class,
-                      'item':self.get_item(),})
+                     self.get_state_data(),)
     
     @property
     def state(self):

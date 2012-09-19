@@ -19,7 +19,7 @@ class BaseFilter(object):
     def populate_state(self, state):
         pass
     
-    def get_links(self, state):
+    def get_links(self, state, **link_kwargs):
         """
         Returns links representing the filterable actions.
         """
@@ -42,7 +42,7 @@ class BaseFilter(object):
         return False
 
 class BaseChoicesFilter(BaseFilter):
-    def get_links(self, state):
+    def get_links(self, state, **link_kwargs):
         pass #TODO take choices and return links
     
     def choices(self, state):

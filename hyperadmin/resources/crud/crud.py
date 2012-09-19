@@ -5,6 +5,7 @@ from django import forms
 
 from hyperadmin.hyperobjects import Link, ResourceItem
 from hyperadmin.resources.resources import BaseResource
+from hyperadmin.resources.crud.changelist import ChangeList
 
 
 class ListForm(forms.Form):
@@ -48,6 +49,7 @@ class CRUDResource(BaseResource):
     list_display = ('__str__',) #TODO should list all field by default
     list_resource_item_class = ListResourceItem
     paginator_class = Paginator
+    changelist_class = ChangeList
     
     #TODO support the following:
     actions = []
@@ -214,6 +216,8 @@ class CRUDResource(BaseResource):
         '''
         Returns a set of native objects for a given state
         '''
+        if 'paginator' in state:
+            return state['paginator'].object_list
         return self.resource_adaptor.objects.all()
     
     def get_resource_items(self, state):
@@ -222,11 +226,28 @@ class CRUDResource(BaseResource):
             return [self.get_list_resource_item(instance) for instance in instances]
         return [self.get_resource_item(instance) for instance in instances]
     
+    def get_active_index(self, state, **kwargs):
+        return self.resource_adaptor.objects.all()
+    
     def get_ordering(self):
         """
         Hook for specifying field ordering.
         """
         return self.ordering or ()  # otherwise we might try to *None, which is bad ;)
+    
+    def get_changelist_kwargs(self, state):
+        return {'resource': self}
+    
+    def get_changelist_class(self):
+        return self.changelist_class
+    
+    def get_changelist(self, state):
+        changelist_class = self.get_changelist_class()
+        kwargs = self.get_changelist_kwargs(state)
+        changelist = changelist_class(**kwargs)
+        changelist.detect_sections()
+        changelist.populate_state(state)
+        return changelist
     
     def get_paginator_class(self):
         return self.paginator_class

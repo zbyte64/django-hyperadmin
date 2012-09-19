@@ -8,23 +8,12 @@ class ModelMixin(object):
     
     def get_queryset(self):
         return self.resource.get_queryset(self.request.user)
-    
-    def get_changelist(self):
-        if not hasattr(self, '_changelist'):
-            self._changelist = self.resource.get_changelist(self.request.user, self.request.GET)
-        return self._changelist
 
 class ModelCreateView(ModelMixin, CRUDCreateView):
     pass
 
 class ModelListView(ModelMixin, CRUDListView):
-    def get_state(self):
-        state = super(ModelListView, self).get_state()
-        state['changelist'] = self.get_changelist()
-        return state
-    
-    def get_paginator(self):
-        return self.get_changelist().paginator
+    pass
 
 class ModelDetailMixin(ModelMixin, CRUDDetailMixin, SingleObjectMixin):
     def get_object(self):
@@ -39,13 +28,19 @@ class ModelDetailView(ModelDetailMixin, CRUDDetailView):
     pass
 
 class InlineModelMixin(object):
+    def get_state(self):
+        state = super(InlineModelMixin, self).get_state()
+        state['parent'] = self.get_parent()
+        return state
+    
     def get_changelist_links(self):
         return []
     
     def get_parent(self):
-        queryset = self.resource.parent.get_queryset(self.request.user)
-        parent = queryset.get(pk=self.kwargs['pk'])
-        return parent
+        if not hasattr(self, '_parent'):
+            queryset = self.resource.parent.get_queryset(self.request.user)
+            self._parent = queryset.get(pk=self.kwargs['pk'])
+        return self._parent
     
     def get_queryset(self):
         return self.resource.get_queryset(self.get_parent(), self.request.user)
@@ -54,10 +49,7 @@ class InlineModelCreateView(InlineModelMixin, ModelCreateView):
     pass
 
 class InlineModelListView(InlineModelMixin, ModelListView):
-    def get_changelist(self):
-        if not hasattr(self, '_changelist'):
-            self._changelist = self.resource.get_changelist(self.get_parent(), self.request.user, self.request.GET)
-        return self._changelist
+    pass
 
 class InlineModelDetailMixin(object):
     def get_object(self):

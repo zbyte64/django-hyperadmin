@@ -5,7 +5,7 @@ from django import forms
 from hyperadmin.hyperobjects import Link
 from hyperadmin.resources.crud.crud import CRUDResource
 from hyperadmin.resources.models import views
-from hyperadmin.resources.models.changelist import ChangeList
+from hyperadmin.resources.models.changelist import ModelChangeList
 
 
 class ModelResource(CRUDResource):
@@ -24,7 +24,7 @@ class ModelResource(CRUDResource):
     
     #save_as = False
     #save_on_top = False
-    changelist = ChangeList
+    changelist_class = ModelChangeList
     inlines = []
     
     #list display options
@@ -82,27 +82,16 @@ class ModelResource(CRUDResource):
         return kwargs
     
     def get_instances(self, state):
-        if 'changelist' in state:
-            return state['changelist'].result_list
-        return super(ModelResource, self).get_instances(state) #TODO power by get_queryset
+        if 'paginator' in state:
+            return state['paginator'].object_list
+        return self.get_queryset(state['auth'])
     
-    def get_changelist(self, user, filter_params=None):
-        changelist_cls = self.changelist
-        kwargs = {'model':self.resource_adaptor,
-                  'root_query_set': self.get_queryset(user),
-                  'user':user,
-                  'filter_params':filter_params or dict(),
-                  'list_display':self.list_display,
-                  'list_display_links':self.list_display_links,
-                  'list_filter':self.list_filter,
-                  'date_hierarchy':self.date_hierarchy,
-                  'search_fields':self.search_fields,
-                  'list_select_related':self.list_select_related,
-                  'list_per_page':self.list_per_page,
-                  'list_max_show_all':self.list_max_show_all,
-                  'list_editable':self.list_editable,
-                  'resource':self,}
-        return changelist_cls(**kwargs)
+    def get_changelist_kwargs(self, state):
+        kwargs = super(ModelResource, self).get_changelist_kwargs(state)
+        kwargs.update({'list_filter': self.list_filter,
+                       'search_fields': self.search_fields,
+                       'date_hierarchy': self.date_hierarchy,})
+        return kwargs
     
     def get_templated_queries(self, state):
         links = super(ModelResource, self).get_templated_queries(state)
@@ -181,6 +170,9 @@ class ModelResource(CRUDResource):
         if not self.has_change_permission(user):
             queryset = queryset.none()
         return queryset
+    
+    def get_active_index(self, state, **kwargs):
+        return self.get_queryset(user=state['auth'])
 
     def has_add_permission(self, user):
         if self.opts.auto_created:
@@ -261,12 +253,15 @@ class InlineModelResource(ModelResource):
             self.rel_name = RelatedObject(self.fk.rel.to, self.model, self.fk).get_accessor_name()
         self.inline_instances = []
     
-    def get_queryset(self, parent, user, filter_params):
+    def get_queryset(self, parent, user):
         queryset = self.resource_adaptor.objects.all()
         queryset = queryset.filter(**{self.fk.name:parent})
         if not self.has_change_permission(user):
             queryset = queryset.none()
         return queryset
+    
+    def get_active_index(self, state, **kwargs):
+        return self.get_queryset(parent=state['parent'], user=state['auth'])
     
     def get_base_url_name(self):
         return '%s_%s_%s_' % (self.parent.app_name, self.parent.resource_name, self.rel_name)
@@ -316,22 +311,4 @@ class InlineModelResource(ModelResource):
         if not instance:
             return self.parent.get_absolute_url()
         return None
-    
-    def get_changelist(self, parent, user, filter_params=None):
-        changelist_cls = self.changelist
-        kwargs = {'model':self.resource_adaptor,
-                  'root_query_set': self.get_queryset(parent, user, filter_params or dict()),
-                  'user':user,
-                  'filter_params':filter_params or dict(),
-                  'list_display':self.list_display,
-                  'list_display_links':self.list_display_links,
-                  'list_filter':self.list_filter,
-                  'date_hierarchy':self.date_hierarchy,
-                  'search_fields':self.search_fields,
-                  'list_select_related':self.list_select_related,
-                  'list_per_page':self.list_per_page,
-                  'list_max_show_all':self.list_max_show_all,
-                  'list_editable':self.list_editable,
-                  'resource':self,}
-        return changelist_cls(**kwargs)
 

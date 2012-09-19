@@ -81,14 +81,16 @@ class CRUDListView(CRUDCreateView):
         data['display_fields'] = list()
         for field in form:
             data['display_fields'].append({'prompt':field.label})
-        try:
-            paginator = self.get_paginator()
-        except NotImplementedError, error:
-            pass
-        else:
-            data['object_count'] = paginator.count
-            data['number_of_pages'] = paginator.num_pages
         return data
+    
+    def get_state(self):
+        state = super(CRUDListView, self).get_state()
+        state['changelist'] = self.resource.get_changelist(state=state)
+        if 'paginator' in state:
+            paginator = state['paginator']
+            state.meta['object_count'] = paginator.count
+            state.meta['number_of_pages'] = paginator.num_pages
+        return state
     
     def get_resource_item(self, instance):
         return self.resource.get_list_resource_item(instance)
