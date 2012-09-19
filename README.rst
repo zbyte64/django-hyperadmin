@@ -29,6 +29,7 @@ Features
 * Architecture allows for more media formats
 * Internal resource representation based on hfactor and forms
 * Headers control media type; "Accepts" and "Content-Type" control response and request format
+* Includes a javascript powered client
 
 
 ------------
@@ -59,11 +60,9 @@ Add to root url patterns::
     url(r'^hyper-admin/', include(hyperadmin.site.urls)),
     url(r'^emberjs-admin/', include(admin_client.urls)),
 
-=================
-Builtin Resources
-=================
-
-Each resource has it's own url patterns and links the urls through hypermedia links. There will be a going back and forth between the frontend needs and defining extra metadata in an extended version of the collections media type. The ember.js client should treat each view as uniformally as possible as all the contextual data should be contained in the API.
+=============
+Configuration
+=============
 
 -------------
 ModelResource
@@ -73,7 +72,9 @@ API Endpoints
 -------------
 
 * "/" lists rows; PUT to create
+* "/add/" POST to add
 * "/<id>/" displays a specific row; POST to update, DELETE to delete
+* "/<id>/delete/" POST to delete
 
 Registering models
 -------------------
@@ -93,42 +94,6 @@ Registering a model with hyperadmin::
         list_filter = ['timestamp', 'category']
     
     hyperadmin.site.register(MyModel, MyModelResource)
-
-
-------------
-SiteResource
-------------
-
-API Endpoints
--------------
-
-* "/" lists resources known in the system.
-* "/_authentication/" ; PUT/POST to authenticate, DELETE to logout, GET for useful info and login forms. Uses django sessions by default.
-
--------------------
-ApplicationResource
--------------------
-
-API Endpoints
--------------
-
-* "/<appname>/" lists resources belonging to the app
-* "/<appname>/<module>/" mount point of crud resource
-
----------------
-StorageResource
----------------
-
-Allows for direct browsing and uploading of files. The storage backend may optionally provide a custom link object to facilitate direct uploading to a CDN.
-
-API Endpoints
--------------
-
-* "/storages/media/" lists directories and files
-* "/storages/media/?path=<path>" lists directories and files belonging to a certain path
-* "/storages/media/<path>/" endpoint for updating a particular file
-* "/storages/static/"
-* "/storages/static/<path>/"
 
 
 ======
