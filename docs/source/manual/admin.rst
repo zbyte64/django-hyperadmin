@@ -11,7 +11,7 @@ ModelResource
 API Endpoints
 -------------
 
-* "/" lists rows; POST to create
+* "/" lists rows; PUT to create
 * "/add/" POST to add
 * "/<id>/" displays a specific row; POST to update, DELETE to delete
 * "/<id>/delete/" POST to delete

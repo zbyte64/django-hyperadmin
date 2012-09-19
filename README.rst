@@ -9,6 +9,8 @@ django-hyperadmin is an API driven Admin interface for resources in Django. Reso
 
 This is (mostly) ALPHA
 
+Documentation: http://django-hyperadmin.readthedocs.org/
+
 Demo site: http://hyperadmindemo.herokuapp.com/
 
 --------
@@ -63,6 +65,36 @@ Builtin Resources
 
 Each resource has it's own url patterns and links the urls through hypermedia links. There will be a going back and forth between the frontend needs and defining extra metadata in an extended version of the collections media type. The ember.js client should treat each view as uniformally as possible as all the contextual data should be contained in the API.
 
+-------------
+ModelResource
+-------------
+
+API Endpoints
+-------------
+
+* "/" lists rows; PUT to create
+* "/<id>/" displays a specific row; POST to update, DELETE to delete
+
+Registering models
+-------------------
+
+Registering a model with hyperadmin::
+
+    import hyperadmin
+    from hpyeradmin.resources.models imoprt ModelResource, InlineModelResource
+    from myapp.models import MyModel, ChildModel
+    
+    class ChildModelResource(InlineModelResource):
+        model = ChildModel
+    
+    class MyModelResource(ModelResource):
+        inlines = [ChildModelResource]
+        list_display = ['name', 'number']
+        list_filter = ['timestamp', 'category']
+    
+    hyperadmin.site.register(MyModel, MyModelResource)
+
+
 ------------
 SiteResource
 ------------
@@ -97,35 +129,6 @@ API Endpoints
 * "/storages/media/<path>/" endpoint for updating a particular file
 * "/storages/static/"
 * "/storages/static/<path>/"
-
--------------
-ModelResource
--------------
-
-API Endpoints
--------------
-
-* "/" lists rows; POST to create
-* "/<id>/" displays a specific row; POST to update, DELETE to delete
-
-Registering models
--------------------
-
-Registering a model with hyperadmin::
-
-    import hyperadmin
-    from hpyeradmin.resources.models imoprt ModelResource, InlineModelResource
-    from myapp.models import MyModel, ChildModel
-    
-    class ChildModelResource(InlineModelResource):
-        model = ChildModel
-    
-    class MyModelResource(ModelResource):
-        inlines = [ChildModelResource]
-        list_display = ['name', 'number']
-        list_filter = ['timestamp', 'category']
-    
-    hyperadmin.site.register(MyModel, MyModelResource)
 
 
 ======
