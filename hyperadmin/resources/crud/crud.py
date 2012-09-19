@@ -252,8 +252,8 @@ class CRUDResource(BaseResource):
     def get_paginator_class(self):
         return self.paginator_class
     
-    def get_paginator(self, index, per_page, orphans=0, allow_empty_first_page=True):
-        return self.get_paginator_class()(index, per_page, orphans, allow_empty_first_page)
+    def get_paginator(self, index, **kwargs):
+        return self.get_paginator_class()(index, **kwargs)
     
     def get_actions(self, request):
         actions = self.site.get_actions(request)

@@ -78,7 +78,7 @@ class ModelResource(CRUDResource):
     
     def get_view_kwargs(self):
         kwargs = super(ModelResource, self).get_view_kwargs()
-        kwargs['model'] = self.resource_adaptor
+        kwargs['model'] = self.model
         return kwargs
     
     def get_instances(self, state):

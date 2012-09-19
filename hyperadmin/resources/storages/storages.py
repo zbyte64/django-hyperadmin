@@ -1,17 +1,17 @@
 from django.conf.urls.defaults import patterns, url
 from django.utils.functional import update_wrapper
 
-import urllib
-
 from hyperadmin.hyperobjects import Link
 from hyperadmin.resources.crud.crud import CRUDResource
 from hyperadmin.resources.storages import views
-from hyperadmin.resources.storages.views import BoundFile
 from hyperadmin.resources.storages.forms import UploadForm
+from hyperadmin.resources.storages.changelist import StorageChangeList, StoragePaginator
 
 
 class StorageResource(CRUDResource):
     #resource_adaptor = storage object
+    changelist_class = StorageChangeList
+    paginator_class = StoragePaginator
     form_class = UploadForm
     
     list_view = views.StorageListView
@@ -31,6 +31,10 @@ class StorageResource(CRUDResource):
     def get_resource_name(self):
         return self._resource_name
     resource_name = property(get_resource_name)
+    
+    def get_storage(self):
+        return self.resource_adaptor
+    storage = property(get_storage)
     
     def get_urls(self):
         def wrap(view, cacheable=False):
@@ -58,26 +62,15 @@ class StorageResource(CRUDResource):
         )
         return urlpatterns
     
-    def get_listing(self, request):
-        path = request.GET.get('path', '')
+    def get_listing(self, path):
         try:
             return self.resource_adaptor.listdir(path)
         except NotImplementedError:
             return [], [] #dirs, files
     
-    def get_links_and_items(self, request):
-        dirs, files = self.get_listing(request)
-        
-        items = list()
-        for file_name in files:
-            items.append(self.get_resource_item(BoundFile(self.resource_adaptor, file_name)))
-        
-        links = list()
-        for directory in dirs:
-            url = '%s?%s' % (request.path, urllib.urlencode({'path':directory}))
-            link = Link(url=url, resource=self, prompt=u"Directory: %s" % directory, classes=['filter', 'directory'], rel="filter")
-            links.append(link)
-        return links, items
+    def get_active_index(self, state):
+        path = state.get('filter_params', {}).get('path', '')
+        return self.get_listing(path)
     
     def get_templated_queries(self, state):
         links = super(StorageResource, self).get_templated_queries(state)
@@ -85,14 +78,9 @@ class StorageResource(CRUDResource):
             links += state['links']
         return links
     
-    def get_resource_items(self, state):
-        if 'items' in state:
-            return state['items']
-        return []
-    
     def get_form_kwargs(self, item=None, **kwargs):
         kwargs = super(StorageResource, self).get_form_kwargs(item, **kwargs)
-        kwargs['storage'] = self.resource_adaptor
+        kwargs['storage'] = self.storage
         return kwargs
     
     def get_item_url(self, item):

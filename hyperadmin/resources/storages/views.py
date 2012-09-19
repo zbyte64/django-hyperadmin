@@ -18,21 +18,13 @@ class BoundFile(object):
         return self.storage.delete(self.name)
 
 class StorageMixin(object):
-    def get_links_and_items(self):
-        if not hasattr(self, '_links'):
-            self._links, self._items = self.resource.get_links_and_items(self.request)
-        return self._links, self._items
+    pass
 
 class StorageCreateView(StorageMixin, CRUDCreateView):
     pass
 
 class StorageListView(StorageMixin, CRUDListView):
-    def get_state(self):
-        state = super(StorageListView, self).get_state()
-        links, items = self.get_links_and_items()
-        state['links'] = links
-        state['items'] = items
-        return state
+    pass
 
 class StorageDetailMixin(StorageMixin, CRUDDetailMixin):
     def get_object(self):

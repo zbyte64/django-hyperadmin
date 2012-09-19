@@ -28,10 +28,10 @@ class ModelDetailView(ModelDetailMixin, CRUDDetailView):
     pass
 
 class InlineModelMixin(object):
-    def get_state(self):
-        state = super(InlineModelMixin, self).get_state()
-        state['parent'] = self.get_parent()
-        return state
+    def get_state_data(self):
+        data = super(InlineModelMixin, self).get_state_data()
+        data['parent'] = self.get_parent()
+        return data
     
     def get_changelist_links(self):
         return []

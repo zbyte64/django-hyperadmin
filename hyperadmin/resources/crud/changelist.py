@@ -15,7 +15,7 @@ class ChangeList(object):
         for section in self.sections.itervalues():
             section.populate_state(state)
         index = self.get_instances(state)
-        state['paginator'] = self.get_paginator(index, self.resource.list_per_page)
+        state['paginator'] = self.get_paginator(index)
     
     def make_link(self, lookup_params, **kwargs):
         pass #TODO
@@ -43,10 +43,14 @@ class ChangeList(object):
             links.extend(section.get_links(state, rel=section.name))
         return links
     
-    def get_paginator(self, index, per_page, orphans=0, allow_empty_first_page=True):
+    def get_paginator_kwargs(self):
+        return {}
+    
+    def get_paginator(self, index, **kwargs):
+        kwargs.update(self.get_paginator_kwargs())
         if self.paginator_class:
-            return self.paginator_class(index, per_page, orphans=orphans, allow_empty_first_page=allow_empty_first_page)
-        return self.resource.get_paginator(index, per_page, orphans=orphans, allow_empty_first_page=allow_empty_first_page)
+            return self.paginator_class(index, **kwargs)
+        return self.resource.get_paginator(index, **kwargs)
     
     def get_ordering(self):
         if self.ordering is not None:

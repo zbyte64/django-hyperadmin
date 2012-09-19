@@ -18,4 +18,7 @@ class ModelChangeList(ChangeList):
             pass
         if self.date_hierarchy:
             pass
+    
+    def get_paginator_kwargs(self):
+        return {'per_page':self.resource.list_per_page,}
 
