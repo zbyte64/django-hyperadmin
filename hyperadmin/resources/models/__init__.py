@@ -1,3 +1,3 @@
-from models import ModelResource, InlineModelResource
+import views
+from hyperadmin.resources.models.models import ModelResource, InlineModelResource
 
-__all__ = ["ModelResource", "InlineModelResource"]

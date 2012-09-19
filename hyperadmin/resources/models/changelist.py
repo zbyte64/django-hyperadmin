@@ -2,8 +2,11 @@ from hyperadmin.resources.crud.changelist import ChangeList, FilterSection
 from hyperadmin.resources.models.filters import FieldFilter, SearchFilter
 
 from django.db import models
-from django.contrib.admin.util import get_fields_from_path, lookup_needs_distinct
-
+from django.contrib.admin.util import get_fields_from_path
+try:
+    from django.contrib.admin.util import lookup_needs_distinct
+except ImportError:
+    from hyperadmin.resources.models.util import lookup_needs_distinct
 
 class ModelChangeList(ChangeList):
     def __init__(self, resource, list_filter, search_fields, date_hierarchy):

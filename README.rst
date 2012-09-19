@@ -28,6 +28,15 @@ Features
 * Internal resource representation based on hfactor and forms
 * Headers control media type; "Accepts" and "Content-Type" control response and request format
 
+
+------------
+Requirements
+------------
+
+* Python 2.6 or later
+* Django 1.3 or later
+
+
 ============
 Installation
 ============
