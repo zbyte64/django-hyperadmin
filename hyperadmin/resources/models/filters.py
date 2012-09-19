@@ -1,14 +1,59 @@
 import datetime
+import operator
 
 from django.db import models
 from django.utils.encoding import smart_unicode
 from django.utils.translation import ugettext_lazy as _
 from django.utils import timezone
-
-from django.contrib.admin.util import (get_model_from_relation,
+from django.contrib.admin.util import (get_model_from_relation, lookup_needs_distinct,
     reverse_field_path, get_limit_choices_to_from_path, prepare_lookup_value)
 
-from hyperadmin.resources.crud.filters import BaseChoicesFilter
+from hyperadmin.resources.crud.filters import BaseChoicesFilter, BaseFilter
+
+SEARCH_VAR = 'q'
+
+class SearchFilter(BaseFilter):
+    title = _('Search')
+    
+    def __init__(self, section, search_fields):
+        super(SearchFilter, self).__init__(section)
+        self.search_fields = search_fields
+    
+    def value(self, state):
+        return state['filter_params'].get(SEARCH_VAR, '')
+    
+    def is_active(self, state):
+        return bool(self.value(state))
+    
+    def filter_index(self, state, active_index):
+        use_distinct = False
+        query = self.value(state)
+        
+        def construct_search(field_name):
+            if field_name.startswith('^'):
+                return "%s__istartswith" % field_name[1:]
+            elif field_name.startswith('='):
+                return "%s__iexact" % field_name[1:]
+            elif field_name.startswith('@'):
+                return "%s__search" % field_name[1:]
+            else:
+                return "%s__icontains" % field_name
+
+        if self.search_fields and query:
+            orm_lookups = [construct_search(str(search_field))
+                           for search_field in self.search_fields]
+            for bit in query.split():
+                or_queries = [models.Q(**{orm_lookup: bit})
+                              for orm_lookup in orm_lookups]
+                active_index = active_index.filter(reduce(operator.or_, or_queries))
+            if not use_distinct:
+                for search_spec in orm_lookups:
+                    if lookup_needs_distinct(self.resource.opts, search_spec):
+                        use_distinct = True
+                        break
+        if use_distinct:
+            return active_index.distinct()
+        return active_index
 
 class FieldFilter(BaseChoicesFilter):
     _field_list_filters = []
@@ -25,7 +70,7 @@ class FieldFilter(BaseChoicesFilter):
         return bool(self.used_parameters)
     
     def populate_state(self, state):
-        params = state['lookup_params']
+        params = state['filter_params']
         self.used_parameters = dict()
         for p in self.expected_parameters():
             if p in params:
@@ -48,12 +93,11 @@ class FieldFilter(BaseChoicesFilter):
             cls._field_list_filters.append((test, list_filter_class))
 
     @classmethod
-    def create(cls, field, request, params, model, model_admin, field_path):
+    def create(cls, field, field_path, section):
         for test, list_filter_class in cls._field_list_filters:
             if not test(field):
                 continue
-            return list_filter_class(field, request, params,
-                model, model_admin, field_path=field_path)
+            return list_filter_class(field, field_path, section)
 
 
 class RelatedFieldFilter(FieldFilter):

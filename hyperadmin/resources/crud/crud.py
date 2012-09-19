@@ -186,6 +186,12 @@ class CRUDResource(BaseResource):
     def has_delete_permission(self, user, obj=None):
         return True
     
+    def get_templated_queries(self, state):
+        links = super(CRUDResource, self).get_templated_queries(state)
+        if 'changelist' in state:
+            links += self.get_changelist_links(state)
+        return links
+    
     def get_embedded_links(self, state):
         create_link = self.get_create_link()
         return [create_link]
@@ -248,6 +254,9 @@ class CRUDResource(BaseResource):
         changelist.detect_sections()
         changelist.populate_state(state)
         return changelist
+    
+    def get_changelist_links(self, state):
+        return state['changelist'].get_links(state)
     
     def get_paginator_class(self):
         return self.paginator_class

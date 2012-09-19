@@ -17,8 +17,8 @@ class ChangeList(object):
         index = self.get_instances(state)
         state['paginator'] = self.get_paginator(index)
     
-    def make_link(self, lookup_params, **kwargs):
-        pass #TODO
+    def make_link(self, **kwargs):
+        return self.resource.get_resource_link(**kwargs)
 
     def register_section(self, name, filter_section, **kwargs):
         kwargs.update({'name':name,
@@ -41,6 +41,7 @@ class ChangeList(object):
         links = list()
         for section in self.sections.itervalues():
             links.extend(section.get_links(state, rel=section.name))
+        links += self.get_paginatation_links(state)
         return links
     
     def get_paginator_kwargs(self):
@@ -56,6 +57,19 @@ class ChangeList(object):
         if self.ordering is not None:
             return self.ordering
         return self.resurce.get_ordering()
+    
+    def get_pagination_links(self, state):
+        links = list()
+        changelist = state['changelist']
+        paginator, page_num = changelist.paginator, changelist.page_num
+        from django.contrib.admin.views.main import PAGE_VAR
+        classes = ["pagination"]
+        for page in range(paginator.num_pages):
+            if page == '.':
+                continue
+            url = state.get_query_string({PAGE_VAR: page})
+            links.append(self.make_link(url=url, prompt=u"%s" % page, classes=classes, rel="pagination"))
+        return links
 
 class FilterSection(object):
     def __init__(self, name, changelist, resource):
@@ -68,8 +82,8 @@ class FilterSection(object):
         kwargs['section'] = self
         self.filters.append(a_filter(**kwargs))
     
-    def make_link(self, lookup_params, **kwargs):
-        return self.changelist.make_link(lookup_params, **kwargs)
+    def make_link(self, **kwargs):
+        return self.changelist.make_link(**kwargs)
     
     def populate_state(self, state):
         assert 'filter_params' in state, 'Filters need to know what params they are operating off'
