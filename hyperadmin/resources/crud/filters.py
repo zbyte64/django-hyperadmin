@@ -1,5 +1,6 @@
 from django.core.exceptions import ImproperlyConfigured
 from django.utils.translation import ugettext_lazy as _
+from django.utils.encoding import force_unicode
 
 class BaseFilter(object):
     title = None  # Human-readable title to appear in the right sidebar.
@@ -40,6 +41,13 @@ class BaseFilter(object):
     
     def is_active(self, state):
         return False
+    
+    def values(self, state):
+        vals = list()
+        filter_params = state['filter_params']
+        for param in self.expected_parameters():
+            vals.append(filter_params.get(param, None))
+        return vals
 
 class BaseChoicesFilter(BaseFilter):
     def get_links(self, state, **link_kwargs):
@@ -50,7 +58,7 @@ class BaseChoicesFilter(BaseFilter):
             kwargs['classes'] = classes
             if choice.get('selected', False):
                 classes.append('selected')
-            kwargs['prompt'] = choice['display']
+            kwargs['prompt'] = force_unicode(choice['display'])
             kwargs['url'] = u'./' + choice['query_string']
             links.append(self.make_link(**kwargs))
         return links

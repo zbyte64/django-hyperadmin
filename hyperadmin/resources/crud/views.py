@@ -59,17 +59,27 @@ class CRUDCreateView(CRUDView):
     
     def post(self, request, *args, **kwargs):
         if not self.can_add():
-            return http.HttpResponseForbidden(_(u"You may add an object"))
+            return http.HttpResponseForbidden(_(u"You may not add an object"))
         form_kwargs = self.get_request_form_kwargs()
         form_link = self.get_create_link(**form_kwargs)
         response_link = form_link.submit(self.state)
         return self.resource.generate_response(self.get_response_media_type(), self.get_response_type(), response_link, self.state)
 
-class CRUDListView(CRUDCreateView):
+class CRUDListView(CRUDView):
     view_class = 'change_list'
     
     def get(self, request, *args, **kwargs):
+        if not self.can_add():
+            self.resource.generate_response(self.get_response_media_type(), self.get_response_type(), self.get_list_link(), self.state)
         return self.resource.generate_response(self.get_response_media_type(), self.get_response_type(), self.get_restful_create_link(), self.state)
+    
+    def put(self, request, *args, **kwargs):
+        if not self.can_add():
+            return http.HttpResponseForbidden(_(u"You may not add an object"))
+        form_kwargs = self.get_request_form_kwargs()
+        form_link = self.get_restful_create_link(**form_kwargs)
+        response_link = form_link.submit(self.state)
+        return self.resource.generate_response(self.get_response_media_type(), self.get_response_type(), response_link, self.state)
     
     def get_meta(self):
         resource_item = self.resource.get_list_resource_item(None)

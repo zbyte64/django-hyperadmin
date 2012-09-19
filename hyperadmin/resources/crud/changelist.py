@@ -70,7 +70,7 @@ class ChangeList(object):
             for page in range(paginator.num_pages):
                 if page == '.':
                     continue
-                url = state.get_query_string({PAGE_VAR: page})
+                url = state.get_query_string({PAGE_VAR: page+1})
                 links.append(self.make_link(url=url, prompt=u"%s" % page, classes=classes, rel="pagination"))
         return links
 

@@ -141,15 +141,16 @@ class RelatedFieldFilter(FieldFilter):
     
     def choices(self, state):
         from django.contrib.admin.views.main import EMPTY_CHANGELIST_VALUE
+        lookup_val, lookup_val_isnull = self.values(state)
         yield {
-            'selected': self.lookup_val is None and not self.lookup_val_isnull,
+            'selected': lookup_val is None and not lookup_val_isnull,
             'query_string': state.get_query_string({},
                 [self.lookup_kwarg, self.lookup_kwarg_isnull]),
             'display': _('All'),
         }
         for pk_val, val in self.lookup_choices:
             yield {
-                'selected': self.lookup_val == smart_unicode(pk_val),
+                'selected': lookup_val == smart_unicode(pk_val),
                 'query_string': state.get_query_string({
                     self.lookup_kwarg: pk_val,
                 }, [self.lookup_kwarg_isnull]),
@@ -159,7 +160,7 @@ class RelatedFieldFilter(FieldFilter):
                 and self.field.field.null or hasattr(self.field, 'rel')
                     and self.field.null):
             yield {
-                'selected': bool(self.lookup_val_isnull),
+                'selected': bool(lookup_val_isnull),
                 'query_string': state.get_query_string({
                     self.lookup_kwarg_isnull: 'True',
                 }, [self.lookup_kwarg]),
@@ -179,9 +180,6 @@ class BooleanFieldFilter(FieldFilter):
 
     def expected_parameters(self):
         return [self.lookup_kwarg, self.lookup_kwarg2]
-
-    def values(self, state):
-        return state['filter_params'].get(self.lookup_kwarg, None), state['filter_params'].get(self.lookup_kwarg2, None)
 
     def choices(self, state):
         lookup_val, lookup_val2 = self.values(state)
@@ -218,16 +216,17 @@ class ChoicesFieldFilter(FieldFilter):
     def expected_parameters(self):
         return [self.lookup_kwarg]
 
-    def choices(self, cl):
+    def choices(self, state):
+        lookup_val = self.values(state)[0]
         yield {
-            'selected': self.lookup_val is None,
-            'query_string': cl.get_query_string({}, [self.lookup_kwarg]),
+            'selected': lookup_val is None,
+            'query_string': state.get_query_string({}, [self.lookup_kwarg]),
             'display': _('All')
         }
         for lookup, title in self.field.flatchoices:
             yield {
-                'selected': smart_unicode(lookup) == self.lookup_val,
-                'query_string': cl.get_query_string({
+                'selected': smart_unicode(lookup) == lookup_val,
+                'query_string': state.get_query_string({
                                     self.lookup_kwarg: lookup}),
                 'display': title,
             }
@@ -286,11 +285,11 @@ class DateFieldFilter(FieldFilter):
     def expected_parameters(self):
         return [self.lookup_kwarg_since, self.lookup_kwarg_until]
 
-    def choices(self, cl):
+    def choices(self, state):
         for title, param_dict in self.links:
             yield {
                 'selected': self.date_params == param_dict,
-                'query_string': cl.get_query_string(
+                'query_string': state.get_query_string(
                                     param_dict, [self.field_generic]),
                 'display': title,
             }
@@ -328,12 +327,13 @@ class AllValuesFieldFilter(FieldFilter):
     def expected_parameters(self):
         return [self.lookup_kwarg, self.lookup_kwarg_isnull]
 
-    def choices(self, cl):
+    def choices(self, state):
+        lookup_val, lookup_val_isnull = self.valeus(state)
         from django.contrib.admin.views.main import EMPTY_CHANGELIST_VALUE
         yield {
-            'selected': (self.lookup_val is None
-                and self.lookup_val_isnull is None),
-            'query_string': cl.get_query_string({},
+            'selected': (lookup_val is None
+                and lookup_val_isnull is None),
+            'query_string': state.get_query_string({},
                 [self.lookup_kwarg, self.lookup_kwarg_isnull]),
             'display': _('All'),
         }
@@ -344,16 +344,16 @@ class AllValuesFieldFilter(FieldFilter):
                 continue
             val = smart_unicode(val)
             yield {
-                'selected': self.lookup_val == val,
-                'query_string': cl.get_query_string({
+                'selected': lookup_val == val,
+                'query_string': state.get_query_string({
                     self.lookup_kwarg: val,
                 }, [self.lookup_kwarg_isnull]),
                 'display': val,
             }
         if include_none:
             yield {
-                'selected': bool(self.lookup_val_isnull),
-                'query_string': cl.get_query_string({
+                'selected': bool(lookup_val_isnull),
+                'query_string': state.get_query_string({
                     self.lookup_kwarg_isnull: 'True',
                 }, [self.lookup_kwarg]),
                 'display': EMPTY_CHANGELIST_VALUE,
