@@ -71,9 +71,6 @@ class CRUDListView(CRUDCreateView):
     def get(self, request, *args, **kwargs):
         return self.resource.generate_response(self.get_response_media_type(), self.get_response_type(), self.get_restful_create_link(), self.state)
     
-    def get_paginator(self):
-        raise NotImplementedError
-    
     def get_meta(self):
         resource_item = self.resource.get_list_resource_item(None)
         form = resource_item.get_form()

@@ -122,6 +122,7 @@ class CRUDResource(BaseResource):
     
     def get_restful_create_link(self, **kwargs):
         kwargs['url'] = self.get_absolute_url()
+        kwargs['method'] = 'PUT'
         return self.get_create_link(**kwargs)
     
     def get_update_link(self, item, form_kwargs=None, **kwargs):
@@ -222,8 +223,8 @@ class CRUDResource(BaseResource):
         '''
         Returns a set of native objects for a given state
         '''
-        if 'paginator' in state:
-            return state['paginator'].object_list
+        if 'page' in state:
+            return state['page'].object_list
         return self.resource_adaptor.objects.all()
     
     def get_resource_items(self, state):

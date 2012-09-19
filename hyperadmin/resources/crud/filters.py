@@ -43,7 +43,17 @@ class BaseFilter(object):
 
 class BaseChoicesFilter(BaseFilter):
     def get_links(self, state, **link_kwargs):
-        pass #TODO take choices and return links
+        links = list()
+        for choice in self.choices(state):
+            kwargs = dict(link_kwargs)
+            classes = kwargs.get('classes', [])
+            kwargs['classes'] = classes
+            if choice.get('selected', False):
+                classes.append('selected')
+            kwargs['prompt'] = choice['display']
+            kwargs['url'] = u'./' + choice['query_string']
+            links.append(self.make_link(**kwargs))
+        return links
     
     def choices(self, state):
         return []

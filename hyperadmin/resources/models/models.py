@@ -82,8 +82,8 @@ class ModelResource(CRUDResource):
         return kwargs
     
     def get_instances(self, state):
-        if 'paginator' in state:
-            return state['paginator'].object_list
+        if 'page' in state:
+            return state['page'].object_list
         return self.get_queryset(state['auth'])
     
     def get_changelist_kwargs(self, state):

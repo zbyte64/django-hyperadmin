@@ -70,11 +70,11 @@ class FieldFilter(BaseChoicesFilter):
         return bool(self.used_parameters)
     
     def populate_state(self, state):
-        params = state['filter_params']
+        params = state['filter_params'].copy()
         self.used_parameters = dict()
         for p in self.expected_parameters():
             if p in params:
-                value = params.pop(p)
+                value = params[p]
                 self.used_parameters[p] = prepare_lookup_value(p, value)
 
     def filter_index(self, state, active_index):
@@ -173,22 +173,26 @@ class BooleanFieldFilter(FieldFilter):
     def expected_parameters(self):
         return [self.lookup_kwarg, self.lookup_kwarg2]
 
-    def choices(self, cl):
+    def values(self, state):
+        return state['filter_params'].get(self.lookup_kwarg, None), state['filter_params'].get(self.lookup_kwarg2, None)
+
+    def choices(self, state):
+        lookup_val, lookup_val2 = self.values(state)
         for lookup, title in (
                 (None, _('All')),
                 ('1', _('Yes')),
                 ('0', _('No'))):
             yield {
-                'selected': self.lookup_val == lookup and not self.lookup_val2,
-                'query_string': cl.get_query_string({
+                'selected': lookup_val == lookup and not lookup_val2,
+                'query_string': state.get_query_string({
                         self.lookup_kwarg: lookup,
                     }, [self.lookup_kwarg2]),
                 'display': title,
             }
         if isinstance(self.field, models.NullBooleanField):
             yield {
-                'selected': self.lookup_val2 == 'True',
-                'query_string': cl.get_query_string({
+                'selected': lookup_val2 == 'True',
+                'query_string': state.get_query_string({
                         self.lookup_kwarg2: 'True',
                     }, [self.lookup_kwarg]),
                 'display': _('Unknown'),

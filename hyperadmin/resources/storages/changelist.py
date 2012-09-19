@@ -35,6 +35,7 @@ class StorageChangeList(ChangeList):
         index = self.get_instances(state)
         paginator = self.get_paginator(index, storage=self.resource.storage)
         state['paginator'] = paginator
+        state['page'] = paginator
         state['links'] = paginator.links
         
 

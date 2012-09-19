@@ -81,20 +81,4 @@ class ModelChangeList(ChangeList):
                     links.append(self.get_resource_link(url=header["url_remove"], prompt=prompt, classes=classes+["remove"], rel="sortby"))
                     links.append(self.get_resource_link(url=header["url_toggle"], prompt=prompt, classes=classes+["toggle"], rel="sortby"))
         return links
-    
-    def get_changelist_filter_links(self, state):
-        changelist = state['changelist']
-        links = list()
-        for spec in changelist.filter_specs:
-            choices = spec.choices(changelist)
-            for choice in choices:
-                classes = ["filter"]
-                if choice['selected']:
-                    classes.append("selected")
-                title = spec.title
-                if callable(title):
-                    title = title()
-                prompt = u"%s: %s" % (title, choice['display'])
-                links.append(self.get_resource_link(url=choice['query_string'], prompt=prompt, classes=classes, rel="filter"))
-        return links
-    
+ 
