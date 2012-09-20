@@ -244,7 +244,7 @@ class InlineModelResource(ModelResource):
         pk = getattr(instance, self.fk.name).pk
         return self.reverse('%sdelete' % self.get_base_url_name(), pk=pk, inline_pk=instance.pk)
     
-    def get_instance_url(self, item):
+    def get_item_url(self, item):
         instance = item.instance
         pk = getattr(instance, self.fk.name).pk
         return self.reverse('%sdetail' % self.get_base_url_name(), pk=pk, inline_pk=instance.pk)

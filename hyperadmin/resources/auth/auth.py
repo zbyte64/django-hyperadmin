@@ -51,9 +51,6 @@ class AuthResource(BaseResource):
     def get_form_class(self):
         return self.form_class
     
-    def get_instance_url(self, instance):
-        return self.get_absolute_url()
-    
     def get_absolute_url(self):
         return self.reverse('authentication')
     
