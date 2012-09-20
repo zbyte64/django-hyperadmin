@@ -28,3 +28,9 @@ def raw(parser, token):
         text.append(u'%s%s%s' % (start, token.contents, end))
     parser.unclosed_block_tag(parse_until)
 raw = register.tag(raw)
+
+@register.inclusion_tag('hyperadmin/html5/resource.html')
+def include_namespace(namespace):
+    return {'state':namespace.state,
+            'link':namespace.link,
+            'namespaces':namespace.get_namespace(),}

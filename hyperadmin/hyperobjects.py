@@ -148,6 +148,9 @@ class Namespace(object):
         self.name = name
         self.link = link
         self.state = state
+    
+    def get_namespaces(self):
+        return dict()
 
 class ResourceItem(object):
     '''

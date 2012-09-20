@@ -3,36 +3,73 @@
 <div class="hypermediaitem item">
 
 <div class="self_link">
-    <h3><a href="{{item.href}}" rel="item">{% if item.prompt %}{{item.prompt}}{% else %}{{ item }}{% endif %}</a></h3>
+    <h3><a href="{{item.get_absolute_url}}" rel="item">{{item.get_prompt}}</a></h3>
 </div>
 
 {% block data %}
-{% if item.data %}
+{% if item.form %}
 <h4>Data</h4>
 <div class="data">
-{% for row in item.data %}
-    <em>{{row.prompt}}</em>: <span class="{{row.name}}">{{row.value}}</span> <br/>
+{% for row in item.form %}
+    <em>{{row.label}}</em>: <span class="{{row.name}}">{{row.value}}</span> <br/>
 {% endfor %}
 </div>
 {% endif %}
 {% endblock %}
 
-{% block outbound_links %}
-{% if item.outbound_links %}
+{% block item_outbound_links %}
+{% with item.get_outbound_links as outbound_links %}
+{% if outbound_links %}
 <h4>Outbound Links</h4>
 <div class="outbound_links">
-{% include "hyperadmin/html5/links.html" with links=item.outbound_links %}
+{% include "hyperadmin/html5/links.html" with links=outbound_links %}
 </div>
 {% endif %}
+{% endwith %}
 {% endblock %}
 
-{% block embedded_links %}
-{% if item.embedded_links %}
+{% block item_embedded_links %}
+{% with item.get_embedded_links as embedded_links %}
+{% if embedded_links %}
 <h4>Embedded Links</h4>
 <div class="embedded_links">
-{% include "hyperadmin/html5/links.html" with links=item.embedded_links %}
+{% include "hyperadmin/html5/links.html" with links=embedded_links %}
 </div>
 {% endif %}
+{% endwith %}
+{% endblock %}
+
+{% block item_templated_queries %}
+{% with item.get_templated_queries as templated_queries %}
+{% if templated_queries %}
+<h4>Templated Queries</h4>
+<div id=templated_queries">
+{% include "hyperadmin/html5/templated_queries.html" with links=templated_queries %}
+</div>
+{% endif %}
+{% endwith %}
+{% endblock %}
+
+{% block item_non_idempotent_updates %}
+{% with item.get_ln_links as non_idempotent_updates %}
+{% if non_idempotent_updates %}
+<h4>Non-Idempotent Updates</h4>
+<div id="non_idempotent_updates">
+{% include "hyperadmin/html5/links.html" with links=non_idempotent_updates %}
+</div>
+{% endif %}
+{% endwith %}
+{% endblock %}
+
+{% block item_idempotent_updates %}
+{% with item.get_idempotent_links as idempotent_updates %}
+{% if idempotent_updates %}
+<h4>Idempotent Updates</h4>
+<div id="idempotent_updates">
+{% include "hyperadmin/html5/links.html" with links=idempotent_updates %}
+</div>
+{% endif %}
+{% endwith %}
 {% endblock %}
 
 </div>

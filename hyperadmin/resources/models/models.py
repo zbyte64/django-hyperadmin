@@ -154,7 +154,8 @@ class ModelResource(CRUDResource):
         for inline in self.inline_instances:
             #TODO why doesn't this resolve?
             #url = self.reverse('%s_%s_%s_list' % (self.app_name, self.resource_name, inline.rel_name), pk=instance.pk)
-            url = self.get_item_url(item) + inline.rel_name + '/'
+            inline = inline.fork_state(parent=item.instance)
+            url = inline.get_absolute_url()
             link = Link(url=url,
                         resource=inline,
                         prompt='inlines: %s' % inline.get_prompt(),
@@ -253,22 +254,11 @@ class InlineModelResource(ModelResource):
         pk = self.state['parent'].pk
         return self.reverse('%slist' % self.get_base_url_name(), pk=pk)
     
-    def get_breadcrumb(self):
-        return None
-    
-    def get_ln_links(self):
-        links = super(InlineModelResource, self).get_ln_links()
-        #CONSIDER is this a feature or a way to get around a media type limitation?
-        if self.state.get('view_class', None) == 'change_list':
-            for item in self.state.get_resource_items():
-                links.extend(item.get_ln_links())
-        return links
-    
-    def get_idempotent_links(self):
-        links = super(InlineModelResource, self).get_idempotent_links()
-        #CONSIDER is this a feature or a way to get around a media type limitation?
-        if self.state.get('view_class', None) == 'change_list':
-            for item in self.state.get_resource_items():
-                links.extend(item.get_idempotent_links())
-        return links
+    def get_breadcrumbs(self):
+        breadcrumbs = self.parent.get_breadcrumbs()
+        parent_item = self.parent.get_resource_item(self.state['parent'])
+        breadcrumbs.append(self.parent.get_item_breadcrumb(parent_item))
+        if self.state.item:
+            breadcrumbs.append(self.get_item_breadcrumb(self.state.item))
+        return breadcrumbs
 

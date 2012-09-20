@@ -1,74 +1,95 @@
-{% extends "hyperadmin/html5/base.html" %}
+{% extends "hyperadmin/html5/base.html" %}{% load hyperadmin_utils %}
 
 {% block content %}
 <div class="hypermediaresource">
 {% block embedded_links %}
+{% with state.get_embedded_links as embedded_links %}
 {% if embedded_links %}
 <h2>Embedded Links</h2>
 <div id="embedded_links">
 {% include "hyperadmin/html5/links.html" with links=embedded_links %}
 </div>
 {% endif %}
+{% endwith %}
 {% endblock %}
 
 {% block outbound_links %}
+{% with state.get_outbound_links as outbound_links %}
 {% if outbound_links %}
 <h2>Outbound Links</h2>
 <div id="outbound_links">
 {% include "hyperadmin/html5/links.html" with links=outbound_links %}
 </div>
 {% endif %}
+{% endwith %}
 {% endblock %}
 
 {% block templated_queries %}
+{% with state.get_templated_queries as templated_queries %}
 {% if templated_queries %}
 <h2>Templated Queries</h2>
 <div id=templated_queries">
 {% include "hyperadmin/html5/templated_queries.html" with links=templated_queries %}
 </div>
 {% endif %}
+{% endwith %}
 {% endblock %}
 
 {% block non_idempotent_updates %}
+{% with state.get_ln_links as non_idempotent_updates %}
 {% if non_idempotent_updates %}
 <h2>Non-Idempotent Updates</h2>
 <div id="non_idempotent_updates">
 {% include "hyperadmin/html5/links.html" with links=non_idempotent_updates %}
 </div>
 {% endif %}
+{% endwith %}
 {% endblock %}
 
 {% block idempotent_updates %}
+{% with state.get_idempotent_links as idempotent_updates %}
 {% if idempotent_updates %}
 <h2>Idempotent Updates</h2>
 <div id="idempotent_updates">
 {% include "hyperadmin/html5/links.html" with links=idempotent_updates %}
 </div>
 {% endif %}
+{% endwith %}
+{% endblock %}
+
+
+{% block link %}
+{% if link.form %}
+<h2>Main Link</h2>
+<div id="main_link">
+{% include "hyperadmin/html5/link.html" %}
+</div>
+{% endif %}
 {% endblock %}
 
 {% block errors %}
-{% if errors %}
+{% if link.errors %}
 <h2>Errors</2>
 <div id="errors" class="errors">
-{{errors}}
+{{link.errors}}
 </div>
 {% endif %}
 {% endblock errors %}
+
 {% block items %}
+{% with state.get_resource_items as items %}
 <h2>Items</h2>
 <div id="items">
-{% include "hyperadmin/html5/items.html" %}
+{% include "hyperadmin/html5/items.html" with items=items %}
 </div>
+{% endwith %}
 {% endblock items %}
-{% block instance %}
-{% if instance %}
-<h2>Instance</h2>
-<div id="instance">
-{{instance}}
-</div>
-{% endif %}
-{% endblock instance %}
-</div>
-{% endblock content %}
 
+{% block namespaces %}
+{% for namespace in namespaces.itervalues %}
+    {% include_namespace namespace %}
+    {#% include "hyperadmin/html5/resource.html" with state=namespace.state link=namespace.link namespaces=namespace.get_namespaces %#}
+{% endfor %}
+{% endblock namespaces %}
+
+{% endblock %}

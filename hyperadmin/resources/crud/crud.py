@@ -213,6 +213,15 @@ class CRUDResource(BaseResource):
         delete_link = self.get_restful_delete_link(item=item)
         return [delete_link]
     
+    def get_item_breadcrumb(self, item):
+        return self.get_update_link(item, rel='breadcrumb')
+    
+    def get_breadcrumbs(self):
+        breadcrumbs = super(CRUDResource, self).get_breadcrumbs()
+        if self.state.item:
+            breadcrumbs.append(self.get_item_breadcrumb(self.state.item))
+        return breadcrumbs
+    
     def get_list_resource_item_class(self):
         return self.list_resource_item_class
     

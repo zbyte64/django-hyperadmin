@@ -8,52 +8,14 @@ class Html5MediaType(MediaType):
     template_dir_name = 'hyperadmin'
     response_class = TemplateResponse
     
-    def convert_field(self, field, name=None):
-        entry = {"name": unicode(name),
-                 "value": field.initial,
-                 "prompt": unicode(field.label)}
-        return entry
-    
-    def links_for_item(self, item):
-        result = dict()
-        result['embedded_links'] = item.get_embedded_links()
-        result['outbound_links'] = item.get_outbound_links()
-        result['href'] = item.get_absolute_url()
-        return result
-    
-    def convert_item(self, item):
-        result = self.links_for_item(item)
-        result['data'] = self.convert_form(item.form)
-        result['prompt'] = item.get_prompt()
-        return result
-    
-    def convert_form(self, form):
-        data = list()
-        for name, field in form.fields.iteritems():
-            entry = self.convert_field(field, name)
-            if form.instance:
-                entry['value'] = form[name].value()
-            data.append(entry)
-        return data
-    
-    def get_context_data(self, form_link, state):
-        context = {'form_link':form_link,
-                   'meta':state.meta,}
+    def get_context_data(self, link, state):
+        context = {'link':link,
+                   'meta':state.meta,
+                   'state':state,}
         
         resource_item = state.item
         
-        items = [self.convert_item(item) for item in state.get_resource_items()]
-        context['items'] = items
-        
-        context['embedded_links'] = state.get_embedded_links()
-        context['outbound_links'] = state.get_outbound_links()
-        context['templated_queries'] = state.get_templated_queries()
-        if resource_item:
-            context['non_idempotent_updates'] = resource_item.get_ln_links()
-            context['idempotent_updates'] = resource_item.get_idempotent_links()
-        else:
-            context['non_idempotent_updates'] = state.get_ln_links()
-            context['idempotent_updates'] = state.get_idempotent_links()
+        context['namespaces'] = state.get_namespaces()
         
         if 'display_fields' in state.meta:
             context['display_fields'] = state.meta['display_fields']
@@ -69,9 +31,9 @@ class Html5MediaType(MediaType):
         }
         
         names = [
-            '{base}/{app_name}/{resource_name}/{view_class}.html'.format(**params),
-            '{base}/{app_name}/{view_class}.html'.format(**params),
-            '{base}/{view_class}.html'.format(**params),
+            #'{base}/{app_name}/{resource_name}/{view_class}.html'.format(**params),
+            #'{base}/{app_name}/{view_class}.html'.format(**params),
+            #'{base}/{view_class}.html'.format(**params),
             self.template_name,
         ]
         
@@ -80,7 +42,7 @@ class Html5MediaType(MediaType):
     def serialize(self, content_type, link, state):
         if self.detect_redirect(link):
             return self.handle_redirect(link)
-        context = self.get_context_data(form_link=link, state=state)
+        context = self.get_context_data(link=link, state=state)
         response = self.response_class(request=self.request, template=self.get_template_names(), context=context)
         response['Content-Type'] = 'text/html'
         return response
