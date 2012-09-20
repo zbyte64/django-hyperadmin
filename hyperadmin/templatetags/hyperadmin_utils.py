@@ -33,4 +33,4 @@ raw = register.tag(raw)
 def include_namespace(namespace):
     return {'state':namespace.state,
             'link':namespace.link,
-            'namespaces':namespace.get_namespace(),}
+            'namespaces':namespace.get_namespaces(),}

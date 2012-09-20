@@ -159,11 +159,13 @@ class BaseResource(object):
     def get_item_prompt(self, item):
         return unicode(item.instance)
     
-    def get_item_link(self, item):
-        item_link = Link(url=item.get_absolute_url(),
-                         resource=self,
-                         rel='item',
-                         prompt=item.get_prompt(),)
+    def get_item_link(self, item, **kwargs):
+        link_kwargs = {'url':item.get_absolute_url(),
+                       'resource':self,
+                       'rel':'item',
+                       'prompt':item.get_prompt(),}
+        link_kwargs.update(kwargs)
+        item_link = Link(**link_kwargs)
         return item_link
     
     def get_namespaces(self):

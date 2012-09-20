@@ -136,6 +136,9 @@ class ModelResource(CRUDResource):
             return self.has_change_permission(user, obj)
         return user.has_perm(
             self.opts.app_label + '.' + self.opts.get_delete_permission())
+        
+    def get_exclude(self):
+        return self.exclude or []
     
     def get_form_class(self):
         if self.form_class:
@@ -143,7 +146,7 @@ class ModelResource(CRUDResource):
         class AdminForm(forms.ModelForm):
             class Meta:
                 model = self.model
-                exclude = self.exclude
+                exclude = self.get_exclude()
                 #TODO formfield overides
                 #TODO fields
         return AdminForm
@@ -152,9 +155,7 @@ class ModelResource(CRUDResource):
         links = super(ModelResource, self).get_item_embedded_links(item=item)
         inline_links = list()
         for inline in self.inline_instances:
-            #TODO why doesn't this resolve?
-            #url = self.reverse('%s_%s_%s_list' % (self.app_name, self.resource_name, inline.rel_name), pk=instance.pk)
-            inline = inline.fork_state(parent=item.instance)
+            inline = inline.fork_state(parent=item.instance, auth=self.state['auth'])
             url = inline.get_absolute_url()
             link = Link(url=url,
                         resource=inline,
@@ -166,13 +167,13 @@ class ModelResource(CRUDResource):
     def get_namespaces(self):
         namespaces = super(ModelResource, self).get_namespaces()
         if self.state.item is not None and self.state.get('view_class', None) == 'change_form':
-            from hyperadmin.hyperobjects import State, Namespace
+            from hyperadmin.hyperobjects import Namespace
             
             for inline in self.inline_instances:
-                state = State(inline, {})
-                link = inline.get_resource_link() #parent=state.item.instance
+                inline = inline.fork_state(parent=self.state.item.instance, auth=self.state['auth'])
+                link = inline.get_resource_link()
                 name = 'inline-%s' % inline.rel_name
-                namespace = Namespace(name=name, link=link, state=state)
+                namespace = Namespace(name=name, link=link, state=inline.state)
                 namespaces[name] = namespace
         return namespaces
 
@@ -258,7 +259,28 @@ class InlineModelResource(ModelResource):
         breadcrumbs = self.parent.get_breadcrumbs()
         parent_item = self.parent.get_resource_item(self.state['parent'])
         breadcrumbs.append(self.parent.get_item_breadcrumb(parent_item))
+        breadcrumbs.append(self.get_breadcrumb())
         if self.state.item:
             breadcrumbs.append(self.get_item_breadcrumb(self.state.item))
         return breadcrumbs
+    
+    def get_form_class(self):
+        if self.form_class:
+            return self.form_class
+        class AdminForm(forms.ModelForm):
+            state = self.state
+            
+            def save(self, commit=True):
+                instance = super(AdminForm, self).save(commit=False)
+                setattr(instance, self.state['resource'].fk.name, self.state['parent'])
+                if commit:
+                    instance.save()
+                return instance
+            
+            class Meta:
+                model = self.model
+                exclude = self.get_exclude() + [self.fk.name]
+                #TODO formfield overides
+                #TODO fields
+        return AdminForm
 

@@ -58,7 +58,7 @@ class BaseChoicesFilter(BaseFilter):
             kwargs['classes'] = classes
             if choice.get('selected', False):
                 classes.append('selected')
-            kwargs['prompt'] = force_unicode(choice['display'])
+            kwargs['prompt'] = '%s: %s' % (self.title, force_unicode(choice['display']))
             kwargs['url'] = u'./' + choice['query_string']
             links.append(self.make_link(**kwargs))
         return links

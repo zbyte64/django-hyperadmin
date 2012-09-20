@@ -88,7 +88,6 @@
 {% block namespaces %}
 {% for namespace in namespaces.itervalues %}
     {% include_namespace namespace %}
-    {#% include "hyperadmin/html5/resource.html" with state=namespace.state link=namespace.link namespaces=namespace.get_namespaces %#}
 {% endfor %}
 {% endblock namespaces %}
 

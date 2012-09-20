@@ -1,4 +1,5 @@
-<em>Count</em>: <span class="count">{{items|length}}</span><br/>
+{% if meta.object_count %}<em>Count</em>: <span class="count">{{meta.object_count}}</span><br/>{% endif %}
+{% if meta.number_of_pages %}<em>Pages</em>: <span class="page_count">{{meta.number_of_pages}}</span><br/>{% endif %}
 {% for item in items %}
 <div class="hypermediaitem item">
 

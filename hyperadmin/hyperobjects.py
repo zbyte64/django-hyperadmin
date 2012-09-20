@@ -138,6 +138,8 @@ class State(dict):
                     del p[k]
             else:
                 p[k] = v
+        if hasattr(p, 'urlencode'):
+            return '?%s' % p.urlencode()
         return '?%s' % urlencode(p)
     
     def get_namespaces(self):
