@@ -161,6 +161,19 @@ class ModelResource(CRUDResource):
                         rel='inline-%s' % inline.rel_name,)
             inline_links.append(link)
         return links + inline_links
+    
+    def get_namespaces(self, state):
+        namespaces = super(ModelResource, self).get_namespaces(state)
+        if state.item is not None and state.get('view_class', None) == 'change_form':
+            from hyperadmin.hyperobjects import State, Namespace
+            
+            for inline in self.inline_instances:
+                state = State(inline, {})
+                link = inline.get_resource_link() #parent=state.item.instance
+                name = 'inline-%s' % inline.rel_name
+                namespace = Namespace(name=name, link=link, state=state)
+                namespaces[name] = namespace
+        return namespaces
 
 class InlineModelResource(ModelResource):
     list_view = views.InlineModelListView
@@ -224,9 +237,9 @@ class InlineModelResource(ModelResource):
         )
         return urlpatterns
     
-    def get_add_url(self):
-        #TODO i need parent resource in order to work
-        return './add/'
+    def get_add_url(self, parent):
+        pk = parent.pk
+        return self.reverse('%sadd' % self.get_base_url_name(), pk=pk)
     
     def get_delete_url(self, item):
         instance = item.instance
@@ -238,8 +251,72 @@ class InlineModelResource(ModelResource):
         pk = getattr(instance, self.fk.name).pk
         return self.reverse('%sdetail' % self.get_base_url_name(), pk=pk, inline_pk=instance.pk)
     
-    def get_absolute_url(self, instance=None):
-        if not instance:
-            return self.parent.get_absolute_url()
+    def get_resource_link(self, parent, **kwargs):
+        link_kwargs = {'url':self.get_absolute_url(parent),
+                       'resource':self,
+                       'rel':'self',
+                       'prompt':self.get_prompt(),}
+        link_kwargs.update(kwargs)
+        resource_link = Link(**link_kwargs)
+        return resource_link
+    
+    def get_create_link(self, parent, form_kwargs=None, **kwargs):
+        if form_kwargs is None:
+            form_kwargs = {}
+        form_kwargs = self.get_form_kwargs(**form_kwargs)
+        
+        link_kwargs = {'url':self.get_add_url(parent),
+                       'resource':self,
+                       'on_submit':self.handle_create_submission,
+                       'method':'POST',
+                       'form_kwargs':form_kwargs,
+                       'form_class': self.get_form_class(),
+                       'prompt':'create',
+                       'rel':'create',}
+        link_kwargs.update(kwargs)
+        create_link = Link(**link_kwargs)
+        return create_link
+    
+    def get_restful_create_link(self, parent, **kwargs):
+        kwargs['url'] = self.get_absolute_url(parent)
+        kwargs['method'] = 'PUT'
+        return self.get_create_link(parent, **kwargs)
+    
+    def get_update_link(self, parent, item, **kwargs):
+        return super(InlineModelResource, self).get_update_link(item, **kwargs)
+    
+    def get_delete_link(self, parent, item, **kwargs):
+        return super(InlineModelResource, self).get_delete_link(item, **kwargs)
+    
+    def get_restful_delete_link(self, parent, item, **kwargs):
+        kwargs['url'] = item.get_absolute_url(parent)
+        kwargs['method'] = 'DELETE'
+        return self.get_delete_link(parent, item, **kwargs)
+    
+    def get_absolute_url(self, parent):
+        pk = parent.pk
+        return self.reverse('%slist' % self.get_base_url_name(), pk=pk)
+    
+    def get_breadcrumb(self):
         return None
+    
+    def get_embedded_links(self, state):
+        create_link = self.get_create_link(state['parent'])
+        return [create_link]
+    
+    def get_ln_links(self, state):
+        links = [self.get_restful_create_link(state['parent'])]
+        #CONSIDER is this a feature or a way to get around a media type limitation?
+        if state.get('view_class', None) == 'change_list':
+            for item in state.get_resource_items():
+                links.extend(item.get_ln_links())
+        return links
+    
+    def get_idempotent_links(self, state):
+        links = super(InlineModelResource, self).get_idempotent_links(state)
+        #CONSIDER is this a feature or a way to get around a media type limitation?
+        if state.get('view_class', None) == 'change_list':
+            for item in state.get_resource_items():
+                links.extend(item.get_idempotent_links())
+        return links
 

@@ -139,6 +139,15 @@ class State(dict):
             else:
                 p[k] = v
         return '?%s' % urlencode(p)
+    
+    def get_namespaces(self):
+        return self.resource.get_namespaces(state=self)
+
+class Namespace(object):
+    def __init__(self, name, link, state):
+        self.name = name
+        self.link = link
+        self.state = state
 
 class ResourceItem(object):
     '''

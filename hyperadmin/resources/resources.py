@@ -154,4 +154,7 @@ class BaseResource(object):
                          rel='item',
                          prompt=item.get_prompt(),)
         return item_link
+    
+    def get_namespaces(self, state):
+        return dict()
 

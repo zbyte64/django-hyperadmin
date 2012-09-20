@@ -15,6 +15,9 @@ class CRUDResourceViewMixin(ResourceViewMixin):
     def get_form_kwargs(self):
         return {}
     
+    def get_link_kwargs(self):
+        return {}
+    
     def can_add(self):
         return self.resource.has_add_permission(self.request.user)
     
@@ -25,19 +28,26 @@ class CRUDResourceViewMixin(ResourceViewMixin):
         return self.resource.has_delete_permission(self.request.user, instance)
     
     def get_create_link(self, **form_kwargs):
-        form_class = self.get_form_class()
         form_kwargs.update(self.get_form_kwargs())
-        return self.resource.get_create_link(form_class=form_class, form_kwargs=form_kwargs)
+        link_kwargs = self.get_link_kwargs()
+        link_kwargs.update({'form_class': self.get_form_class(),
+                            'form_kwargs': form_kwargs,})
+        return self.resource.get_create_link(**link_kwargs)
     
     def get_restful_create_link(self, **form_kwargs):
-        form_class = self.get_form_class()
         form_kwargs.update(self.get_form_kwargs())
-        return self.resource.get_restful_create_link(form_class=form_class, form_kwargs=form_kwargs)
+        link_kwargs = self.get_link_kwargs()
+        link_kwargs.update({'form_class': self.get_form_class(),
+                            'form_kwargs': form_kwargs,})
+        return self.resource.get_restful_create_link(**link_kwargs)
     
     def get_update_link(self, item, **form_kwargs):
-        form_class = self.get_form_class()
         form_kwargs.update(self.get_form_kwargs())
-        return self.resource.get_update_link(item=item, form_class=form_class, form_kwargs=form_kwargs)
+        link_kwargs = self.get_link_kwargs()
+        link_kwargs.update({'form_class': self.get_form_class(),
+                            'form_kwargs': form_kwargs,
+                            'item':item})
+        return self.resource.get_update_link(**link_kwargs)
     
     def get_delete_link(self, item, **form_kwargs):
         return self.resource.get_delete_link(item=item, form_kwargs=form_kwargs)
@@ -46,7 +56,8 @@ class CRUDResourceViewMixin(ResourceViewMixin):
         return self.resource.get_restful_delete_link(item=item, form_kwargs=form_kwargs)
     
     def get_list_link(self):
-        return self.resource.get_resource_link()
+        link_kwargs = self.get_link_kwargs()
+        return self.resource.get_resource_link(**link_kwargs)
 
 class CRUDView(CRUDResourceViewMixin, View):
     pass
