@@ -44,7 +44,7 @@ class BaseFilter(object):
     
     def values(self, state):
         vals = list()
-        filter_params = state['filter_params']
+        filter_params = state.params
         for param in self.expected_parameters():
             vals.append(filter_params.get(param, None))
         return vals

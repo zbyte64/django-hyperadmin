@@ -27,7 +27,7 @@ class SearchFilter(BaseFilter):
         self.search_fields = search_fields
     
     def value(self, state):
-        return state['filter_params'].get(SEARCH_VAR, '')
+        return state.params.get(SEARCH_VAR, '')
     
     def is_active(self, state):
         return bool(self.value(state))
@@ -77,7 +77,7 @@ class FieldFilter(BaseChoicesFilter):
         return bool(self.used_parameters)
     
     def populate_state(self, state):
-        params = state['filter_params'].copy()
+        params = state.params.copy()
         self.used_parameters = dict()
         for p in self.expected_parameters():
             if p in params:

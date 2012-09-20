@@ -68,14 +68,14 @@ class StorageResource(CRUDResource):
         except NotImplementedError:
             return [], [] #dirs, files
     
-    def get_active_index(self, state):
-        path = state.get('filter_params', {}).get('path', '')
+    def get_active_index(self):
+        path = self.state.params.get('path', '')
         return self.get_listing(path)
     
-    def get_templated_queries(self, state):
-        links = super(StorageResource, self).get_templated_queries(state)
-        if 'links' in state:
-            links += state['links']
+    def get_templated_queries(self):
+        links = super(StorageResource, self).get_templated_queries()
+        if 'links' in self.state:
+            links += self.state['links']
         return links
     
     def get_form_kwargs(self, item=None, **kwargs):

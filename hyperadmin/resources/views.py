@@ -67,7 +67,7 @@ class ResourceViewMixin(ConditionalAccessMixin):
         return {'auth':self.request.user,
                 'view_class':self.view_class,
                 'item':self.get_item(),
-                'filter_params':self.request.GET.copy(),}
+                'params':self.request.GET.copy(),}
     
     def dispatch(self, request, *args, **kwargs):
         self.request = request

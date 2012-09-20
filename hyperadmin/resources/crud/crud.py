@@ -257,7 +257,7 @@ class CRUDResource(BaseResource):
         return changelist
     
     def get_changelist_links(self):
-        return self.state['changelist'].get_links()
+        return self.state['changelist'].get_links(self.state)
     
     def get_paginator_class(self):
         return self.paginator_class

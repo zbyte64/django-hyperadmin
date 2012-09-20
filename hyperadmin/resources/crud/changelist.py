@@ -18,7 +18,7 @@ class ChangeList(object):
             section.populate_state(state)
         index = self.get_instances(state)
         state['paginator'] = self.get_paginator(index)
-        page_num = int(state['filter_params'].get(PAGE_VAR, 1))
+        page_num = int(state.params.get(PAGE_VAR, 1))
         state['page'] = state['paginator'].page(page_num)
     
     def make_link(self, **kwargs):
@@ -31,12 +31,11 @@ class ChangeList(object):
         self.sections[name] = filter_section(**kwargs)
         return self.sections[name]
     
-    def get_active_index(self, state):
-        return self.resource.get_active_index(state=state)
+    def get_active_index(self):
+        return self.resource.get_active_index()
     
     def get_instances(self, state):
-        assert 'filter_params' in state, 'Filters need to know what params they are operating off'
-        active_index = self.get_active_index(state)
+        active_index = self.get_active_index()
         for section in self.sections.itervalues():
             active_index = section.filter_index(state, active_index)
         return active_index
@@ -89,7 +88,6 @@ class FilterSection(object):
         return self.changelist.make_link(**kwargs)
     
     def populate_state(self, state):
-        assert 'filter_params' in state, 'Filters need to know what params they are operating off'
         for a_filter in self.filters:
             a_filter.populate_state(state)
     
