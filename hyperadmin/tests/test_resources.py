@@ -55,7 +55,8 @@ class ModelResourceTestCase(ResourceTestCase):
         request = self.factory.get('/')
         view(request)
         
-        media_type, response_type, link, state = self.resource.generate_response.call_args[0]
+        media_type, response_type, link = self.resource.generate_response.call_args[0]
+        state = link.resource.state
         
         self.assertEqual(len(state.get_resource_items()), User.objects.count())
         
@@ -67,7 +68,8 @@ class ModelResourceTestCase(ResourceTestCase):
         request = self.factory.get('/')
         view(request, pk=instance.pk)
         
-        media_type, response_type, link, state = self.resource.generate_response.call_args[0]
+        media_type, response_type, link = self.resource.generate_response.call_args[0]
+        state = link.resource.state
         
         self.assertEqual(len(state.get_resource_items()), 1)
         self.assertTrue(state.item)
@@ -83,7 +85,7 @@ class ModelResourceTestCase(ResourceTestCase):
         request = self.factory.put('/', update_data)
         view(request)
         
-        media_type, response_type, link, state = self.resource.generate_response.call_args[0]
+        media_type, response_type, link = self.resource.generate_response.call_args[0]
         
         self.assertTrue(link.form)
         self.assertTrue(link.form.errors)
@@ -98,7 +100,8 @@ class ModelResourceTestCase(ResourceTestCase):
         request = self.factory.post('/', update_data)
         view(request, pk=instance.pk)
         
-        media_type, response_type, link, state = self.resource.generate_response.call_args[0]
+        media_type, response_type, link = self.resource.generate_response.call_args[0]
+        state = link.resource.state
         
         self.assertTrue(link.form)
         self.assertTrue(link.form.errors)
@@ -120,7 +123,8 @@ class InlineModelResourceTestCase(ResourceTestCase):
         request = self.factory.get('/')
         view(request, pk=self.user.pk)
         
-        media_type, response_type, link, state = self.resource.generate_response.call_args[0]
+        media_type, response_type, link = self.resource.generate_response.call_args[0]
+        state = link.resource.state
         
         self.assertEqual(len(state.get_resource_items()), self.user.groups.all().count())
     
@@ -136,7 +140,7 @@ class InlineModelResourceTestCase(ResourceTestCase):
         request = self.factory.get('/')
         view(request, pk=instance.pk)
         
-        media_type, response_type, link, state = self.resource.generate_response.call_args[0]
+        media_type, response_type, link = self.resource.generate_response.call_args[0]
             
     #TODO
     def test_post_list(self):
@@ -151,7 +155,7 @@ class InlineModelResourceTestCase(ResourceTestCase):
         request = self.factory.post('/', update_data)
         view(request, pk=instance.pk)
         
-        media_type, response_type, link, state = self.resource.generate_response.call_args[0]
+        media_type, response_type, link = self.resource.generate_response.call_args[0]
     
     #TODO
     def test_post_detail(self):
@@ -165,7 +169,7 @@ class InlineModelResourceTestCase(ResourceTestCase):
         request = self.factory.post('/', update_data)
         view(request, pk=instance.pk)
         
-        media_type, response_type, link, state = self.resource.generate_response.call_args[0]
+        media_type, response_type, link = self.resource.generate_response.call_args[0]
 
 class SiteResourceTestCase(ResourceTestCase):
     def register_resource(self):
@@ -187,7 +191,8 @@ class SiteResourceTestCase(ResourceTestCase):
         request = self.factory.get('/')
         view(request)
         
-        media_type, response_type, link, state = self.resource.generate_response.call_args[0]
+        media_type, response_type, link = self.resource.generate_response.call_args[0]
+        state = link.resource.state
         
         self.assertTrue(state.get_resource_items())
 
@@ -202,7 +207,8 @@ class ApplicationResourceTestCase(ResourceTestCase):
         request = self.factory.get('/')
         view(request)
         
-        media_type, response_type, link, state = self.resource.generate_response.call_args[0]
+        media_type, response_type, link, = self.resource.generate_response.call_args[0]
+        state = link.resource.state
         
         self.assertTrue(state.get_resource_items())
 
@@ -227,7 +233,7 @@ class StorageResourceTestCase(ResourceTestCase):
         request = self.factory.get('/')
         view(request)
         
-        media_type, response_type, link, state = self.resource.generate_response.call_args[0]
+        media_type, response_type, link = self.resource.generate_response.call_args[0]
         #list view sets the state here
         #self.assertEqual(len(state.get_resource_items()), 1)
     
@@ -239,7 +245,8 @@ class StorageResourceTestCase(ResourceTestCase):
         request = self.factory.get('/')
         view(request, path='test.txt')
         
-        media_type, response_type, link, state = self.resource.generate_response.call_args[0]
+        media_type, response_type, link = self.resource.generate_response.call_args[0]
+        state = link.resource.state
         self.assertEqual(len(state.get_resource_items()), 1)
         
         item = state.get_resource_items()[0]
@@ -257,7 +264,7 @@ class StorageResourceTestCase(ResourceTestCase):
         request = self.factory.put('/', update_data)
         view(request)
         
-        media_type, response_type, link, state = self.resource.generate_response.call_args[0]
+        media_type, response_type, link = self.resource.generate_response.call_args[0]
         
         #self.assertEqual(link.rel, 'item')
         #if there was an error:
@@ -276,7 +283,7 @@ class StorageResourceTestCase(ResourceTestCase):
         request = self.factory.post('/', update_data)
         view(request, path='test.txt')
         
-        media_type, response_type, link, state = self.resource.generate_response.call_args[0]
+        media_type, response_type, link = self.resource.generate_response.call_args[0]
         
         self.assertEqual(link.rel, 'item')
         #if not rel
@@ -292,7 +299,8 @@ class AuthenticationResourceTestCase(ResourceTestCase):
         request = self.factory.get('/')
         view(request)
         
-        media_type, response_type, link, state = self.resource.generate_response.call_args[0]
+        media_type, response_type, link = self.resource.generate_response.call_args[0]
+        state = link.resource.state
         self.assertTrue(state.get_embedded_links()) #TODO logout link?
         self.assertTrue(state['authenticated'])
     
@@ -302,6 +310,7 @@ class AuthenticationResourceTestCase(ResourceTestCase):
         request = self.factory.delete('/')
         view(request)
         
-        media_type, response_type, link, state = self.resource.generate_response.call_args[0]
+        media_type, response_type, link = self.resource.generate_response.call_args[0]
+        state = link.resource.state
         self.assertFalse(state['authenticated'])
 

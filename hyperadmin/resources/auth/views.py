@@ -3,8 +3,8 @@ from django.views.generic import View
 from hyperadmin.resources.views import ResourceViewMixin
 
 class AuthViewMixin(ResourceViewMixin):
-    def get_state(self):
-        state = super(AuthViewMixin, self).get_state()
+    def get_state_data(self):
+        state = super(AuthViewMixin, self).get_state_data()
         state['authenticated'] = self.request.user.is_authenticated()
         state['request'] = self.request #for logging in and out
         return state
@@ -34,19 +34,19 @@ class AuthenticationResourceView(AuthViewMixin, View):
     view_class = 'login'
     
     def get(self, request, *args, **kwargs):
-        return self.resource.generate_response(self.get_response_media_type(), self.get_response_type(), self.get_login_link(), self.state)
+        return self.resource.generate_response(self.get_response_media_type(), self.get_response_type(), self.get_login_link())
     
     def post(self, request, *args, **kwargs):
         form_kwargs = self.get_request_form_kwargs()
         form_link = self.get_active_link(**form_kwargs)
-        response_link = form_link.submit(self.state)
-        return self.resource.generate_response(self.get_response_media_type(), self.get_response_type(), response_link, self.state)
+        response_link = form_link.submit()
+        return self.resource.generate_response(self.get_response_media_type(), self.get_response_type(), response_link)
     
     def delete(self, request, *args, **kwargs):
         form_kwargs = self.get_request_form_kwargs()
         form_link = self.get_restful_logout_link(**form_kwargs)
-        response_link = form_link.submit(self.state)
-        return self.resource.generate_response(self.get_response_media_type(), self.get_response_type(), response_link, self.state)
+        response_link = form_link.submit()
+        return self.resource.generate_response(self.get_response_media_type(), self.get_response_type(), response_link)
 
 class AuthenticationLogoutView(AuthViewMixin, View):
     view_class = 'logout'
@@ -54,6 +54,6 @@ class AuthenticationLogoutView(AuthViewMixin, View):
     def get(self, request, *args, **kwargs):
         form_kwargs = self.get_request_form_kwargs()
         form_link = self.get_logout_link(**form_kwargs)
-        response_link = form_link.submit(self.state)
-        return self.resource.generate_response(self.get_response_media_type(), self.get_response_type(), response_link, self.state)
+        response_link = form_link.submit()
+        return self.resource.generate_response(self.get_response_media_type(), self.get_response_type(), response_link)
 

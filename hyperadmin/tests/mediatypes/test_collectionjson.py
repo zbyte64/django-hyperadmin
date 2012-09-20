@@ -20,7 +20,7 @@ class CollectionJsonTestCase(MediaTypeTestCase):
     
     def test_queryset_serialize(self):
         link = self.resource.get_resource_link()
-        state = self.resource.get_state_class()(self.resource, {})
+        state = self.resource.state
         state['auth'] = self.user
         
         response = self.adaptor.serialize(content_type=self.content_type, link=link, state=state)
@@ -32,7 +32,7 @@ class CollectionJsonTestCase(MediaTypeTestCase):
         instance = ContentType.objects.all()[0]
         item = self.resource.get_resource_item(instance)
         link = self.resource.get_item_link(item)
-        state = self.resource.get_state_class()(self.resource, {})
+        state = self.resource.state
         state.item = item
         
         response = self.adaptor.serialize(content_type=self.content_type, link=link, state=state)
@@ -43,7 +43,8 @@ class CollectionJsonTestCase(MediaTypeTestCase):
     def test_site_resource_serialize(self):
         site_resource = SiteResource(site=site)
         link = site_resource.get_resource_link()
-        state = site_resource.get_state_class()(site_resource, {})
+        state = self.resource.state
+        state['auth'] = self.user
         
         response = self.adaptor.serialize(content_type=self.content_type, link=link, state=state)
         data = json.loads(response.content)
@@ -55,7 +56,7 @@ class CollectionJsonTestCase(MediaTypeTestCase):
         return
         #TODO patch reverse
         link = app_resource.get_resource_link()
-        state = app_resource.get_state_class()(app_resource, {})
+        state = self.resource.state
         
         response = self.adaptor.serialize(content_type=self.content_type, link=link, state=state)
         data = json.loads(response.content)

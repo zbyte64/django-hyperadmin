@@ -156,7 +156,7 @@ class CRUDResource(BaseResource):
         kwargs['method'] = 'DELETE'
         return self.get_delete_link(item, **kwargs)
     
-    def handle_create_submission(self, state, link, submit_kwargs):
+    def handle_create_submission(self, link, submit_kwargs):
         form = link.get_form(**submit_kwargs)
         if form.is_valid():
             instance = form.save()
@@ -164,7 +164,7 @@ class CRUDResource(BaseResource):
             return self.get_item_link(resource_item)
         return link.clone(form=form)
     
-    def handle_update_submission(self, state, link, submit_kwargs):
+    def handle_update_submission(self, link, submit_kwargs):
         form = link.get_form(**submit_kwargs)
         if form.is_valid():
             instance = form.save()
@@ -173,8 +173,8 @@ class CRUDResource(BaseResource):
             return self.get_item_link(resource_item)
         return link.clone(form=form)
     
-    def handle_delete_submission(self, state, link, submit_kwargs):
-        instance = state.item.instance
+    def handle_delete_submission(self, link, submit_kwargs):
+        instance = self.state.item.instance
         instance.delete()
         return self.get_resource_link()
     
@@ -187,13 +187,13 @@ class CRUDResource(BaseResource):
     def has_delete_permission(self, user, obj=None):
         return True
     
-    def get_templated_queries(self, state):
-        links = super(CRUDResource, self).get_templated_queries(state)
-        if 'changelist' in state:
-            links += self.get_changelist_links(state)
+    def get_templated_queries(self):
+        links = super(CRUDResource, self).get_templated_queries()
+        if 'changelist' in self.state:
+            links += self.get_changelist_links()
         return links
     
-    def get_embedded_links(self, state):
+    def get_embedded_links(self):
         create_link = self.get_create_link()
         return [create_link]
     
@@ -201,7 +201,7 @@ class CRUDResource(BaseResource):
         delete_link = self.get_delete_link(item=item)
         return [delete_link]
     
-    def get_ln_links(self, state):
+    def get_ln_links(self):
         create_link = self.get_restful_create_link()
         return [create_link]
     
@@ -219,21 +219,21 @@ class CRUDResource(BaseResource):
     def get_list_resource_item(self, instance):
         return self.get_list_resource_item_class()(resource=self, instance=instance)
     
-    def get_instances(self, state):
+    def get_instances(self):
         '''
         Returns a set of native objects for a given state
         '''
-        if 'page' in state:
-            return state['page'].object_list
+        if 'page' in self.state:
+            return self.state['page'].object_list
         return self.resource_adaptor.objects.all()
     
-    def get_resource_items(self, state):
-        instances = self.get_instances(state)
-        if state.get('view_class', None) == 'change_list':
+    def get_resource_items(self):
+        instances = self.get_instances()
+        if self.state.get('view_class', None) == 'change_list':
             return [self.get_list_resource_item(instance) for instance in instances]
         return [self.get_resource_item(instance) for instance in instances]
     
-    def get_active_index(self, state, **kwargs):
+    def get_active_index(self, **kwargs):
         return self.resource_adaptor.objects.all()
     
     def get_ordering(self):
@@ -242,22 +242,22 @@ class CRUDResource(BaseResource):
         """
         return self.ordering or ()  # otherwise we might try to *None, which is bad ;)
     
-    def get_changelist_kwargs(self, state):
+    def get_changelist_kwargs(self):
         return {'resource': self}
     
     def get_changelist_class(self):
         return self.changelist_class
     
-    def get_changelist(self, state):
+    def get_changelist(self):
         changelist_class = self.get_changelist_class()
-        kwargs = self.get_changelist_kwargs(state)
+        kwargs = self.get_changelist_kwargs()
         changelist = changelist_class(**kwargs)
         changelist.detect_sections()
-        changelist.populate_state(state)
+        changelist.populate_state(self.state)
         return changelist
     
-    def get_changelist_links(self, state):
-        return state['changelist'].get_links(state)
+    def get_changelist_links(self):
+        return self.state['changelist'].get_links()
     
     def get_paginator_class(self):
         return self.paginator_class

@@ -66,31 +66,31 @@ class CRUDCreateView(CRUDView):
     view_class = 'change_form'
     
     def get(self, request, *args, **kwargs):
-        return self.resource.generate_response(self.get_response_media_type(), self.get_response_type(), self.get_create_link(), self.state)
+        return self.resource.generate_response(self.get_response_media_type(), self.get_response_type(), self.get_create_link())
     
     def post(self, request, *args, **kwargs):
         if not self.can_add():
             return http.HttpResponseForbidden(_(u"You may not add an object"))
         form_kwargs = self.get_request_form_kwargs()
         form_link = self.get_create_link(**form_kwargs)
-        response_link = form_link.submit(self.state)
-        return self.resource.generate_response(self.get_response_media_type(), self.get_response_type(), response_link, self.state)
+        response_link = form_link.submit()
+        return self.resource.generate_response(self.get_response_media_type(), self.get_response_type(), response_link)
 
 class CRUDListView(CRUDView):
     view_class = 'change_list'
     
     def get(self, request, *args, **kwargs):
         if not self.can_add():
-            self.resource.generate_response(self.get_response_media_type(), self.get_response_type(), self.get_list_link(), self.state)
-        return self.resource.generate_response(self.get_response_media_type(), self.get_response_type(), self.get_restful_create_link(), self.state)
+            self.resource.generate_response(self.get_response_media_type(), self.get_response_type(), self.get_list_link())
+        return self.resource.generate_response(self.get_response_media_type(), self.get_response_type(), self.get_restful_create_link())
     
     def put(self, request, *args, **kwargs):
         if not self.can_add():
             return http.HttpResponseForbidden(_(u"You may not add an object"))
         form_kwargs = self.get_request_form_kwargs()
         form_link = self.get_restful_create_link(**form_kwargs)
-        response_link = form_link.submit(self.state)
-        return self.resource.generate_response(self.get_response_media_type(), self.get_response_type(), response_link, self.state)
+        response_link = form_link.submit()
+        return self.resource.generate_response(self.get_response_media_type(), self.get_response_type(), response_link)
     
     def get_meta(self):
         resource_item = self.resource.get_list_resource_item(None)
@@ -101,14 +101,13 @@ class CRUDListView(CRUDView):
             data['display_fields'].append({'prompt':field.label})
         return data
     
-    def get_state(self):
-        state = super(CRUDListView, self).get_state()
-        state['changelist'] = self.resource.get_changelist(state=state)
-        if 'paginator' in state:
-            paginator = state['paginator']
-            state.meta['object_count'] = paginator.count
-            state.meta['number_of_pages'] = paginator.num_pages
-        return state
+    def fork_state(self):
+        super(CRUDListView, self).fork_state()
+        self.state['changelist'] = self.resource.get_changelist()
+        if 'paginator' in self.state:
+            paginator = self.state['paginator']
+            self.state.meta['object_count'] = paginator.count
+            self.state.meta['number_of_pages'] = paginator.num_pages
     
     def get_resource_item(self, instance):
         return self.resource.get_list_resource_item(instance)
@@ -117,10 +116,9 @@ class CRUDDetailMixin(object):
     def get_object(self):
         raise NotImplementedError
     
-    def get_state(self):
-        state = super(CRUDDetailMixin, self).get_state()
-        state.item = self.get_item()
-        return state
+    def fork_state(self):
+        super(CRUDDetailMixin, self).fork_state()
+        self.state.item = self.get_item()
     
     def get_item(self):
         if not getattr(self, 'object', None):
@@ -130,7 +128,7 @@ class CRUDDetailMixin(object):
     def get(self, request, *args, **kwargs):
         self.object = self.get_object()
         resource_item = self.get_item()
-        return self.resource.generate_response(self.get_response_media_type(), self.get_response_type(), self.get_update_link(resource_item), self.state)
+        return self.resource.generate_response(self.get_response_media_type(), self.get_response_type(), self.get_update_link(resource_item))
 
 class CRUDDeleteView(CRUDDetailMixin, CRUDView):
     view_class = 'delete_confirmation'
@@ -143,9 +141,9 @@ class CRUDDeleteView(CRUDDetailMixin, CRUDView):
         resource_item = self.get_resource_item()
         
         form_link = self.get_delete_link(resource_item)
-        response_link = form_link.submit(self.state)
+        response_link = form_link.submit()
         
-        return self.resource.generate_response(self.get_response_media_type(), self.get_response_type(), response_link, self.state)
+        return self.resource.generate_response(self.get_response_media_type(), self.get_response_type(), response_link)
 
 class CRUDDetailView(CRUDDetailMixin, CRUDView):
     view_class = 'change_form'
@@ -153,7 +151,7 @@ class CRUDDetailView(CRUDDetailMixin, CRUDView):
     def get(self, request, *args, **kwargs):
         self.object = self.get_object()
         resource_item = self.get_item()
-        return self.resource.generate_response(self.get_response_media_type(), self.get_response_type(), self.get_update_link(resource_item), self.state)
+        return self.resource.generate_response(self.get_response_media_type(), self.get_response_type(), self.get_update_link(resource_item))
     
     def post(self, request, *args, **kwargs):
         self.object = self.get_object()
@@ -163,8 +161,8 @@ class CRUDDetailView(CRUDDetailMixin, CRUDView):
         resource_item = self.get_item()
         form_kwargs = self.get_request_form_kwargs()
         form_link = self.get_update_link(resource_item, **form_kwargs)
-        response_link = form_link.submit(self.state)
-        return self.resource.generate_response(self.get_response_media_type(), self.get_response_type(), response_link, self.state)
+        response_link = form_link.submit()
+        return self.resource.generate_response(self.get_response_media_type(), self.get_response_type(), response_link)
     
     def delete(self, request, *args, **kwargs):
         self.object = self.get_object()
@@ -173,6 +171,6 @@ class CRUDDetailView(CRUDDetailMixin, CRUDView):
         
         resource_item = self.get_item()
         form_link = self.get_restul_delete_link(resource_item)
-        response_link = form_link.submit(self.state)
-        return self.resource.generate_response(self.get_response_media_type(), self.get_response_type(), response_link, self.state)
+        response_link = form_link.submit()
+        return self.resource.generate_response(self.get_response_media_type(), self.get_response_type(), response_link)
 

@@ -57,17 +57,17 @@ class AuthResource(BaseResource):
     def get_absolute_url(self):
         return self.reverse('authentication')
     
-    def handle_login_submission(self, state, link, submit_kwargs):
+    def handle_login_submission(self, link, submit_kwargs):
         form = link.get_form(**submit_kwargs)
         if form.is_valid():
             form.save()
-            state['authenticated'] = True
+            self.state['authenticated'] = True
             return self.site.site_resource.get_resource_link()
         return link.clone(form=form)
     
-    def handle_logout_submission(self, state, link, submit_kwargs):
-        logout(state['request'])
-        state['authenticated'] = False
+    def handle_logout_submission(self, link, submit_kwargs):
+        logout(self.state['request'])
+        self.state['authenticated'] = False
         return self.get_login_link()
     
     def get_login_link(self, form_kwargs=None, **kwargs):
@@ -103,17 +103,17 @@ class AuthResource(BaseResource):
         kwargs['method'] = 'DELETE'
         return self.get_logout_link(form_kwargs, **kwargs)
     
-    def get_idempotent_links(self, state):
-        links = super(AuthResource, self).get_idempotent_links(state)
-        if state.get('authenticated', False):
+    def get_idempotent_links(self):
+        links = super(AuthResource, self).get_idempotent_links()
+        if self.state.get('authenticated', False):
             links.append(self.get_restful_logout_link())
         else:
             links.append(self.get_login_link())
         return links
     
-    def get_embedded_links(self, state):
-        links = super(AuthResource, self).get_embedded_links(state)
-        if state.get('authenticated', False):
+    def get_embedded_links(self):
+        links = super(AuthResource, self).get_embedded_links()
+        if self.state.get('authenticated', False):
             links.append(self.get_logout_link())
         return links
 

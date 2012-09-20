@@ -1,3 +1,5 @@
+from copy import copy
+
 from django import forms
 from django.conf.urls.defaults import patterns
 
@@ -19,6 +21,15 @@ class BaseResource(object):
         self.resource_adaptor = resource_adaptor
         self.site = site
         self.parent = parent_resource
+        self.state = self.get_state_class()(resource=self, meta={})
+        self.state['resource'] = self
+    
+    def fork_state(self, **kwargs):
+        new_resource = copy(self)
+        new_resource.state = self.get_state_class()(resource=new_resource, meta=copy(self.state.meta))
+        new_resource.state.update(self.state)
+        new_resource.state.update(kwargs)
+        return new_resource
     
     def get_app_name(self):
         raise NotImplementedError
@@ -48,26 +59,26 @@ class BaseResource(object):
         return {'resource':self,
                 'resource_site':self.site,}
     
-    def get_embedded_links(self, state):
+    def get_embedded_links(self):
         return []
     
     def get_item_embedded_links(self, item):
         return []
     
-    def get_outbound_links(self, state):
-        return self.get_breadcrumbs(state)
+    def get_outbound_links(self):
+        return self.get_breadcrumbs()
     
     def get_item_outbound_links(self, item):
         return []
     
-    def get_templated_queries(self, state):
+    def get_templated_queries(self):
         return []
     
     def get_item_templated_queries(self, item):
         return []
     
     #TODO find a better name
-    def get_ln_links(self, state):
+    def get_ln_links(self):
         return []
     
     #TODO find a better name
@@ -75,7 +86,7 @@ class BaseResource(object):
         return []
     
     #TODO find a better name
-    def get_idempotent_links(self, state):
+    def get_idempotent_links(self):
         return []
     
     #TODO find a better name
@@ -96,8 +107,8 @@ class BaseResource(object):
             kwargs.setdefault('instance', item.instance)
         return kwargs
     
-    def generate_response(self, media_type, content_type, link, state):
-        return media_type.serialize(content_type=content_type, link=link, state=state)
+    def generate_response(self, media_type, content_type, link):
+        return media_type.serialize(content_type=content_type, link=link, state=self.state)
     
     def get_related_resource_from_field(self, field):
         return self.site.get_related_resource_from_field(field)
@@ -117,7 +128,7 @@ class BaseResource(object):
     def get_resource_item(self, instance):
         return self.get_resource_item_class()(resource=self, instance=instance)
     
-    def get_resource_items(self, state):
+    def get_resource_items(self):
         return []
     
     def get_resource_link_item(self):
@@ -135,10 +146,10 @@ class BaseResource(object):
     def get_breadcrumb(self):
         return self.get_resource_link(rel='breadcrumb')
     
-    def get_breadcrumbs(self, state):
+    def get_breadcrumbs(self):
         breadcrumbs = []
         if self.parent:
-            breadcrumbs = self.parent.get_breadcrumbs(state=None)
+            breadcrumbs = self.parent.get_breadcrumbs()
         breadcrumbs.append(self.get_breadcrumb())
         return breadcrumbs
     
@@ -155,6 +166,6 @@ class BaseResource(object):
                          prompt=item.get_prompt(),)
         return item_link
     
-    def get_namespaces(self, state):
+    def get_namespaces(self):
         return dict()
 

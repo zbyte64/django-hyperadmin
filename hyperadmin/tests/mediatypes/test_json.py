@@ -14,7 +14,7 @@ class JsonTestCase(MediaTypeTestCase):
     
     def test_queryset_serialize(self):
         link = self.resource.get_resource_link()
-        state = self.resource.get_state_class()(self.resource, {})
+        state = self.resource.state
         state['auth'] = self.user
         
         response = self.adaptor.serialize(content_type='application/json', link=link, state=state)
@@ -25,7 +25,7 @@ class JsonTestCase(MediaTypeTestCase):
         instance = ContentType.objects.all()[0]
         item = self.resource.get_resource_item(instance)
         link = self.resource.get_item_link(item)
-        state = self.resource.get_state_class()(self.resource, {})
+        state = self.resource.state
         state.item = item
         
         response = self.adaptor.serialize(content_type='application/json', link=link, state=state)
@@ -42,7 +42,7 @@ class JsonpTestCase(MediaTypeTestCase):
     
     def test_queryset_serialize(self):
         link = self.resource.get_resource_link()
-        state = self.resource.get_state_class()(self.resource, {})
+        state = self.resource.state
         state['auth'] = self.user
         
         response = self.adaptor.serialize(content_type='text/javascript', link=link, state=state)
@@ -54,7 +54,7 @@ class JsonpTestCase(MediaTypeTestCase):
         instance = ContentType.objects.all()[0]
         item = self.resource.get_resource_item(instance)
         link = self.resource.get_item_link(item)
-        state = self.resource.get_state_class()(self.resource, {})
+        state = self.resource.state
         state.item = item
         
         response = self.adaptor.serialize(content_type='text/javascript', link=link, state=state)

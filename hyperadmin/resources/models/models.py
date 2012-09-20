@@ -81,13 +81,13 @@ class ModelResource(CRUDResource):
         kwargs['model'] = self.model
         return kwargs
     
-    def get_instances(self, state):
-        if 'page' in state:
-            return state['page'].object_list
-        return self.get_queryset(state['auth'])
+    def get_instances(self):
+        if 'page' in self.state:
+            return self.state['page'].object_list
+        return self.get_queryset(self.state['auth'])
     
-    def get_changelist_kwargs(self, state):
-        kwargs = super(ModelResource, self).get_changelist_kwargs(state)
+    def get_changelist_kwargs(self):
+        kwargs = super(ModelResource, self).get_changelist_kwargs()
         kwargs.update({'list_filter': self.list_filter,
                        'search_fields': self.search_fields,
                        'date_hierarchy': self.date_hierarchy,})
@@ -102,8 +102,8 @@ class ModelResource(CRUDResource):
             queryset = queryset.none()
         return queryset
     
-    def get_active_index(self, state, **kwargs):
-        return self.get_queryset(user=state['auth'])
+    def get_active_index(self, **kwargs):
+        return self.get_queryset(user=self.state['auth'])
 
     def has_add_permission(self, user):
         if self.opts.auto_created:
@@ -162,9 +162,9 @@ class ModelResource(CRUDResource):
             inline_links.append(link)
         return links + inline_links
     
-    def get_namespaces(self, state):
-        namespaces = super(ModelResource, self).get_namespaces(state)
-        if state.item is not None and state.get('view_class', None) == 'change_form':
+    def get_namespaces(self):
+        namespaces = super(ModelResource, self).get_namespaces()
+        if self.state.item is not None and self.state.get('view_class', None) == 'change_form':
             from hyperadmin.hyperobjects import State, Namespace
             
             for inline in self.inline_instances:
@@ -186,9 +186,7 @@ class InlineModelResource(ModelResource):
     rel_name = None
     
     def __init__(self, parent):
-        self.resource_adaptor = self.model
-        self.site = parent.site
-        self.parent = parent
+        super(InlineModelResource, self).__init__(resource_adaptor=self.model, site=parent.site, parent_resource=parent)
         
         from django.db.models.fields.related import RelatedObject
         from django.forms.models import _get_foreign_key
@@ -204,8 +202,8 @@ class InlineModelResource(ModelResource):
             queryset = queryset.none()
         return queryset
     
-    def get_active_index(self, state, **kwargs):
-        return self.get_queryset(parent=state['parent'], user=state['auth'])
+    def get_active_index(self, **kwargs):
+        return self.get_queryset(parent=self.state['parent'], user=self.state['auth'])
     
     def get_base_url_name(self):
         return '%s_%s_%s_' % (self.parent.app_name, self.parent.resource_name, self.rel_name)
@@ -237,8 +235,8 @@ class InlineModelResource(ModelResource):
         )
         return urlpatterns
     
-    def get_add_url(self, parent):
-        pk = parent.pk
+    def get_add_url(self):
+        pk = self.state['parent'].pk
         return self.reverse('%sadd' % self.get_base_url_name(), pk=pk)
     
     def get_delete_url(self, item):
@@ -251,72 +249,26 @@ class InlineModelResource(ModelResource):
         pk = getattr(instance, self.fk.name).pk
         return self.reverse('%sdetail' % self.get_base_url_name(), pk=pk, inline_pk=instance.pk)
     
-    def get_resource_link(self, parent, **kwargs):
-        link_kwargs = {'url':self.get_absolute_url(parent),
-                       'resource':self,
-                       'rel':'self',
-                       'prompt':self.get_prompt(),}
-        link_kwargs.update(kwargs)
-        resource_link = Link(**link_kwargs)
-        return resource_link
-    
-    def get_create_link(self, parent, form_kwargs=None, **kwargs):
-        if form_kwargs is None:
-            form_kwargs = {}
-        form_kwargs = self.get_form_kwargs(**form_kwargs)
-        
-        link_kwargs = {'url':self.get_add_url(parent),
-                       'resource':self,
-                       'on_submit':self.handle_create_submission,
-                       'method':'POST',
-                       'form_kwargs':form_kwargs,
-                       'form_class': self.get_form_class(),
-                       'prompt':'create',
-                       'rel':'create',}
-        link_kwargs.update(kwargs)
-        create_link = Link(**link_kwargs)
-        return create_link
-    
-    def get_restful_create_link(self, parent, **kwargs):
-        kwargs['url'] = self.get_absolute_url(parent)
-        kwargs['method'] = 'PUT'
-        return self.get_create_link(parent, **kwargs)
-    
-    def get_update_link(self, parent, item, **kwargs):
-        return super(InlineModelResource, self).get_update_link(item, **kwargs)
-    
-    def get_delete_link(self, parent, item, **kwargs):
-        return super(InlineModelResource, self).get_delete_link(item, **kwargs)
-    
-    def get_restful_delete_link(self, parent, item, **kwargs):
-        kwargs['url'] = item.get_absolute_url(parent)
-        kwargs['method'] = 'DELETE'
-        return self.get_delete_link(parent, item, **kwargs)
-    
-    def get_absolute_url(self, parent):
-        pk = parent.pk
+    def get_absolute_url(self):
+        pk = self.state['parent'].pk
         return self.reverse('%slist' % self.get_base_url_name(), pk=pk)
     
     def get_breadcrumb(self):
         return None
     
-    def get_embedded_links(self, state):
-        create_link = self.get_create_link(state['parent'])
-        return [create_link]
-    
-    def get_ln_links(self, state):
-        links = [self.get_restful_create_link(state['parent'])]
+    def get_ln_links(self):
+        links = super(InlineModelResource, self).get_ln_links()
         #CONSIDER is this a feature or a way to get around a media type limitation?
-        if state.get('view_class', None) == 'change_list':
-            for item in state.get_resource_items():
+        if self.state.get('view_class', None) == 'change_list':
+            for item in self.state.get_resource_items():
                 links.extend(item.get_ln_links())
         return links
     
-    def get_idempotent_links(self, state):
-        links = super(InlineModelResource, self).get_idempotent_links(state)
+    def get_idempotent_links(self):
+        links = super(InlineModelResource, self).get_idempotent_links()
         #CONSIDER is this a feature or a way to get around a media type limitation?
-        if state.get('view_class', None) == 'change_list':
-            for item in state.get_resource_items():
+        if self.state.get('view_class', None) == 'change_list':
+            for item in self.state.get_resource_items():
                 links.extend(item.get_idempotent_links())
         return links
 

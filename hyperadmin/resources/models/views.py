@@ -28,9 +28,6 @@ class ModelDetailView(ModelDetailMixin, CRUDDetailView):
     pass
 
 class InlineModelMixin(object):
-    def get_link_kwargs(self):
-        return {'parent':self.get_parent()}
-    
     def get_state_data(self):
         data = super(InlineModelMixin, self).get_state_data()
         data['parent'] = self.get_parent()

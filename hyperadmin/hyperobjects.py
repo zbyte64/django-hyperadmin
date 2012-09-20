@@ -65,7 +65,7 @@ class Link(object):
             return self.form.errors
         return None
     
-    def submit(self, state, **kwargs):
+    def submit(self, **kwargs):
         '''
         Returns a link representing the action
         The resource_item of the link may represent the updated/created object
@@ -73,7 +73,7 @@ class Link(object):
         '''
         on_submit = self.on_submit
         
-        return on_submit(state=state, link=self, submit_kwargs=kwargs)
+        return on_submit(link=self, submit_kwargs=kwargs)
     
     def clone(self, **kwargs):
         a_clone = copy(self)
@@ -89,19 +89,19 @@ class State(dict):
         super(State, self).__init__(*args, **kwargs)
     
     def get_embedded_links(self):
-        return self.resource.get_embedded_links(self)
+        return self.resource.get_embedded_links()
     
     def get_outbound_links(self):
-        return self.resource.get_outbound_links(self)
+        return self.resource.get_outbound_links()
     
     def get_templated_queries(self):
-        return self.resource.get_templated_queries(self)
+        return self.resource.get_templated_queries()
     
     def get_ln_links(self):
-        return self.resource.get_ln_links(self)
+        return self.resource.get_ln_links()
     
     def get_idempotent_links(self):
-        return self.resource.get_idempotent_links(self)
+        return self.resource.get_idempotent_links()
     
     def set_item(self, val):
         self['item'] = val
@@ -122,7 +122,7 @@ class State(dict):
     def get_resource_items(self):
         if self.item is not None:
             return self.item.get_resource_items()
-        return self.resource.get_resource_items(state=self)
+        return self.resource.get_resource_items()
     
     def get_query_string(self, new_params=None, remove=None):
         if new_params is None: new_params = {}
@@ -141,7 +141,7 @@ class State(dict):
         return '?%s' % urlencode(p)
     
     def get_namespaces(self):
-        return self.resource.get_namespaces(state=self)
+        return self.resource.get_namespaces()
 
 class Namespace(object):
     def __init__(self, name, link, state):

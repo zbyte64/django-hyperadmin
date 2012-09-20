@@ -8,12 +8,11 @@ class SiteResource(BaseResource):
     list_view = views.SiteResourceView
     
     def __init__(self, site, auth_resource=None):
-        self.site = site
+        super(SiteResource, self).__init__(resource_adaptor=dict(), site=site)
         if auth_resource is None:
             from hyperadmin.resources.auth.auth import AuthResource
             auth_resource = AuthResource
         self.auth_resource = auth_resource(site=site)
-        self.parent = None
     
     def get_prompt(self):
         return self.site.name
@@ -46,14 +45,14 @@ class SiteResource(BaseResource):
     def get_item_prompt(self, item):
         return item.instance.get_prompt()
     
-    def get_items(self, state):
+    def get_items(self):
         applications = self.applications.items()
         apps = [entry[1] for entry in sorted(applications, key=lambda x: x[0])]
         apps.append(self.auth_resource)
         return apps
     
-    def get_resource_items(self, state):
-        return [self.get_resource_item(item) for item in self.get_items(state)]
+    def get_resource_items(self):
+        return [self.get_resource_item(item) for item in self.get_items()]
     
     def get_item_url(self, item):
         if hasattr(item.instance, 'get_absolute_url'):

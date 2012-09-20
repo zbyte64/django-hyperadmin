@@ -8,10 +8,8 @@ class ApplicationResource(BaseResource):
     list_view = views.ApplicationResourceView
     
     def __init__(self, app_name, site):
+        super(ApplicationResource, self).__init__(resource_adaptor=dict(), site=site, parent_resource=site.site_resource)
         self._app_name = app_name
-        self.resource_adaptor = dict() #TODO OrderedDict
-        self.site = site
-        self.parent = site.site_resource
     
     def get_app_name(self):
         return self._app_name
@@ -39,7 +37,7 @@ class ApplicationResource(BaseResource):
         key = resource.get_resource_name()
         self.resource_adaptor[key] = resource
     
-    def get_items(self, state):
+    def get_items(self):
         #TODO sort by name
         return self.resource_adaptor.values()
     
@@ -53,8 +51,8 @@ class ApplicationResource(BaseResource):
     def get_absolute_url(self):
         return self.reverse(self.app_name)
     
-    def get_resource_items(self, state):
-        return [self.get_resource_item(item) for item in self.get_items(state)]
+    def get_resource_items(self):
+        return [self.get_resource_item(item) for item in self.get_items()]
         
     def get_child_resource_links(self):
         links = list()

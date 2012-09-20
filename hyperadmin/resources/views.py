@@ -65,20 +65,19 @@ class ResourceViewMixin(ConditionalAccessMixin):
     
     def get_state_data(self):
         return {'auth':self.request.user,
-                'resource':self.resource,
                 'view_class':self.view_class,
                 'item':self.get_item(),
                 'filter_params':self.request.GET.copy(),}
     
-    def get_state(self):
-        state_cls = self.get_state_class()
-        return state_cls(self.resource,
-                     self.get_meta(),
-                     self.get_state_data(),)
+    def dispatch(self, request, *args, **kwargs):
+        self.request = request
+        self.args = args
+        self.kwargs = kwargs
+        self.fork_state()
+        return super(ResourceViewMixin, self).dispatch(request, *args, **kwargs)
     
-    @property
-    def state(self):
-        if not hasattr(self, '_state'):
-            self._state = self.get_state()
-        return self._state
+    def fork_state(self):
+        self.resource = self.resource.fork_state(**self.get_state_data())
+        self.state = self.resource.state
+        self.state.meta.update(self.get_meta())
 
