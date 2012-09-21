@@ -8,7 +8,7 @@
 </div>
 
 {% block data %}
-{% if item.form %}
+{% if item.form and item.form.fields %}
 <h4>Data</h4>
 <div class="data">
 {% for row in item.form %}

@@ -81,10 +81,8 @@ class ModelResource(CRUDResource):
         kwargs['model'] = self.model
         return kwargs
     
-    def get_instances(self):
-        if 'page' in self.state:
-            return self.state['page'].object_list
-        return self.get_queryset(self.state['auth'])
+    def get_active_index(self, **kwargs):
+        return self.get_queryset(user=self.state['auth'])
     
     def get_changelist_kwargs(self):
         kwargs = super(ModelResource, self).get_changelist_kwargs()
@@ -102,9 +100,6 @@ class ModelResource(CRUDResource):
             queryset = queryset.none()
         return queryset
     
-    def get_active_index(self, **kwargs):
-        return self.get_queryset(user=self.state['auth'])
-
     def has_add_permission(self, user):
         if self.opts.auto_created:
             # We're checking the rights to an auto-created intermediate model,
@@ -175,6 +170,18 @@ class ModelResource(CRUDResource):
                 name = 'inline-%s' % inline.rel_name
                 namespace = Namespace(name=name, link=link, state=inline.state)
                 namespaces[name] = namespace
+        return namespaces
+    
+    def get_item_namespaces(self, item):
+        namespaces = super(ModelResource, self).get_item_namespaces(item)
+        from hyperadmin.hyperobjects import Namespace
+        
+        for inline in self.inline_instances:
+            inline = inline.fork_state(parent=item.instance, auth=self.state['auth'])
+            link = inline.get_resource_link()
+            name = 'inline-%s' % inline.rel_name
+            namespace = Namespace(name=name, link=link, state=inline.state)
+            namespaces[name] = namespace
         return namespaces
 
 class InlineModelResource(ModelResource):

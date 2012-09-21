@@ -170,4 +170,7 @@ class BaseResource(object):
     
     def get_namespaces(self):
         return dict()
+    
+    def get_item_namespaces(self, item):
+        return dict()
 

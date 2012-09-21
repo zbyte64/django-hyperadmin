@@ -234,7 +234,7 @@ class CRUDResource(BaseResource):
         '''
         if 'page' in self.state:
             return self.state['page'].object_list
-        return self.resource_adaptor.objects.all()
+        return self.get_active_index()
     
     def get_resource_items(self):
         instances = self.get_instances()

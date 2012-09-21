@@ -212,4 +212,7 @@ class ResourceItem(object):
     
     def get_resource_items(self):
         return [self]
+    
+    def get_namespaces(self):
+        return self.resource.get_item_namespaces(self)
 
