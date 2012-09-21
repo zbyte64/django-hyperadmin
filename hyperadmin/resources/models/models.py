@@ -165,9 +165,9 @@ class ModelResource(CRUDResource):
             from hyperadmin.hyperobjects import Namespace
             
             for inline in self.inline_instances:
-                inline = inline.fork_state(parent=self.state.item.instance, auth=self.state['auth'])
-                link = inline.get_resource_link()
                 name = 'inline-%s' % inline.rel_name
+                inline = inline.fork_state(parent=self.state.item.instance, auth=self.state['auth'], namespace=name)
+                link = inline.get_resource_link()
                 namespace = Namespace(name=name, link=link, state=inline.state)
                 namespaces[name] = namespace
         return namespaces
@@ -177,9 +177,9 @@ class ModelResource(CRUDResource):
         from hyperadmin.hyperobjects import Namespace
         
         for inline in self.inline_instances:
-            inline = inline.fork_state(parent=item.instance, auth=self.state['auth'])
-            link = inline.get_resource_link()
             name = 'inline-%s' % inline.rel_name
+            inline = inline.fork_state(parent=item.instance, auth=self.state['auth'], namespace=name)
+            link = inline.get_resource_link()
             namespace = Namespace(name=name, link=link, state=inline.state)
             namespaces[name] = namespace
         return namespaces
@@ -290,4 +290,18 @@ class InlineModelResource(ModelResource):
                 #TODO formfield overides
                 #TODO fields
         return AdminForm
+    
+    def get_ln_links(self):
+        links = super(InlineModelResource, self).get_ln_links()
+        if self.state.namespace:
+            for item in self.get_resource_items():
+                links.append(self.get_update_link(item))
+        return links
+    
+    def get_idempotent_links(self):
+        links = super(InlineModelResource, self).get_idempotent_links()
+        if self.state.namespace:
+            for item in self.get_resource_items():
+                links.append(self.get_delete_link(item))
+        return links
 

@@ -119,6 +119,10 @@ class State(dict):
             return self['request'].GET
         return {}
     
+    @property
+    def namespace(self):
+        return self.get('namespace', None)
+    
     def get_resource_items(self):
         if self.item is not None:
             return self.item.get_resource_items()

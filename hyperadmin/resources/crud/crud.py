@@ -201,7 +201,7 @@ class CRUDResource(BaseResource):
         delete_link = self.get_delete_link(item=item)
         return [delete_link]
     
-    def get_ln_links(self):
+    def get_idempotent_links(self):
         create_link = self.get_restful_create_link()
         return [create_link]
     

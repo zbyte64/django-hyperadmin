@@ -145,9 +145,9 @@
             </div>
             {{/if}}
             
-            {{#if links}}
+            {{#if getLinks}}
             <div>
-            {{#each links}}
+            {{#each getLinks}}
                 {{view App.LinkView}}
             {{/each}}
             </div>
@@ -163,7 +163,7 @@
             <th>{{view App.LinkView}}</th>
         </thead>
         <tbody>
-          {{#each links}}
+          {{#each getLinks}}
           <tr>
               <td>{{view App.LinkView}}</td>
           </tr>

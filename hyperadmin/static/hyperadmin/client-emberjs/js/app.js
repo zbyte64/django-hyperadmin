@@ -61,7 +61,17 @@ App.Link = App.CommonObject.extend({
 })
 App.Query = App.Link.extend({})
 App.Item = App.Link.extend({
-  links: Em.ArrayController.create({})
+  getLinks: function() {
+    var links = this.get('links')
+    var data = Em.ArrayController.create({'content':Array()})
+    if (!links) return data;
+    for (var i=0; i<links.length; i++) {
+        var item_data = links[i];
+        var item = App.Link.create(item_data);
+        data.pushObject(item);
+    }
+    return data;
+  }.property('links').cacheable()
 })
 App.Field = App.CommonObject.extend({
   isSelect: function() {
@@ -88,6 +98,96 @@ App.Template = App.Link.extend({
   }.property('data')
 })
 App.Error = Em.Object.extend({})
+
+App.makeControllerProperty = function(controller_class, item_class, key) {
+    function_controller = function() {
+        var data = controller_class.create({'content':Array()})
+        var cdata = this.get('data')
+        if (!cdata) return data;
+        var subdata = cdata[key];
+        if (!subdata) return data;
+        for (var i=0; i<subdata.length; i++) {
+            var item_data = subdata[i];
+            var item = item_class.create(item_data);
+            data.pushObject(item);
+        }
+        return data;
+    }
+    return function_controller.property('data.'+key).cacheable()
+}
+App.makeSimpleProperty = function(key, item_class) {
+    attr_property = function() {
+        var cdata = this.get('data')
+        if (!cdata) return null;
+        var subdata = cdata[key];
+        if (item_class && subdata) {
+            return item_class.create(subdata);
+        }
+        return subdata
+    }
+    return attr_property.property('data.'+key).cacheable()
+}
+
+App.QueriesController = Em.ArrayController.extend({
+    sortby: function() {
+        return this.filterProperty('rel', 'sortby')
+    }.property('@each.rel').cacheable(),
+    filters: function() {
+        return this.filterProperty('rel', 'filter')
+    }.property('@each.rel').cacheable(),
+    pagination: function() {
+        return this.filterProperty('rel', 'pagination')
+    }.property('@each.rel').cacheable(),
+    breadcrumbs: function() {
+        return this.filterProperty('rel', 'breadcrumb')
+    }.property('@each.rel').cacheable()
+})
+App.TemplatesController = Em.ArrayController.extend({})
+    
+App.CollectionController = Em.ObjectController.extend({
+    data: null, //powers all data bound to it
+    version: App.makeSimpleProperty('version'),
+    href: App.makeSimpleProperty('href'),
+    resource_class: App.makeSimpleProperty('resource_class'),
+    isResourceListing: function() {
+        return this.get('resource_class') == 'resourcelisting'
+    }.property('resource_class'),
+    isCrudResource: function() {
+        return this.get('resource_class') == 'crudresource'
+    }.property('resource_class'),
+    display_fields: App.makeControllerProperty(Em.ArrayController, App.CommonObject, 'display_fields'),
+    url: function() {
+        var url = this.get('href');
+        var end_pos = url.indexOf('?')
+        if (end_pos > -1) {
+            url = url.substr(0, end_pos)
+        }
+        return url
+    }.property('href'),
+    links: App.makeControllerProperty(App.QueriesController, App.Query, 'links'),
+    items: App.makeControllerProperty(Em.ArrayController, App.Item, 'items'),
+    queries: App.makeControllerProperty(App.QueriesController, App.Query, 'queries'),
+    templates: App.makeControllerProperty(App.TemplatesController, App.Template, 'templates'),
+    error: App.makeSimpleProperty('error', App.Error),
+    namespaces: function() {
+        var data = App.ArrayController.create({'content':Array()})
+        var cdata = this.get('data')
+        if (!cdata) return data;
+        var subdata = cdata['namespaces'];
+        if (!subdata) return data;
+        
+        for (var name_key in subdata) {
+            var namespace = App.CollectionController.create({})
+            namespace.handleResponse(subdata[name_key])
+            data.pushObject(namespace);
+        }
+        return data
+    }.property('data.namespaces').cacheable(),
+    handleResponse: function(data) {
+        this.set('data', data)
+        console.log(this, data)
+    }
+})
 
 App.uploadingFiles = false;
 App.initUploadFile = function(field, options) {
@@ -171,7 +271,7 @@ App.initUploadFile = function(field, options) {
         //'uploadLimit': 1,
         'async': true,
         'type': 'POST',
-        'url': '/hyper-admin/-storages/media/',
+        'url': '/hyper-admin/-storages/media/add/',
         'paramName': 'upload',
         'accepts': {
           'json': App.contentType, //custom media type defintion
@@ -189,120 +289,7 @@ App.initUploadFile = function(field, options) {
 //views bind to this and are automatically updated when the controller issues update actions
 App.resourceController = Em.ObjectController.create({
     apiUrl: null,
-    collection: Em.ObjectController.create({ //bind data to this
-        version: null,
-        href: null,
-        resource_class: null,
-        isResourceListing: function() {
-            return this.get('resource_class') == 'resourcelisting'
-        }.property('resource_class'),
-        isCrudResource: function() {
-            return this.get('resource_class') == 'crudresource'
-        }.property('resource_class'),
-        display_fields: Em.ArrayController.create({
-            handleResponse: function(data) {
-                this.set('content', []);
-                if (!data) return;
-                for (var i=0; i<data.length; i++) {
-                    var display_data = data[i];
-                    var display = App.CommonObject.create(display_data);
-                    this.pushObject(display);
-                }
-            }
-        }),
-        url: function() {
-            var url = this.get('href');
-            var end_pos = url.indexOf('?')
-            if (end_pos > -1) {
-                url = url.substr(0, end_pos)
-            }
-            return url
-        }.property('href'),
-        links: Em.ArrayController.create({
-            handleResponse: function(data) {
-                this.set('content', []);
-                for (var i=0; i<data.length; i++) {
-                    var link_data = data[i];
-                    var link = App.Query.create(link_data);
-                    this.pushObject(link);
-                }
-            },
-            breadcrumbs: function() {
-                return this.filterProperty('rel', 'breadcrumb')
-            }.property('@each.rel').cacheable()
-        }),
-        items: Em.ArrayController.create({
-            handleResponse: function(data) {
-                this.set('content', []);
-                for (var i=0; i<data.length; i++) {
-                    var item_data = data[i];
-                    var item = App.Item.create(item_data);
-                    item.set('links', Em.ArrayController.create({
-                        content: []
-                    }))
-                    for (var j=0; j<item_data.links.length; j++) {
-                        var link = App.Link.create(item_data.links[j])
-                        item.links.pushObject(link)
-                    }
-                    this.pushObject(item);
-                }
-            }
-        }),
-        queries: Em.ArrayController.create({
-            handleResponse: function(data) {
-                this.set('content', []);
-                for (var i=0; i<data.length; i++) {
-                    var query_data = data[i];
-                    var query = App.Query.create(query_data);
-                    this.pushObject(query);
-                }
-            },
-            sortby: function() {
-                return this.filterProperty('rel', 'sortby')
-            }.property('@each.rel').cacheable(),
-            filters: function() {
-                return this.filterProperty('rel', 'filter')
-            }.property('@each.rel').cacheable(),
-            pagination: function() {
-                return this.filterProperty('rel', 'pagination')
-            }.property('@each.rel').cacheable()
-        }),
-        template: null,
-        templates: Em.ArrayController.create({
-            handleResponse: function(data) {
-                this.set('content', []);
-                if (data) {
-                    for (var i=0; i<data.length; i++) {
-                        var template_data = data[i];
-                        var template = App.Template.create(template_data);
-                        this.pushObject(template);
-                    }
-                }
-            }
-        }),
-        error: null,
-        handleResponse: function(data) {
-            this.set('version', data['version']);
-            this.set('href', data['href']);
-            this.set('resource_class', data['resource_class']);
-            this.display_fields.handleResponse(data['display_fields'])
-            this.links.handleResponse(data['links'])
-            this.items.handleResponse(data['items'])
-            this.queries.handleResponse(data['queries'])
-            this.templates.handleResponse(data['templates'])
-            if (data['template']) {
-                var template = App.Template.create(data['template'])
-                this.set('template', template)
-            } else {
-                this.set('template', null)
-            }
-            if (data['error']) {
-                this.set('error', App.Error.create(data['error']))
-            } else {
-                this.set('error', null)
-            }
-        }
-    }), 
+    collection: App.CollectionController.create({}), 
     followLink: function(url) {
         var settings = $.extend({}, App.requestDefaults, {
             url: url,
@@ -438,6 +425,9 @@ App.requestDefaults = {
                 xhr.setRequestHeader("X-CSRFToken", getCookie('csrftoken'));
             }
         });
+    },
+    headers: {
+        'Accept-Namespaces':'inline'
     }
 }
 

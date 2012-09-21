@@ -144,6 +144,14 @@ class CollectionNextJSON(CollectionJSON):
 BUILTIN_MEDIA_TYPES['application/vnd.Collection.next+JSON'] = CollectionNextJSON
 
 class CollectionHyperAdminJSON(CollectionNextJSON):
+    def get_accepted_namespaces(self):
+        namespaces = list()
+        for entry in self.request.META.get('HTTP_ACCEPT_NAMESPACES', '').split(','):
+            entry = entry.strip()
+            if entry:
+                namespaces.append(entry)
+        return namespaces
+    
     def convert_field(self, field):
         entry = super(CollectionHyperAdminJSON, self).convert_field(field)
         resource = self.get_related_resource_from_field(field)
@@ -155,7 +163,7 @@ class CollectionHyperAdminJSON(CollectionNextJSON):
         #TODO upload to
         return entry
     
-    def prepare_collection(self, form_link, state):
+    def prepare_collection(self, form_link, state, include_namespaces=True):
         data = super(CollectionHyperAdminJSON, self).prepare_collection(form_link, state)
         resource_item = state.item
         
@@ -168,8 +176,16 @@ class CollectionHyperAdminJSON(CollectionNextJSON):
         if len(update_links):
             data['templates'] = [self.convert_link(link) for link in update_links]
         
+        if include_namespaces:
+            data['namespaces'] = dict()
+            accepted_namespaces = self.get_accepted_namespaces()
+            for key, namespace in state.get_namespaces().iteritems():
+                for a_key in accepted_namespaces:
+                    if key.startswith(a_key):
+                        data['namespaces'][key] = self.prepare_collection(form_link=namespace.link, state=namespace.state, include_namespaces=False)
+                        break
+        
         data['resource_class'] = form_link.resource.resource_class
-        #TODO power this by meta
         if 'display_fields' in state.meta:
             data['display_fields'] = state.meta['display_fields']
         return data
