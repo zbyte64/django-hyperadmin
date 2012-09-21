@@ -103,6 +103,9 @@ class CRUDResource(BaseResource):
     def get_absolute_url(self):
         return self.reverse('%s_%s_list' % (self.app_name, self.resource_name))
     
+    #CRUD Methods are based off: (which backbone appears to agree with)
+    #http://en.wikipedia.org/wiki/Create,_read,_update_and_delete
+    
     def get_create_link(self, form_kwargs=None, **kwargs):
         if form_kwargs is None:
             form_kwargs = {}
@@ -120,11 +123,6 @@ class CRUDResource(BaseResource):
         create_link = Link(**link_kwargs)
         return create_link
     
-    def get_restful_create_link(self, **kwargs):
-        kwargs['url'] = self.get_absolute_url()
-        kwargs['method'] = 'PUT'
-        return self.get_create_link(**kwargs)
-    
     def get_update_link(self, item, form_kwargs=None, **kwargs):
         if form_kwargs is None:
             form_kwargs = {}
@@ -139,6 +137,10 @@ class CRUDResource(BaseResource):
                        'rel':'update',}
         update_link = Link(**link_kwargs)
         return update_link
+    
+    def get_restful_update_link(self, **kwargs):
+        kwargs['method'] = 'PUT'
+        return self.get_update_link(**kwargs)
     
     def get_delete_link(self, item, **kwargs):
         link_kwargs = {'url':self.get_delete_url(item),
@@ -202,7 +204,7 @@ class CRUDResource(BaseResource):
         return [delete_link]
     
     def get_idempotent_links(self):
-        create_link = self.get_restful_create_link()
+        create_link = self.get_create_link()
         return [create_link]
     
     def get_item_ln_links(self, item):
@@ -234,6 +236,8 @@ class CRUDResource(BaseResource):
         '''
         if 'page' in self.state:
             return self.state['page'].object_list
+        if self.state.get('view_class', None) == 'change_form':
+            return []
         return self.get_active_index()
     
     def get_resource_items(self):
