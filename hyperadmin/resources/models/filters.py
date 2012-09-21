@@ -277,7 +277,7 @@ class DateFieldFilter(FieldFilter):
             field, field_path, section)
     
     def populate_state(self, state):
-        params = state['lookup_params']
+        params = state.params
         self.field_generic = '%s__' % self.field_path
         self.date_params = dict([(k, v) for k, v in params.items()
                                  if k.startswith(self.field_generic)])
