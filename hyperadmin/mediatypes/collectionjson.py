@@ -183,6 +183,7 @@ class CollectionHyperAdminJSON(CollectionNextJSON):
                 for a_key in accepted_namespaces:
                     if key.startswith(a_key):
                         data['namespaces'][key] = self.prepare_collection(form_link=namespace.link, state=namespace.state, include_namespaces=False)
+                        data['namespaces'][key]['namespace'] = key
                         break
         
         data['resource_class'] = form_link.resource.resource_class

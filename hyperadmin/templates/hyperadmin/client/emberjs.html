@@ -45,6 +45,19 @@
         {{view App.TemplateView}}
     </div>
     
+    <div class="container">
+        {{view App.NamespacesView}}
+    </div>
+    
+  </script>
+  
+  <script type="text/x-handlebars" data-template-name="namespaces">
+        {{#each App.resourceController.collection.namespaces}}
+            <h3>{{namespace}}</h3>
+            {{#each templates}}
+              {{view App.FormView}}
+            {{/each}}
+        {{/each}}
   </script>
   
   <script type="text/x-handlebars" data-template-name="breadcrumbs">

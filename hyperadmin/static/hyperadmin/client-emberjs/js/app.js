@@ -146,6 +146,7 @@ App.TemplatesController = Em.ArrayController.extend({})
     
 App.CollectionController = Em.ObjectController.extend({
     data: null, //powers all data bound to it
+    namespace: App.makeSimpleProperty('namespace'),
     version: App.makeSimpleProperty('version'),
     href: App.makeSimpleProperty('href'),
     resource_class: App.makeSimpleProperty('resource_class'),
@@ -170,7 +171,7 @@ App.CollectionController = Em.ObjectController.extend({
     templates: App.makeControllerProperty(App.TemplatesController, App.Template, 'templates'),
     error: App.makeSimpleProperty('error', App.Error),
     namespaces: function() {
-        var data = App.ArrayController.create({'content':Array()})
+        var data = Em.ArrayController.create({'content':Array()})
         var cdata = this.get('data')
         if (!cdata) return data;
         var subdata = cdata['namespaces'];
@@ -441,6 +442,11 @@ App.AdminView = Em.View.extend({})
 App.ResourceView = App.AdminView.extend({
   templateName: 'resource',
   classNames: ['resource']
+})
+
+App.NamespacesView = App.AdminView.extend({
+  templateName: 'namespaces',
+  classNames: ['namespaces']
 })
 
 App.BreadcrumbsView = App.AdminView.extend({
