@@ -290,8 +290,10 @@ App.initUploadFile = function(field, options) {
 //views bind to this and are automatically updated when the controller issues update actions
 App.resourceController = Em.ObjectController.create({
     apiUrl: null,
+    isLoading: true,
     collection: App.CollectionController.create({}), 
     followLink: function(url) {
+        App.resourceController.set('isLoading', true)
         var settings = $.extend({}, App.requestDefaults, {
             url: url,
             success: this.handleResponse
@@ -299,8 +301,8 @@ App.resourceController = Em.ObjectController.create({
         $.ajax(settings)
     },
     submitForm: function(form) {
+        App.resourceController.set('isLoading', true)
         var payload = App.serializeFormJSON(form)
-        console.log(payload)
         var settings = $.extend({}, App.requestDefaults, {
             url: form.attr('target'),
             type: form.attr('method') || 'POST',
@@ -312,6 +314,7 @@ App.resourceController = Em.ObjectController.create({
     },
     handleResponse: function(data, textStatus, jqXHR) {
         App.resourceController.collection.handleResponse(data['collection'])
+        App.resourceController.set('isLoading', false)
     }
 });
 
@@ -438,6 +441,11 @@ App.ApplicationView = Em.View.extend({
 });
 
 App.AdminView = Em.View.extend({})
+
+App.LoadingView = App.AdminView.extend({
+  templateName: 'loading',
+  classNames: ['loading']
+})
 
 App.ResourceView = App.AdminView.extend({
   templateName: 'resource',

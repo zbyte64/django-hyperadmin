@@ -281,6 +281,7 @@ class DateFieldFilter(FieldFilter):
         self.field_generic = '%s__' % self.field_path
         self.date_params = dict([(k, v) for k, v in params.items()
                                  if k.startswith(self.field_generic)])
+        self.used_parameters = self.data_params
 
     def expected_parameters(self):
         return [self.lookup_kwarg_since, self.lookup_kwarg_until]

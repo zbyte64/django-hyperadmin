@@ -28,27 +28,38 @@
   {% raw %}
   <script type="text/x-handlebars" data-template-name="resource">
     {{view App.BreadcrumbsView}}
-    {{view App.QueriesView}}
     
-    {{#if App.resourceController.collection.isCrudResource}}
-      {{view App.CrudItemsView}}
+    {{#if App.resourceController.isLoading}}
+        {{view App.LoadingView}}
     {{else}}
-      {{#if App.resourceController.collection.isResourceListing}}
-        {{view App.ResourceItemsView}}
-      {{else}}
-        {{view App.ItemsView}}
-      {{/if}}
+        
+        {{view App.QueriesView}}
+        
+        {{#if App.resourceController.collection.isCrudResource}}
+          {{view App.CrudItemsView}}
+        {{else}}
+          {{#if App.resourceController.collection.isResourceListing}}
+            {{view App.ResourceItemsView}}
+          {{else}}
+            {{view App.ItemsView}}
+          {{/if}}
+        {{/if}}
+        
+        <div class="container">
+            {{view App.ErrorView}}
+            {{view App.TemplateView}}
+        </div>
+        
+        <div class="container">
+            {{view App.NamespacesView}}
+        </div>
+    
     {{/if}}
     
-    <div class="container">
-        {{view App.ErrorView}}
-        {{view App.TemplateView}}
-    </div>
-    
-    <div class="container">
-        {{view App.NamespacesView}}
-    </div>
-    
+  </script>
+  
+  <script type="text/x-handlebars" data-template-name="loading">
+    Loading...
   </script>
   
   <script type="text/x-handlebars" data-template-name="namespaces">

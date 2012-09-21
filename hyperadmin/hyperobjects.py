@@ -18,7 +18,7 @@ class Link(object):
         self.form_kwargs = form_kwargs
         self.classes = classes
         self.descriptors = descriptors
-        self.rel = rel #CL
+        self.rel = rel #CL #CONSIDER they may be other cls, this should be a dictionary, classes is also a CL
         self.prompt = prompt
         self.cu_headers = cu_headers
         self.cr_headers = cr_headers
@@ -33,8 +33,8 @@ class Link(object):
             if self.form_class:
                 return 'LT'
             #TODO how do we determine which to return?
-            return 'LO'
-            return 'LE'
+            return 'LO' #link out to this content
+            return 'LE' #embed this content
         return 'L?'
     
     def class_attr(self):
