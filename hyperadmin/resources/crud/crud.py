@@ -195,6 +195,7 @@ class CRUDResource(BaseResource):
             links += self.get_changelist_links()
         return links
     
+    #technically these are outbound links, not embedded
     def get_embedded_links(self):
         create_link = self.get_create_link()
         return [create_link]

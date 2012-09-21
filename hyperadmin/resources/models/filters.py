@@ -236,15 +236,15 @@ FieldFilter.register(lambda f: bool(f.choices), ChoicesFieldFilter)
 
 class DateFieldFilter(FieldFilter):
     def __init__(self, field, field_path, section):
-        now = timezone.now()
+        now = datetime.datetime.now()
         # When time zone support is enabled, convert "now" to the user's time
         # zone so Django's definition of "Today" matches what the user expects.
-        if now.tzinfo is not None:
-            current_tz = timezone.get_current_timezone()
-            now = now.astimezone(current_tz)
-            if hasattr(current_tz, 'normalize'):
-                # available for pytz time zones
-                now = current_tz.normalize(now)
+        #if now.tzinfo is not None:
+        #    current_tz = timezone.get_current_timezone()
+        #    now = now.astimezone(current_tz)
+        #    if hasattr(current_tz, 'normalize'):
+        #        # available for pytz time zones
+        #        now = current_tz.normalize(now)
 
         if isinstance(field, models.DateTimeField):
             today = now.replace(hour=0, minute=0, second=0, microsecond=0)
