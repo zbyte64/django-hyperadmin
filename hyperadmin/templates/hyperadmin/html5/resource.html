@@ -87,6 +87,7 @@
 
 {% block namespaces %}
 {% for namespace in namespaces.itervalues %}
+    <h2>Namespace: {{namespace.name}}</h2>
     {% include_namespace namespace %}
 {% endfor %}
 {% endblock namespaces %}
