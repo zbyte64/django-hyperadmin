@@ -143,7 +143,7 @@ App.QueriesController = Em.ArrayController.extend({
     }.property('@each.rel').cacheable()
 })
 App.TemplatesController = Em.ArrayController.extend({})
-    
+
 App.CollectionController = Em.ObjectController.extend({
     data: null, //powers all data bound to it
     namespace: App.makeSimpleProperty('namespace'),
@@ -190,9 +190,35 @@ App.CollectionController = Em.ObjectController.extend({
     }
 })
 
+App.getFormFromEndpoint = function(url, rel, callback) {
+    /* given an api endpoint, do a call
+    /  look for templates for a given rel
+    /  pass to callback */
+    function lookupForm(data, textStatus, jqXHR) {
+        collection = App.CollectionController.create({})
+        collection.handleResponse(data)
+        for(var index=0; index<collection.templates.get('length'); index++) {
+            template = collection.templates.get(index)
+            if (template && template.rel == rel) {
+                callback(template)
+                return true;
+            }
+        }
+        return false;
+    }
+    
+    var settings = $.extend({}, App.requestDefaults, {
+        url: url,
+        success: lookupForm
+    })
+    $.ajax(settings)
+}
+
 App.uploadingFiles = false;
 App.initUploadFile = function(field, options) {
   console.log('upload init', field, options)
+  var endpoint = field.attr('data-resource-url');
+  
   function add(e, data) {
     console.log('upload add', e, data)
     App.uploadingFiles = true;
@@ -204,6 +230,27 @@ App.initUploadFile = function(field, options) {
     fileInput.hide()
     
     //TODO this is only necessary because forms insist on resaving and "upload to" is not communicated
+    /*
+    if (endpoint) {
+        /* file uploads require a single ajax request to get an upload slot
+         * this is the first request to get a signed url *
+        $.ajax({
+            type : 'POST',
+            //async : false,
+            dataType: 'json',
+            url : determine_name_url,
+            beforeSend : add_csrf,
+            data : {filename: file.name,
+                       upload_to: upload_to},
+            success : function(post_data) {
+                data.formData = post_data;
+                data.fileInput.attr('name', options.fileObjName);
+                file.path = post_data['targetpath'];
+                data.submit();
+            }
+        });
+    }
+    */
     data.formData = {'name':'hyperadmin-tmp/'+file.name}
     data.submit()
   }
@@ -257,6 +304,7 @@ App.initUploadFile = function(field, options) {
   function get_form(item) {
     return $(item).parents('form:first')
   }
+  
   var options = $.extend({
         //'onUploadSuccess': on_upload_success,
         'add': add,

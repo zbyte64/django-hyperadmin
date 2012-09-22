@@ -87,21 +87,43 @@ class State(dict):
         self.resource = resource
         self.meta = meta
         super(State, self).__init__(*args, **kwargs)
+        
+        #nuke previous state links
+        self.update({'embedded_links': [],
+                     'outbound_links': [],
+                     'templated_queries': [],
+                     'ln_links': [],
+                     'idempotent_links': [],})
     
     def get_embedded_links(self):
-        return self.resource.get_embedded_links()
+        return self.resource.get_embedded_links() + self['embedded_links']
+    
+    def add_embedded_link(self, link):
+        self['embedded_links'].append(link)
     
     def get_outbound_links(self):
-        return self.resource.get_outbound_links()
+        return self.resource.get_outbound_links() + self['outbound_links']
+    
+    def add_outbound_link(self, link):
+        self['outbound_links'].append(link)
     
     def get_templated_queries(self):
-        return self.resource.get_templated_queries()
+        return self.resource.get_templated_queries() + self['templated_queries']
+    
+    def add_templated_query(self, link):
+        self['templated_queries'].append(link)
     
     def get_ln_links(self):
-        return self.resource.get_ln_links()
+        return self.resource.get_ln_links() + self['ln_links']
+    
+    def add_ln_link(self, link):
+        self['ln_links'].append(link)
     
     def get_idempotent_links(self):
-        return self.resource.get_idempotent_links()
+        return self.resource.get_idempotent_links() + self['idempotent_links']
+    
+    def add_idempotent_link(self, link):
+        self['idemptotent_links'].append(link)
     
     def set_item(self, val):
         self['item'] = val

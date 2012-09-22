@@ -4,7 +4,7 @@ from django.utils.functional import update_wrapper
 from hyperadmin.hyperobjects import Link
 from hyperadmin.resources.crud.crud import CRUDResource
 from hyperadmin.resources.storages import views
-from hyperadmin.resources.storages.forms import UploadForm
+from hyperadmin.resources.storages.forms import UploadForm, UploadLinkForm
 from hyperadmin.resources.storages.changelist import StorageChangeList, StoragePaginator
 
 
@@ -13,9 +13,11 @@ class StorageResource(CRUDResource):
     changelist_class = StorageChangeList
     paginator_class = StoragePaginator
     form_class = UploadForm
+    upload_link_form_class = UploadLinkForm
     
     list_view = views.StorageListView
     add_view = views.StorageCreateView
+    upload_link_view = views.StorageUploadLinkView
     detail_view = views.StorageDetailView
     delete_view = views.StorageDeleteView
     
@@ -36,6 +38,9 @@ class StorageResource(CRUDResource):
         return self.resource_adaptor
     storage = property(get_storage)
     
+    def get_upload_link_form_class(self):
+        return self.upload_link_form_class
+    
     def get_urls(self):
         def wrap(view, cacheable=False):
             def wrapper(*args, **kwargs):
@@ -53,6 +58,9 @@ class StorageResource(CRUDResource):
             url(r'^add/$',
                 wrap(self.add_view.as_view(**init)),
                 name='%s_%s_add' % (self.app_name, self.resource_name)),
+            url(r'^upload-link/$',
+                wrap(self.upload_link_view.as_view(**init)),
+                name='%s_%s_uploadlink' % (self.app_name, self.resource_name)),
             url(r'^(?P<path>.+)/$',
                 wrap(self.detail_view.as_view(**init)),
                 name='%s_%s_detail' % (self.app_name, self.resource_name)),
@@ -83,6 +91,27 @@ class StorageResource(CRUDResource):
         kwargs['storage'] = self.storage
         return kwargs
     
+    def get_upload_link(self, form_kwargs=None, **kwargs):
+        if form_kwargs is None:
+            form_kwargs = {}
+        form_kwargs = self.get_form_kwargs(**form_kwargs)
+        form_kwargs['resource'] = self
+        
+        link_kwargs = {'url':self.get_upload_link_url(),
+                       'resource':self,
+                       'on_submit':self.handle_upload_link_submission,
+                       'method':'POST',
+                       'form_kwargs':form_kwargs,
+                       'form_class': self.get_upload_link_form_class(),
+                       'prompt':'create upload link',
+                       'rel':'upload-link',}
+        link_kwargs.update(kwargs)
+        create_link = Link(**link_kwargs)
+        return create_link
+    
+    def get_upload_link_url(self):
+        return self.reverse('%s_%s_uploadlink' % (self.app_name, self.resource_name))
+    
     def get_item_url(self, item):
         instance = item.instance
         return self.reverse('%s_%s_detail' % (self.app_name, self.resource_name), path=instance.name)
@@ -91,8 +120,22 @@ class StorageResource(CRUDResource):
         instance = item.instance
         return self.reverse('%s_%s_delete' % (self.app_name, self.resource_name), path=instance.name)
     
-    def get_item_embedded_links(self, item):
-        links = super(StorageResource, self).get_item_embedded_links(item)
+    def handle_upload_link_submission(self, link, submit_kwargs):
+        form = link.get_form(**submit_kwargs)
+        if form.is_valid():
+            #presumably this special form returns a link
+            upload_link = form.save()
+            self.state.add_ln_link(upload_link)
+            return link
+        return link.clone(form=form)
+    
+    def get_outbound_links(self):
+        links = super(StorageResource, self).get_outbound_links()
+        links.append(self.get_upload_link())
+        return links
+    
+    def get_item_outbound_links(self, item):
+        links = super(StorageResource, self).get_item_outbound_links(item)
         link = Link(url=item.instance.url,
                     resource=self,
                     prompt='Absolute Url',

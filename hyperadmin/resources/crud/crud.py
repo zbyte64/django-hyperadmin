@@ -195,26 +195,30 @@ class CRUDResource(BaseResource):
             links += self.get_changelist_links()
         return links
     
-    #technically these are outbound links, not embedded
-    def get_embedded_links(self):
-        create_link = self.get_create_link()
-        return [create_link]
+    def get_outbound_links(self):
+        links = super(CRUDResource, self).get_outbound_links()
+        links.append(self.get_create_link())
+        return links
     
-    def get_item_embedded_links(self, item):
-        delete_link = self.get_delete_link(item=item)
-        return [delete_link]
+    def get_item_outbound_links(self, item):
+        links = super(CRUDResource, self).get_item_outbound_links(item)
+        links.append(self.get_delete_link(item=item))
+        return links
     
     def get_idempotent_links(self):
-        create_link = self.get_create_link()
-        return [create_link]
+        links = super(CRUDResource, self).get_idempotent_links()
+        links.append(self.get_create_link())
+        return links
     
     def get_item_ln_links(self, item):
-        update_link = self.get_update_link(item=item)
-        return [update_link]
+        links = super(CRUDResource, self).get_item_ln_links(item)
+        links.append(self.get_update_link(item=item))
+        return links
     
     def get_item_idempotent_links(self, item):
-        delete_link = self.get_restful_delete_link(item=item)
-        return [delete_link]
+        links = super(CRUDResource, self).get_item_idempotent_links(item)
+        links.append(self.get_restful_delete_link(item=item))
+        return links
     
     def get_item_breadcrumb(self, item):
         return self.get_item_link(item, rel='breadcrumb')

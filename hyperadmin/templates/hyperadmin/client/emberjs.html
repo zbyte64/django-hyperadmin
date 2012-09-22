@@ -149,7 +149,7 @@
         {{/each}}
     </select>
     {{else}}
-    <input {{bindAttr type="type"}} {{bindAttr name="name"}} {{bindAttr value="value"}} {{bindAttr class="css_class"}} {{bindAttr checked="isChecked:checked"}}/>
+    <input {{bindAttr type="type"}} {{bindAttr name="name"}} {{bindAttr value="value"}} {{bindAttr class="css_class"}} {{bindAttr checked="isChecked:checked"}} {{bindAttr data-resource-url="related_resource_url"}}/>
     {{/if}}
     {{/each}}
     <button {{action submitForm}} type="button" class="btn">{{prompt}}</button>

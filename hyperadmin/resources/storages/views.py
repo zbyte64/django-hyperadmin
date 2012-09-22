@@ -1,4 +1,4 @@
-from hyperadmin.resources.crud.views import CRUDDetailMixin, CRUDCreateView, CRUDListView, CRUDDeleteView, CRUDDetailView
+from hyperadmin.resources.crud.views import CRUDDetailMixin, CRUDCreateView, CRUDListView, CRUDDeleteView, CRUDDetailView, CRUDView
 
 
 class BoundFile(object):
@@ -18,7 +18,23 @@ class BoundFile(object):
         return self.storage.delete(self.name)
 
 class StorageMixin(object):
-    pass
+    def get_upload_link(self, **form_kwargs):
+        form_kwargs.update(self.get_form_kwargs())
+        link_kwargs = self.get_link_kwargs()
+        link_kwargs.update({'form_kwargs': form_kwargs,})
+        return self.resource.get_upload_link(**link_kwargs)
+
+class StorageUploadLinkView(StorageMixin, CRUDView):
+    view_class = 'change_form'
+    
+    def get(self, request, *args, **kwargs):
+        return self.resource.generate_response(self.get_response_media_type(), self.get_response_type(), self.get_upload_link())
+    
+    def post(self, request, *args, **kwargs):
+        form_kwargs = self.get_request_form_kwargs()
+        form_link = self.get_upload_link(**form_kwargs)
+        response_link = form_link.submit()
+        return self.resource.generate_response(self.get_response_media_type(), self.get_response_type(), response_link)
 
 class StorageCreateView(StorageMixin, CRUDCreateView):
     pass

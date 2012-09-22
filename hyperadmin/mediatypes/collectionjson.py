@@ -156,7 +156,10 @@ class CollectionHyperAdminJSON(CollectionNextJSON):
         entry = super(CollectionHyperAdminJSON, self).convert_field(field)
         resource = self.get_related_resource_from_field(field)
         if resource:
-            entry['related_resource_url'] = resource.get_absolute_url()
+            if isinstance(resource, basestring):
+                entry['related_resource_url'] = resource
+            else:
+                entry['related_resource_url'] = resource.get_absolute_url()
         entry['classes'] = field.css_classes().split()
         #if isinstance(field, forms.FileField):
         #    field.form.instance

@@ -104,7 +104,7 @@ class ResourceSite(object):
             if model in self.registry:
                 return self.registry[model]
         if isinstance(field, FileField):
-            return self.applications['-storages'].resource_adaptor['media']
+            return self.applications['-storages'].resource_adaptor['media'].get_upload_link_url()
         return None
     
     def get_html_type_from_field(self, field):
