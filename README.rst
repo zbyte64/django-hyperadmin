@@ -29,7 +29,7 @@ Features
 * Architecture allows for more media formats
 * Internal resource representation based on hfactor and forms
 * Headers control media type; "Accepts" and "Content-Type" control response and request format
-* Includes a javascript powered client
+* Clients packaged seperately
 
 
 ------------
@@ -49,16 +49,18 @@ Put 'hyperadmin' into your ``INSTALLED_APPS`` section of your settings file.
 And the following to urls.py::
 
     import hyperadmin
-    from hyperadmin.clients import EmberJSClient
     hyperadmin.autodiscover() #TODO this does nothing
     hyperadmin.site.install_models_from_site(admin.site) #ports admin models to hyperadmin
     hyperadmin.site.install_storage_resources() #enables the storage resource for media and static
-    admin_client = EmberJSClient(api_endpoint='/hyper-admin/')
 
 Add to root url patterns::
 
     url(r'^hyper-admin/', include(hyperadmin.site.urls)),
-    url(r'^emberjs-admin/', include(admin_client.urls)),
+
+
+(Optional) Install a client:
+
+* https://github.com/zbyte64/django-hyperadmin-emberclient
 
 =============
 Configuration
@@ -100,8 +102,9 @@ Registering a model with hyperadmin::
 Client
 ======
 
-Currently there is one client written using emberjs. See ``hyperadmin.clients.emberjs.EmberJSClient``
-This client is able to browse the API and perform CRUD operations. There are plans to support inlines.
+Currently there is one client written using emberjs: https://github.com/zbyte64/django-hyperadmin-emberclient
+Visiting the api endpoint in a browser will let you browse the various hyberobjects made available through the resource.
+
 
 =============================
 Reading up on Hypermedia APIs

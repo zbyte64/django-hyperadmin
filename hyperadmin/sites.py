@@ -129,6 +129,9 @@ class ResourceSite(object):
     def reverse(self, name, *args, **kwargs):
         return reverse('%s:%s' % (self.name, name), args=args, kwargs=kwargs)#, current_app=self.app_name)
     
+    def get_absolute_url(self):
+        return self.site_resource.get_absolute_url()
+    
     def get_actions(self, request):
         return SortedDict()
     

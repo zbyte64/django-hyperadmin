@@ -33,8 +33,12 @@ class SimpleTemplateClient(Client):
         pass #TODO
     
     def get_context_data(self):
+        api_endpoint = self.api_endpoint
+        if hasattr(api_endpoint, 'get_absolute_url'):
+            api_endpoint = api_endpoint.get_absolute_url()
+        print api_endpoint
         return {'media':self.get_media(),
-                'api_endpoint':self.api_endpoint,
+                'api_endpoint':api_endpoint,
                 'client':self,}
     
     def get_urls(self):
