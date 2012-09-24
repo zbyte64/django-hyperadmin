@@ -149,5 +149,5 @@ class StorageResource(CRUDResource):
         return links
     
     def get_item_prompt(self, item):
-        return item.instance.url
+        return item.instance.name
 

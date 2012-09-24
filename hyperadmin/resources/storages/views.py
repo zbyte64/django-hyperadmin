@@ -21,6 +21,9 @@ class BoundFile(object):
     
     def exists(self):
         return self.storage.exists(self.name)
+    
+    def __unicode__(self):
+        return self.name
 
 class StorageMixin(object):
     def get_upload_link(self, **form_kwargs):
