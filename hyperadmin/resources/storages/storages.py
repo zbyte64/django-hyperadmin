@@ -1,3 +1,5 @@
+import os
+
 from django.conf.urls.defaults import patterns, url
 from django.utils.functional import update_wrapper
 
@@ -72,7 +74,10 @@ class StorageResource(CRUDResource):
     
     def get_listing(self, path):
         try:
-            return self.resource_adaptor.listdir(path)
+            dirs, files = self.resource_adaptor.listdir(path)
+            if path:
+                files = [os.path.join(path, filename) for filename in files]
+            return dirs, files
         except NotImplementedError:
             return [], [] #dirs, files
     
@@ -142,4 +147,7 @@ class StorageResource(CRUDResource):
                     rel='storage-url',)
         links.append(link)
         return links
+    
+    def get_item_prompt(self, item):
+        return item.instance.url
 

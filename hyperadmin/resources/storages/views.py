@@ -1,3 +1,5 @@
+from django import http
+
 from hyperadmin.resources.crud.views import CRUDDetailMixin, CRUDCreateView, CRUDListView, CRUDDeleteView, CRUDDetailView, CRUDView
 
 
@@ -16,6 +18,9 @@ class BoundFile(object):
     
     def delete(self):
         return self.storage.delete(self.name)
+    
+    def exists(self):
+        return self.storage.exists(self.name)
 
 class StorageMixin(object):
     def get_upload_link(self, **form_kwargs):
@@ -46,6 +51,8 @@ class StorageDetailMixin(StorageMixin, CRUDDetailMixin):
     def get_object(self):
         if not hasattr(self, 'object'):
             self.object = BoundFile(self.resource.resource_adaptor, self.kwargs['path'])
+            if not self.object.exists():
+                raise http.Http404
         return self.object
 
 class StorageDeleteView(StorageDetailMixin, CRUDDeleteView):

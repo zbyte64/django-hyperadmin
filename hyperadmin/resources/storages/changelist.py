@@ -1,12 +1,12 @@
-import urllib
-
 from hyperadmin.resources.storages.views import BoundFile
 from hyperadmin.hyperobjects import Link
 from hyperadmin.resources.crud.changelist import ChangeList
 
 class StoragePaginator(object):
     #count, num_pages, object_list
-    def __init__(self, index, storage):
+    def __init__(self, index, storage, state):
+        self.state = state
+        self.path = state.params.get('path', '')
         self.dirs, self.files = index
         self.storage = storage
         
@@ -22,9 +22,20 @@ class StoragePaginator(object):
             items.append(BoundFile(self.storage, file_name))
         
         links = list()
+        if self.path:
+            url = './%s' % self.state.get_query_string({}, ['path'])
+            print url
+            link = Link(url=url, resource=self, prompt=u"Directory: /", classes=['filter', 'directory'], rel="filter")
+            links.append(link)
         for directory in self.dirs:
-            url = './?%s' % urllib.urlencode({'path':directory})
+            url = './%s' % self.state.get_query_string({'path':directory})
+            print url
             link = Link(url=url, resource=self, prompt=u"Directory: %s" % directory, classes=['filter', 'directory'], rel="filter")
+            links.append(link)
+        if '/' in self.path:
+            url = './%s' % self.state.get_query_string({'path':self.path[:self.path.rfind('/')]})
+            print url
+            link = Link(url=url, resource=self, prompt=u"Directory: ../", classes=['filter', 'directory'], rel="filter")
             links.append(link)
         return links, items
 
@@ -33,7 +44,7 @@ class StorageChangeList(ChangeList):
         for section in self.sections.itervalues():
             section.populate_state(state)
         index = self.get_instances(state)
-        paginator = self.get_paginator(index, storage=self.resource.storage)
+        paginator = self.get_paginator(index, storage=self.resource.storage, state=state)
         state['paginator'] = paginator
         state['page'] = paginator
         state['links'] = paginator.links
