@@ -197,7 +197,7 @@ class ResourceSite(object):
                 except:
                     pass #too much customization for us to handle!
     
-    def install_storage_resources(self):
+    def install_storage_resources(self, media_resource_class=None, static_resource_class=None):
         from hyperadmin.resources.storages.storages import StorageResource
         from django.core.files.storage import default_storage as media_storage
         try:
@@ -206,8 +206,12 @@ class ResourceSite(object):
             from django.conf import settings
             from django.core.files.storage import get_storage_class
             static_storage = get_storage_class(settings.STATICFILES_STORAGE)()
-        self.register(media_storage, StorageResource, resource_name='media')
-        self.register(static_storage, StorageResource, resource_name='static')
+        if media_resource_class is None:
+            media_resource_class = StorageResource
+        if static_resource_class is None:
+            static_resource_class = StorageResource
+        self.register(media_storage, media_resource_class, resource_name='media')
+        self.register(static_storage, static_resource_class, resource_name='static')
 
 
 site = ResourceSite()
