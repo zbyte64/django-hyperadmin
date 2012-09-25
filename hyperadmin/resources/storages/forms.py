@@ -24,7 +24,7 @@ class UploadForm(forms.Form):
 
 class UploadLinkForm(forms.Form):
     name = forms.CharField() #desired file name
-    upload_to = forms.CharField() #directory path
+    upload_to = forms.CharField(required=False) #directory path
     overwrite = forms.BooleanField(required=False)
     
     def __init__(self, **kwargs):
@@ -35,12 +35,16 @@ class UploadLinkForm(forms.Form):
     def save(self, commit=True):
         import os
         file_name = self.storage.get_valid_name(self.cleaned_data['name'])
-        path = os.path.join(self.cleaned_data['upload_to'], file_name)
+        upload_to = self.cleaned_data.get('upload_to', '')
+        if upload_to:
+            path = os.path.join(upload_to, file_name)
+        else:
+            path = file_name
         overwrite = self.cleaned_data.get('overwrite', False)
         if overwrite:
             name = path
         else:
             name = self.storage.get_available_name(path)
         form_kwargs = {'initial':{'name':name, 'overwrite':overwrite}}
-        link = self.resource.get_create_link(form_kwargs=form_kwargs)
+        link = self.resource.get_create_link(form_kwargs=form_kwargs, rel='direct-upload')
         return link
