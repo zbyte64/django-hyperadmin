@@ -3,6 +3,7 @@ try:
 except ImportError:
     from django.conf.urls.defaults import patterns, url
 from django.views.generic import TemplateView
+from django.core.urlresolvers import reverse
 
 class Client(object):
     def __init__(self, api_endpoint, name='hyper-client', app_name='client'):
@@ -16,6 +17,9 @@ class Client(object):
     def urls(self):
         return self.get_urls(), self.app_name, self.name
     urls = property(urls)
+    
+    def reverse(self, name, *args, **kwargs):
+        return reverse('%s:%s' % (self.name, name), args=args, kwargs=kwargs, current_app=self.app_name)
 
 class SimpleTemplateClientView(TemplateView):
     client = None
@@ -36,7 +40,6 @@ class SimpleTemplateClient(Client):
         api_endpoint = self.api_endpoint
         if hasattr(api_endpoint, 'get_absolute_url'):
             api_endpoint = api_endpoint.get_absolute_url()
-        print api_endpoint
         return {'media':self.get_media(),
                 'api_endpoint':api_endpoint,
                 'client':self,}

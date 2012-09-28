@@ -4,6 +4,13 @@ from django import http
 BUILTIN_MEDIA_TYPES = dict()
 
 class MediaType(object):
+    recognized_media_types = []
+    
+    @classmethod
+    def register_with_builtins(cls):
+        for media_type in cls.recognized_media_types:
+            BUILTIN_MEDIA_TYPES[media_type] = cls
+    
     def __init__(self, view):
         self.view = view
         self.request = view.request

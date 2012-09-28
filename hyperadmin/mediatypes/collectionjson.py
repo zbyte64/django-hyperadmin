@@ -3,9 +3,13 @@ from django.utils import simplejson as json
 from django.utils.encoding import force_unicode
 from django import http
 
-from common import MediaType, BUILTIN_MEDIA_TYPES
+from common import MediaType
 
 class CollectionJSON(MediaType):
+    recognized_media_types = [
+        'application/vnd.Collection+JSON'
+    ]
+    
     def convert_field(self, field):
         entry = {"name": force_unicode(field.name),
                  "prompt": force_unicode(field.label)}
@@ -106,9 +110,13 @@ class CollectionJSON(MediaType):
         return {'data':form_data,
                 'files':files,}
 
-BUILTIN_MEDIA_TYPES['application/vnd.Collection+JSON'] = CollectionJSON
+CollectionJSON.register_with_builtins()
 
 class CollectionNextJSON(CollectionJSON):
+    recognized_media_types = [
+        'application/vnd.Collection.next+JSON'
+    ]
+    
     def convert_field(self, field):
         entry = super(CollectionNextJSON, self).convert_field(field)
         entry['required'] = field.field.required
@@ -141,9 +149,13 @@ class CollectionNextJSON(CollectionJSON):
         #TODO link_r["enctype"]
         return link_r
 
-BUILTIN_MEDIA_TYPES['application/vnd.Collection.next+JSON'] = CollectionNextJSON
+CollectionNextJSON.register_with_builtins()
 
 class CollectionHyperAdminJSON(CollectionNextJSON):
+    recognized_media_types = [
+        'application/vnd.Collection.hyperadmin+JSON'
+    ]
+    
     def get_accepted_namespaces(self):
         namespaces = list()
         for entry in self.request.META.get('HTTP_ACCEPT_NAMESPACES', '').split(','):
@@ -194,5 +206,5 @@ class CollectionHyperAdminJSON(CollectionNextJSON):
             data['display_fields'] = state.meta['display_fields']
         return data
 
-BUILTIN_MEDIA_TYPES['application/vnd.Collection.hyperadmin+JSON'] = CollectionHyperAdminJSON
+CollectionHyperAdminJSON.register_with_builtins()
 

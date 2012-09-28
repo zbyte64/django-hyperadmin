@@ -2,9 +2,13 @@ from django.core.serializers.json import DjangoJSONEncoder
 from django.utils import simplejson as json
 from django import http
 
-from common import MediaType, BUILTIN_MEDIA_TYPES
+from common import MediaType
 
 class JSON(MediaType):
+    recognized_media_types = [
+        'application/json'
+    ]
+    
     def convert_item(self, item):
         return self.get_form_instance_values(item.form)
     
@@ -28,9 +32,13 @@ class JSON(MediaType):
         return {'data':data,
                 'files':self.request.FILES,}
 
-BUILTIN_MEDIA_TYPES['application/json'] = JSON
+JSON.register_with_builtins()
 
 class JSONP(JSON):
+    recognized_media_types = [
+        'text/javascript'
+    ]
+    
     def get_jsonp_callback(self):
         #TODO make configurable
         return self.request.GET['callback']
@@ -41,5 +49,5 @@ class JSONP(JSON):
         callback = self.get_jsonp_callback()
         return http.HttpResponse(u'%s(%s)' % (callback, content), content_type)
 
-BUILTIN_MEDIA_TYPES['text/javascript'] = JSONP
+JSONP.register_with_builtins()
 

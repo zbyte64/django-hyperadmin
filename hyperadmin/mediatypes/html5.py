@@ -1,12 +1,19 @@
 from django.template.response import TemplateResponse
 from django.middleware.csrf import CsrfViewMiddleware
 
-from common import MediaType, BUILTIN_MEDIA_TYPES
+from common import MediaType
 
 class Html5MediaType(MediaType):
     template_name = 'hyperadmin/html5/resource.html'
-    template_dir_name = 'hyperadmin'
+    template_dir_name = 'hyperadmin/html5'
     response_class = TemplateResponse
+    recognized_media_types = [
+        'text/html',
+        'application/xhtml+xml',
+        'application/text-html',
+        'application/x-www-form-urlencoded',
+        'multipart/form-data',
+    ]
     
     def get_context_data(self, link, state):
         context = {'link':link,
@@ -31,9 +38,9 @@ class Html5MediaType(MediaType):
         }
         
         names = [
-            #'{base}/{app_name}/{resource_name}/{view_class}.html'.format(**params),
-            #'{base}/{app_name}/{view_class}.html'.format(**params),
-            #'{base}/{view_class}.html'.format(**params),
+            '{base}/{app_name}/{resource_name}/{view_class}.html'.format(**params),
+            '{base}/{app_name}/{view_class}.html'.format(**params),
+            '{base}/{view_class}.html'.format(**params),
             self.template_name,
         ]
         
@@ -44,7 +51,7 @@ class Html5MediaType(MediaType):
             return self.handle_redirect(link)
         context = self.get_context_data(link=link, state=state)
         response = self.response_class(request=self.request, template=self.get_template_names(), context=context)
-        response['Content-Type'] = 'text/html'
+        response['Content-Type'] = 'application/text-html'
         return response
     
     def deserialize(self):
@@ -60,9 +67,5 @@ class Html5MediaType(MediaType):
             assert False, 'csrf failed' #TODO APIException(response) or SuspiciousOperation ....
             raise response
 
-BUILTIN_MEDIA_TYPES['text/html'] = Html5MediaType
-BUILTIN_MEDIA_TYPES['application/xhtml+xml'] = Html5MediaType
-BUILTIN_MEDIA_TYPES['application/text-html'] = Html5MediaType
-BUILTIN_MEDIA_TYPES['application/x-www-form-urlencoded'] = Html5MediaType
-BUILTIN_MEDIA_TYPES['multipart/form-data'] = Html5MediaType
+Html5MediaType.register_with_builtins()
 
