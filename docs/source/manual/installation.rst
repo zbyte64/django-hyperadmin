@@ -23,9 +23,10 @@ And the following to urls.py::
 
 Add to root url patterns::
 
-    url(r'^hyper-admin/', include(hyperadmin.site.urls)),
+    url(r'^hyperapi/', include(hyperadmin.site.urls)),
 
 
 (Optional) Install a client:
 
 * https://github.com/zbyte64/django-hyperadmin-emberclient
+* https://github.com/zbyte64/django-hyperadmin-client

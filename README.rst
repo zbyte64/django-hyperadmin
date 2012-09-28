@@ -55,12 +55,13 @@ And the following to urls.py::
 
 Add to root url patterns::
 
-    url(r'^hyper-admin/', include(hyperadmin.site.urls)),
+    url(r'^hyperapi/', include(hyperadmin.site.urls)),
 
 
 (Optional) Install a client:
 
 * https://github.com/zbyte64/django-hyperadmin-emberclient
+* https://github.com/zbyte64/django-hyperadmin-client
 
 =============
 Configuration
@@ -98,11 +99,13 @@ Registering a model with hyperadmin::
     hyperadmin.site.register(MyModel, MyModelResource)
 
 
-======
-Client
-======
+=======
+Clients
+=======
 
-Currently there is one client written using emberjs: https://github.com/zbyte64/django-hyperadmin-emberclient
+Emberjs Client: https://github.com/zbyte64/django-hyperadmin-emberclient
+Django Template Client: https://github.com/zbyte64/django-hyperadmin-client
+
 Visiting the api endpoint in a browser will let you browse the various hyberobjects made available through the resource.
 
 
