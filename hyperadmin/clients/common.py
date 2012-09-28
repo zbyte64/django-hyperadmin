@@ -6,10 +6,13 @@ from django.views.generic import TemplateView
 from django.core.urlresolvers import reverse
 
 class Client(object):
-    def __init__(self, api_endpoint, name='hyper-client', app_name='client'):
+    default_namespace = 'hyper-client'
+    default_app_name = 'client'
+    
+    def __init__(self, api_endpoint, name=None, app_name=None):
         self.api_endpoint = api_endpoint
-        self.name = name
-        self.app_name = app_name
+        self.name = name or self.default_namespace
+        self.app_name = app_name or self.default_app_name
     
     def get_urls(self):
         pass

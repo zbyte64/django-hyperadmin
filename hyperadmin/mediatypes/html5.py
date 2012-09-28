@@ -51,7 +51,7 @@ class Html5MediaType(MediaType):
             return self.handle_redirect(link)
         context = self.get_context_data(link=link, state=state)
         response = self.response_class(request=self.request, template=self.get_template_names(), context=context)
-        response['Content-Type'] = 'application/text-html'
+        response['Content-Type'] = 'text/html'
         return response
     
     def deserialize(self):
