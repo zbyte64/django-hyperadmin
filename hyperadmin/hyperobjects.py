@@ -3,7 +3,7 @@ from django.utils.http import urlencode
 
 
 class Link(object):
-    def __init__(self, url, resource, method='GET', form=None, form_class=None, form_kwargs=None,
+    def __init__(self, url, resource, method='GET', form=None, form_class=None, form_kwargs=None, link_factor=None,
                  classes=[], descriptors=None, rel=None, prompt=None, cu_headers=None, cr_headers=None, on_submit=None):
         '''
         fields = dictionary of django fields describing the accepted data
@@ -11,11 +11,12 @@ class Link(object):
         
         '''
         self.url = url
-        self.method = str(method).upper() #CM
+        self._method = str(method).upper() #CM
         self.resource = resource
         self._form = form
         self.form_class = form_class
         self.form_kwargs = form_kwargs
+        self.link_factor = link_factor
         self.classes = classes
         self.descriptors = descriptors
         self.rel = rel #CL #CONSIDER they may be other cls, this should be a dictionary, classes is also a CL
@@ -25,17 +26,31 @@ class Link(object):
         self.on_submit = on_submit
     
     def get_link_factor(self):
-        if self.method in ('PUT', 'DELETE'):
+        if self.link_factor:
+            return self.link_factor
+        if self._method in ('PUT', 'DELETE'):
             return 'LI'
-        if self.method == 'POST':
+        if self._method == 'POST':
             return 'LN'
-        if self.method == 'GET':
+        if self._method == 'GET':
             if self.form_class:
                 return 'LT'
             #TODO how do we determine which to return?
             return 'LO' #link out to this content
             return 'LE' #embed this content
         return 'L?'
+    
+    @property
+    def is_simple_link(self):
+        if self.get_link_factor() in ('LO', 'LE'):
+            return True
+        return False
+    
+    @property
+    def method(self):
+        if self.is_simple_link:
+            return 'GET'
+        return self._method
     
     def class_attr(self):
         return u' '.join(self.classes)
@@ -55,12 +70,14 @@ class Link(object):
     
     @property
     def form(self):
-        if self._form is None and self.form_class:
+        if self._form is None and self.form_class and not self.is_simple_link:
             self._form = self.get_form()
         return self._form
     
     @property
     def errors(self):
+        if self.is_simple_link:
+            return None
         if self.form_class:
             return self.form.errors
         return None

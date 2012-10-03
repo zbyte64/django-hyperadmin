@@ -215,12 +215,12 @@ class CRUDResource(BaseResource):
     
     def get_outbound_links(self):
         links = super(CRUDResource, self).get_outbound_links()
-        links.append(self.get_create_link())
+        links.append(self.get_create_link(link_factor='LO'))
         return links
     
     def get_item_outbound_links(self, item):
         links = super(CRUDResource, self).get_item_outbound_links(item)
-        links.append(self.get_delete_link(item=item))
+        links.append(self.get_delete_link(item=item, link_factor='LO'))
         return links
     
     def get_idempotent_links(self):
