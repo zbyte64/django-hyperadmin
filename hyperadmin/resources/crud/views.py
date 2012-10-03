@@ -132,6 +132,11 @@ class CRUDDetailMixin(object):
 class CRUDDeleteView(CRUDDetailMixin, CRUDView):
     view_class = 'delete_confirmation'
     
+    def get(self, request, *args, **kwargs):
+        self.object = self.get_object()
+        resource_item = self.get_item()
+        return self.resource.generate_response(self.get_response_media_type(), self.get_response_type(), self.get_delete_link(resource_item))
+    
     def post(self, request, *args, **kwargs):
         self.object = self.get_object()
         if not self.can_delete(self.object):

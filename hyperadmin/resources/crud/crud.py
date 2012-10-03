@@ -225,17 +225,22 @@ class CRUDResource(BaseResource):
     
     def get_idempotent_links(self):
         links = super(CRUDResource, self).get_idempotent_links()
-        links.append(self.get_create_link())
+        if not self.state.item: #only display a create link if we are not viewing a specific item
+            links.append(self.get_create_link())
         return links
     
     def get_item_ln_links(self, item):
         links = super(CRUDResource, self).get_item_ln_links(item)
-        links.append(self.get_update_link(item=item))
+        if self.state.get('view_class', None) != 'delete_confirmation':
+            links.append(self.get_update_link(item=item))
         return links
     
     def get_item_idempotent_links(self, item):
         links = super(CRUDResource, self).get_item_idempotent_links(item)
-        links.append(self.get_restful_delete_link(item=item))
+        if self.state.get('view_class', None) == 'delete_confirmation':
+            links.append(self.get_delete_link(item=item))
+        else:
+            links.append(self.get_restful_delete_link(item=item))
         return links
     
     def get_item_breadcrumb(self, item):
