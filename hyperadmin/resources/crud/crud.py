@@ -25,9 +25,23 @@ class ListForm(forms.Form):
                     label = self.resource.resource_name
                 self.fields[display] = forms.CharField(label=label)
                 if self.instance:
-                    val = getattr(self.instance, display)
+                    if hasattr(self.instance, display):
+                        try:
+                            val = getattr(self.instance, display)
+                        except:
+                            val = ''
+                    elif hasattr(self.resource, display):
+                        try:
+                            val = getattr(self.resource, display)(self.instance)
+                        except:
+                            val = ''
+                    else:
+                        val = '' #TODO raise ImproperlyConfigured
                     if callable(val):
-                        val = val()
+                        try:
+                            val = val()
+                        except:
+                            val = ''
                     self.initial[display] = force_unicode(val)
         else:
             pass
