@@ -64,10 +64,13 @@ class ResourceViewMixin(ConditionalAccessMixin):
         return self.resource.get_state_class()
     
     def get_state_data(self):
-        return {'auth':self.request.user,
-                'view_class':self.view_class,
-                'item':self.get_item(),
-                'params':self.request.GET.copy(),}
+        data = dict(self.kwargs)
+        data.update({'auth':self.request.user,
+                     'view_class':self.view_class,
+                     'item':self.get_item(),
+                     'params':self.request.GET.copy(),
+                     'args':self.args,})
+        return data
     
     def dispatch(self, request, *args, **kwargs):
         self.request = request
