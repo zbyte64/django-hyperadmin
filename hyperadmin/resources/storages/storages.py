@@ -52,23 +52,24 @@ class StorageResource(CRUDResource):
         init = self.get_view_kwargs()
         
         # Admin-site-wide views.
+        base_name = self.get_base_url_name()
         urlpatterns = self.get_extra_urls()
         urlpatterns += patterns('',
             url(r'^$',
                 wrap(self.list_view.as_view(**init)),
-                name='%s_%s_list' % (self.app_name, self.resource_name)),
+                name='%slist' % base_name),
             url(r'^add/$',
                 wrap(self.add_view.as_view(**init)),
-                name='%s_%s_add' % (self.app_name, self.resource_name)),
+                name='%sadd' % base_name),
             url(r'^upload-link/$',
                 wrap(self.upload_link_view.as_view(**init)),
-                name='%s_%s_uploadlink' % (self.app_name, self.resource_name)),
+                name='%suploadlink' % base_name),
             url(r'^(?P<path>.+)/$',
                 wrap(self.detail_view.as_view(**init)),
-                name='%s_%s_detail' % (self.app_name, self.resource_name)),
+                name='%sdetail' % base_name),
             url(r'^(?P<path>.+)/delete/$',
                 wrap(self.delete_view.as_view(**init)),
-                name='%s_%s_delete' % (self.app_name, self.resource_name)),
+                name='%sdelete' % base_name),
         )
         return urlpatterns
     
@@ -115,15 +116,15 @@ class StorageResource(CRUDResource):
         return create_link
     
     def get_upload_link_url(self):
-        return self.reverse('%s_%s_uploadlink' % (self.app_name, self.resource_name))
+        return self.reverse('%suploadlink' % self.get_base_url_name())
     
     def get_item_url(self, item):
         instance = item.instance
-        return self.reverse('%s_%s_detail' % (self.app_name, self.resource_name), path=instance.name)
+        return self.reverse('%sdetail' % self.get_base_url_name(), path=instance.name)
     
     def get_delete_url(self, item):
         instance = item.instance
-        return self.reverse('%s_%s_delete' % (self.app_name, self.resource_name), path=instance.name)
+        return self.reverse('%sdelete' % self.get_base_url_name(), path=instance.name)
     
     def handle_upload_link_submission(self, link, submit_kwargs):
         form = link.get_form(**submit_kwargs)

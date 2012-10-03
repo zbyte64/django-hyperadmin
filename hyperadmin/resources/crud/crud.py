@@ -78,6 +78,9 @@ class CRUDResource(BaseResource):
         raise NotImplementedError
     resource_name = property(get_resource_name)
     
+    def get_base_url_name(self):
+        return '%s_%s_' % (self.app_name, self.resource_name)
+    
     def get_prompt(self):
         return self.resource_name
     
@@ -88,34 +91,35 @@ class CRUDResource(BaseResource):
         init = self.get_view_kwargs()
         
         # Admin-site-wide views.
+        base_name = self.get_base_url_name()
         urlpatterns = self.get_extra_urls()
         urlpatterns += patterns('',
             url(r'^$',
                 wrap(self.list_view.as_view(**init)),
-                name='%s_%s_list' % (self.app_name, self.resource_name)),
+                name='%slist' % base_name),
             url(r'^add/$',
                 wrap(self.add_view.as_view(**init)),
-                name='%s_%s_add' % (self.app_name, self.resource_name)),
+                name='%sadd' % base_name),
             url(r'^(?P<pk>\w+)/$',
                 wrap(self.detail_view.as_view(**init)),
-                name='%s_%s_detail' % (self.app_name, self.resource_name)),
+                name='%sdetail' % base_name),
             url(r'^(?P<pk>\w+)/delete/$',
                 wrap(self.delete_view.as_view(**init)),
-                name='%s_%s_delete' % (self.app_name, self.resource_name)),
+                name='%sdelete' % base_name),
         )
         return urlpatterns
     
     def get_add_url(self):
-        return self.reverse('%s_%s_add' % (self.app_name, self.resource_name))
+        return self.reverse('%sadd' % self.get_base_url_name())
     
     def get_item_url(self, item):
-        return self.reverse('%s_%s_detail' % (self.app_name, self.resource_name), pk=item.instance.pk)
+        return self.reverse('%sdetail' % self.get_base_url_name(), pk=item.instance.pk)
     
     def get_delete_url(self, item):
-        return self.reverse('%s_%s_delete' % (self.app_name, self.resource_name), pk=item.instance.pk)
+        return self.reverse('%sdelete' % self.get_base_url_name(), pk=item.instance.pk)
     
     def get_absolute_url(self):
-        return self.reverse('%s_%s_list' % (self.app_name, self.resource_name))
+        return self.reverse('%slist' % self.get_base_url_name())
     
     #CRUD Methods are based off: (which backbone appears to agree with)
     #http://en.wikipedia.org/wiki/Create,_read,_update_and_delete
