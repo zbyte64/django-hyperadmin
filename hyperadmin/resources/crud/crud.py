@@ -255,8 +255,8 @@ class CRUDResource(BaseResource):
     def get_list_resource_item_class(self):
         return self.list_resource_item_class
     
-    def get_list_resource_item(self, instance):
-        return self.get_list_resource_item_class()(resource=self, instance=instance)
+    def get_list_resource_item(self, instance, **kwargs):
+        return self.get_list_resource_item_class()(resource=self, instance=instance, **kwargs)
     
     def get_instances(self):
         '''

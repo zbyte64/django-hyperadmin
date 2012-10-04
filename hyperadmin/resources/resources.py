@@ -125,8 +125,8 @@ class BaseResource(object):
     def get_resource_item_class(self):
         return self.resource_item_class
     
-    def get_resource_item(self, instance):
-        return self.get_resource_item_class()(resource=self, instance=instance)
+    def get_resource_item(self, instance, **kwargs):
+        return self.get_resource_item_class()(resource=self, instance=instance, **kwargs)
     
     def get_resource_items(self):
         return []
