@@ -51,3 +51,9 @@ class ListResourceItem(ResourceItem):
         form_kwargs = {'instance':kwargs.get('instance', None),
                        'resource':self.resource}
         return form_kwargs
+    
+    def get_ln_links(self):
+        return []
+    
+    def get_idempotent_links(self):
+        return []

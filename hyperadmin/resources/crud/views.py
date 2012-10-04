@@ -34,7 +34,8 @@ class CRUDResourceViewMixin(ResourceViewMixin):
                             'form_kwargs': form_kwargs,})
         return self.resource.get_create_link(**link_kwargs)
     
-    def get_update_link(self, item, **form_kwargs):
+    def get_update_link(self, **form_kwargs):
+        item = self.get_item()
         form_kwargs.update(self.get_form_kwargs())
         link_kwargs = self.get_link_kwargs()
         link_kwargs.update({'form_class': self.get_form_class(),
@@ -50,10 +51,12 @@ class CRUDResourceViewMixin(ResourceViewMixin):
                             'item':item})
         return self.resource.get_restful_update_link(**link_kwargs)
     
-    def get_delete_link(self, item, **form_kwargs):
+    def get_delete_link(self, **form_kwargs):
+        item = self.get_item()
         return self.resource.get_delete_link(item=item, form_kwargs=form_kwargs)
     
-    def get_restful_delete_link(self, item, **form_kwargs):
+    def get_restful_delete_link(self, **form_kwargs):
+        item = self.get_item()
         return self.resource.get_restful_delete_link(item=item, form_kwargs=form_kwargs)
     
     def get_list_link(self):
@@ -125,26 +128,20 @@ class CRUDDetailMixin(object):
         return self.resource.get_resource_item(self.object)
     
     def get(self, request, *args, **kwargs):
-        self.object = self.get_object()
-        resource_item = self.get_item()
-        return self.resource.generate_response(self.get_response_media_type(), self.get_response_type(), self.get_update_link(resource_item))
+        return self.resource.generate_response(self.get_response_media_type(), self.get_response_type(), self.get_update_link())
 
 class CRUDDeleteView(CRUDDetailMixin, CRUDView):
     view_class = 'delete_confirmation'
     
     def get(self, request, *args, **kwargs):
-        self.object = self.get_object()
-        resource_item = self.get_item()
-        return self.resource.generate_response(self.get_response_media_type(), self.get_response_type(), self.get_delete_link(resource_item))
+        return self.resource.generate_response(self.get_response_media_type(), self.get_response_type(), self.get_delete_link())
     
     def post(self, request, *args, **kwargs):
         self.object = self.get_object()
         if not self.can_delete(self.object):
             return http.HttpResponseForbidden(_(u"You may not delete that object"))
         
-        resource_item = self.get_resource_item()
-        
-        form_link = self.get_delete_link(resource_item)
+        form_link = self.get_delete_link()
         response_link = form_link.submit()
         
         return self.resource.generate_response(self.get_response_media_type(), self.get_response_type(), response_link)
@@ -153,18 +150,15 @@ class CRUDDetailView(CRUDDetailMixin, CRUDView):
     view_class = 'change_form'
     
     def get(self, request, *args, **kwargs):
-        self.object = self.get_object()
-        resource_item = self.get_item()
-        return self.resource.generate_response(self.get_response_media_type(), self.get_response_type(), self.get_update_link(resource_item))
+        return self.resource.generate_response(self.get_response_media_type(), self.get_response_type(), self.get_update_link())
     
     def put(self, request, *args, **kwargs):
         self.object = self.get_object()
         if not self.can_change(self.object):
             return http.HttpResponseForbidden(_(u"You may not modify that object"))
         
-        resource_item = self.get_item()
         form_kwargs = self.get_request_form_kwargs()
-        form_link = self.get_update_link(resource_item, **form_kwargs)
+        form_link = self.get_update_link(**form_kwargs)
         response_link = form_link.submit()
         return self.resource.generate_response(self.get_response_media_type(), self.get_response_type(), response_link)
     
@@ -175,8 +169,7 @@ class CRUDDetailView(CRUDDetailMixin, CRUDView):
         if not self.can_delete(self.object):
             return http.HttpResponseForbidden(_(u"You may not delete that object"))
         
-        resource_item = self.get_item()
-        form_link = self.get_restul_delete_link(resource_item)
+        form_link = self.get_restul_delete_link()
         response_link = form_link.submit()
         return self.resource.generate_response(self.get_response_media_type(), self.get_response_type(), response_link)
 

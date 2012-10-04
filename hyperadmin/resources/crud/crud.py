@@ -100,7 +100,7 @@ class CRUDResource(BaseResource):
                        'resource':self,
                        'on_submit':self.handle_update_submission,
                        'method':'POST',
-                       'form_class':self.get_form_class(),
+                       'form_class':item.get_form_class(),
                        'form_kwargs':form_kwargs,
                        'prompt':'update',
                        'rel':'update',}
