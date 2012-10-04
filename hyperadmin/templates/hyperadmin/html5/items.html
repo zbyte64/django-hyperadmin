@@ -1,3 +1,4 @@
+{% load hyperadmin_utils %}
 {% if meta.object_count %}<em>Count</em>: <span class="count">{{meta.object_count}}</span><br/>{% endif %}
 {% if meta.number_of_pages %}<em>Pages</em>: <span class="page_count">{{meta.number_of_pages}}</span><br/>{% endif %}
 {% for item in items %}
@@ -72,6 +73,15 @@
 {% endif %}
 {% endwith %}
 {% endblock %}
+
+{% block item_namespaces %}
+{% if state.item %}
+{% for namespace in item.get_namespaces.itervalues %}
+    <h4>Namespace: {{namespace.name}}</h4>
+    {% include_namespace namespace %}
+{% endfor %}
+{% endif %}
+{% endblock item_namespaces %}
 
 </div>
 {% endfor %}

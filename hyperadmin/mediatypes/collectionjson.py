@@ -191,10 +191,11 @@ class CollectionHyperAdminJSON(CollectionNextJSON):
         if len(update_links):
             data['templates'] = [self.convert_link(link) for link in update_links]
         
-        if include_namespaces:
+        if include_namespaces and resource_item:
             data['namespaces'] = dict()
             accepted_namespaces = self.get_accepted_namespaces()
-            for key, namespace in state.get_namespaces().iteritems():
+            #for key, namespace in state.get_namespaces().iteritems():
+            for key, namespace in resource_item.get_namespaces().iteritems():
                 for a_key in accepted_namespaces:
                     if key.startswith(a_key):
                         data['namespaces'][key] = self.prepare_collection(form_link=namespace.link, state=namespace.state, include_namespaces=False)

@@ -2,7 +2,7 @@ from django.conf.urls.defaults import patterns, url, include
 from django.utils.functional import update_wrapper
 from django import forms
 
-from hyperadmin.hyperobjects import Link
+from hyperadmin.hyperobjects import Link, Namespace
 from hyperadmin.resources.crud.crud import CRUDResource
 from hyperadmin.resources.models import views
 from hyperadmin.resources.models.changelist import ModelChangeList
@@ -159,22 +159,8 @@ class ModelResource(CRUDResource):
             inline_links.append(link)
         return links + inline_links
     
-    def get_namespaces(self):
-        namespaces = super(ModelResource, self).get_namespaces()
-        if self.state.item is not None and self.state.get('view_class', None) == 'change_form':
-            from hyperadmin.hyperobjects import Namespace
-            
-            for inline in self.inline_instances:
-                name = 'inline-%s' % inline.rel_name
-                inline = inline.fork_state(parent=self.state.item.instance, auth=self.state['auth'], namespace=name)
-                link = inline.get_resource_link()
-                namespace = Namespace(name=name, link=link, state=inline.state)
-                namespaces[name] = namespace
-        return namespaces
-    
     def get_item_namespaces(self, item):
         namespaces = super(ModelResource, self).get_item_namespaces(item)
-        from hyperadmin.hyperobjects import Namespace
         
         for inline in self.inline_instances:
             name = 'inline-%s' % inline.rel_name
