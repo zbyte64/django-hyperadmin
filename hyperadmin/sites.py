@@ -1,3 +1,5 @@
+from copy import copy, deepcopy
+
 from django.views.decorators.cache import never_cache
 from django.views.decorators.csrf import csrf_exempt
 from django.conf.urls.defaults import patterns
@@ -11,6 +13,7 @@ from hyperadmin.resources.applications.site import SiteResource
 from hyperadmin.resources.applications.application import ApplicationResource
 
 import collections
+
 
 class ResourceSite(object):
     site_resource_class = SiteResource
@@ -131,6 +134,15 @@ class ResourceSite(object):
     
     def get_absolute_url(self):
         return self.site_resource.get_absolute_url()
+    
+    def __deepcopy__(self, memo):
+        new = copy(self)
+        memo[id(self)] = new
+        new.media_types = copy(self.media_types)
+        new.site_resource = deepcopy(self.site_resource, memo)
+        new.applications = deepcopy(self.applications, memo)
+        new.registry = deepcopy(self.registry, memo)
+        return new
     
     def get_actions(self, request):
         return SortedDict()

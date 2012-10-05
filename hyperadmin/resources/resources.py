@@ -1,4 +1,4 @@
-from copy import copy
+from copy import copy, deepcopy
 
 from django import forms
 from django.conf.urls.defaults import patterns
@@ -16,13 +16,18 @@ class BaseResource(object):
     resource_item_class = ResourceItem
     state_class = State
     form_class = EmptyForm
+    donot_copy = ['state'] #indicates which attributes should not be deepcopied
     
     def __init__(self, resource_adaptor, site, parent_resource=None):
         self.resource_adaptor = resource_adaptor
         self.site = site
         self.parent = parent_resource
-        self.state = self.get_state_class()(resource=self, meta={})
-        self.state['resource'] = self
+        self.state = self.create_state()
+    
+    def create_state(self):
+        state = self.get_state_class()(resource=self, meta={})
+        state['resource'] = self
+        return state
     
     def fork_state(self, **kwargs):
         new_resource = copy(self)
@@ -30,6 +35,17 @@ class BaseResource(object):
         new_resource.state.update(self.state)
         new_resource.state.update(kwargs)
         return new_resource
+    
+    def __deepcopy__(self, memo):
+        for attr in self.donot_copy:
+            if hasattr(self, attr):
+                val = getattr(self, attr)
+                memo[id(val)] = val
+        
+        new = copy(self)
+        new.__dict__.update(deepcopy(self.__dict__, memo))
+        new.state = new.create_state()
+        return new
     
     def get_app_name(self):
         raise NotImplementedError
