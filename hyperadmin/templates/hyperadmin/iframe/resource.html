@@ -1,0 +1,11 @@
+<html>
+<head></head>
+<body>
+{% block content %}
+<textarea data-type="{{content_type}}">
+{{payload|safe}}
+</textarea>
+{% endblock %}
+</div>
+</body>
+</html>
