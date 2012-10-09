@@ -97,11 +97,15 @@ class StorageResource(CRUDResource):
         kwargs['storage'] = self.storage
         return kwargs
     
+    def get_upload_link_form_kwargs(self, **kwargs):
+        kwargs = self.get_form_kwargs(**kwargs)
+        kwargs['resource'] = self
+        return kwargs
+    
     def get_upload_link(self, form_kwargs=None, **kwargs):
         if form_kwargs is None:
             form_kwargs = {}
-        form_kwargs = self.get_form_kwargs(**form_kwargs)
-        form_kwargs['resource'] = self
+        form_kwargs = self.get_upload_link_form_kwargs(**form_kwargs)
         
         link_kwargs = {'url':self.get_upload_link_url(),
                        'resource':self,
