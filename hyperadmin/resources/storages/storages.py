@@ -131,8 +131,7 @@ class StorageResource(CRUDResource):
         if form.is_valid():
             #presumably this special form returns a link
             upload_link = form.save()
-            self.state.add_ln_link(upload_link)
-            return link
+            return upload_link
         return link.clone(form=form)
     
     def get_outbound_links(self):
