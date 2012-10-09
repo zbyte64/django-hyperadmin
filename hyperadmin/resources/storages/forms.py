@@ -30,6 +30,7 @@ class UploadLinkForm(forms.Form):
     def __init__(self, **kwargs):
         self.storage = kwargs.pop('storage')
         self.resource = kwargs.pop('resource')
+        self.request = kwargs.pop('request') #this is useful because we may return a full url
         super(UploadLinkForm, self).__init__(**kwargs)
     
     def save(self, commit=True):

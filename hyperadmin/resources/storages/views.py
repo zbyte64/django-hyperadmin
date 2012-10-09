@@ -28,6 +28,7 @@ class BoundFile(object):
 class StorageMixin(object):
     def get_upload_link(self, **form_kwargs):
         form_kwargs.update(self.get_form_kwargs())
+        form_kwargs['request'] = self.request
         link_kwargs = self.get_link_kwargs()
         link_kwargs.update({'form_kwargs': form_kwargs,})
         return self.resource.get_upload_link(**link_kwargs)
