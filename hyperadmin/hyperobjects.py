@@ -1,4 +1,5 @@
 from copy import copy
+
 from django.utils.http import urlencode
 
 
@@ -10,7 +11,7 @@ class Link(object):
         descriptors = dictionary of data describing the link
         
         '''
-        self.url = url
+        self._url = url
         self._method = str(method).upper() #CM
         self.resource = resource
         self._form = form
@@ -24,6 +25,13 @@ class Link(object):
         self.cu_headers = cu_headers
         self.cr_headers = cr_headers
         self.on_submit = on_submit
+    
+    @property
+    def url(self):
+        assert False
+    
+    def get_absolute_url(self):
+        return self.resource.get_link_url(self)
     
     def get_link_factor(self):
         if self.link_factor:
@@ -110,7 +118,8 @@ class State(dict):
                      'outbound_links': [],
                      'templated_queries': [],
                      'ln_links': [],
-                     'idempotent_links': [],})
+                     'idempotent_links': [],
+                     'extra_get_params':{},})
     
     def get_embedded_links(self):
         return self.resource.get_embedded_links() + self['embedded_links']
@@ -141,6 +150,16 @@ class State(dict):
     
     def add_idempotent_link(self, link):
         self['idemptotent_links'].append(link)
+    
+    def get_link_url(self, link):
+        url = link._url
+        if self.get('extra_get_params', None):
+            params = urlencode(self['extra_get_params'])
+            if '?' in url:
+                url += params
+            else:
+                url += '?' + params
+        return url
     
     def set_item(self, val):
         self['item'] = val

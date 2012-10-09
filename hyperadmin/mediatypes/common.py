@@ -25,14 +25,14 @@ class MediaType(object):
     
     def handle_redirect(self, link):
         if self.request.method != 'GET':
-            response = http.HttpResponse(link.url, status=303)
-            response['Location'] = link.url
+            response = http.HttpResponse(link.get_absolute_url(), status=303)
+            response['Location'] = link.get_absolute_url()
         else:
-            response = http.HttpResponseRedirect(link.url)
+            response = http.HttpResponseRedirect(link.get_absolute_url())
         return response
     
     def detect_redirect(self, link):
-        if link.url != self.request.path:
+        if link.get_absolute_url() != self.request.path:
             return True
         return False
     

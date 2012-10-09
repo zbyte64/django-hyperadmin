@@ -189,4 +189,7 @@ class BaseResource(object):
     
     def get_item_namespaces(self, item):
         return dict()
+    
+    def get_link_url(self, link):
+        return self.state.get_link_url(link)
 

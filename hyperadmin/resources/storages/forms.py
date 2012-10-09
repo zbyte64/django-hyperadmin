@@ -1,6 +1,10 @@
+from urllib import urlencode
+
 from django import forms
+from django.middleware.csrf import get_token
 
 from hyperadmin.resources.storages.views import BoundFile
+
 
 class UploadForm(forms.Form):
     name = forms.CharField()
@@ -14,6 +18,10 @@ class UploadForm(forms.Form):
         if self.instance:
             self.initial['name'] = self.instance.name
             self.initial['overwrite'] = True
+    
+    def add_csrf_field(self, request):
+        value = get_token(request)
+        self.fields['csrfmiddlewaretoken'] = forms.CharField(initial=value, widget=forms.HiddenInput)
     
     def save(self, commit=True):
         if self.cleaned_data.get('overwrite', False): #TODO would be better if storage accepted an argument to overwrite
@@ -48,4 +56,11 @@ class UploadLinkForm(forms.Form):
             name = self.storage.get_available_name(path)
         form_kwargs = {'initial':{'name':name, 'overwrite':overwrite}}
         link = self.resource.get_create_link(form_kwargs=form_kwargs, rel='direct-upload')
+        link.form.add_csrf_field(self.request)
+        
+        response_type = self.request.META.get('HTTP_ACCEPT', None)
+        if response_type:
+            params = {'_HTTP_ACCEPT': response_type}
+            link.url = '%s?%s' % (link.url, urlencode(params))
+        
         return link

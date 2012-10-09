@@ -32,6 +32,15 @@ class GetPatchMetaMixin(object):
                 if src in self.request.GET:
                     self._patched_meta[dst] = self.request.GET[src]
         return self._patched_meta
+    
+    def get_state_data(self):
+        data = dict()
+        pass_through_params = dict()
+        for src, dst in self.get_to_meta_map.iteritems():
+            if src in self.request.GET:
+                pass_through_params[src] = self.request.GET[src]
+        data['extra_get_params'] = pass_through_params
+        return data
 
 class ResourceViewMixin(GetPatchMetaMixin, ConditionalAccessMixin):
     resource = None
@@ -87,7 +96,8 @@ class ResourceViewMixin(GetPatchMetaMixin, ConditionalAccessMixin):
         return self.resource.get_state_class()
     
     def get_state_data(self):
-        data = dict(self.kwargs)
+        data = super(ResourceViewMixin, self).get_state_data()
+        data.update(self.kwargs)
         data.update({'auth':self.request.user,
                      'view_class':self.view_class,
                      'item':self.get_item(),

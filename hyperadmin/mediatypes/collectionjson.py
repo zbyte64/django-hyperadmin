@@ -41,7 +41,7 @@ class CollectionJSON(MediaType):
         return data
     
     def convert_link(self, link):
-        link_r = {"href":link.url,
+        link_r = {"href":link.get_absolute_url(),
                   "rel":link.rel,
                   "prompt":link.prompt,
                   "classes":link.classes,
@@ -81,7 +81,7 @@ class CollectionJSON(MediaType):
         if form_link.form:
             data['template'] = self.convert_link(form_link)
         
-        data.update(href=form_link.url, version="1.0", meta=state.meta)
+        data.update(href=form_link.get_absolute_url(), version="1.0", meta=state.meta)
         return data
     
     def serialize(self, content_type, link, state):
