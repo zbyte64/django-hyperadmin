@@ -31,9 +31,7 @@ class BaseResource(object):
     
     def fork_state(self, **kwargs):
         new_resource = copy(self)
-        new_resource.state = self.get_state_class()(resource=new_resource, meta=copy(self.state.meta))
-        new_resource.state.update(self.state)
-        new_resource.state.update(kwargs)
+        new_resource.state = self.state.fork(resource=new_resource, data=kwargs)
         return new_resource
     
     def __deepcopy__(self, memo):

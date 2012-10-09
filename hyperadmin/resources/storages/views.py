@@ -44,6 +44,7 @@ class StorageUploadLinkView(StorageMixin, CRUDView):
     def post(self, request, *args, **kwargs):
         form_kwargs = self.get_request_form_kwargs()
         form_link = self.get_upload_link(**form_kwargs)
+        
         response_link = form_link.submit()
         self.state.add_ln_link(response_link)
         return self.resource.generate_response(self.get_response_media_type(), self.get_response_type(), form_link)

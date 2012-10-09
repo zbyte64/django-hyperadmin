@@ -32,7 +32,7 @@ class MediaType(object):
         return response
     
     def detect_redirect(self, link):
-        if link.get_absolute_url() != self.request.path:
+        if link.get_absolute_url() != self.request.get_full_path():
             return True
         return False
     

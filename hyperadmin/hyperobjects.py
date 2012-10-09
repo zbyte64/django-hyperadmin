@@ -14,6 +14,7 @@ class Link(object):
         self._url = url
         self._method = str(method).upper() #CM
         self.resource = resource
+        self.state = resource.state.fork()
         self._form = form
         self.form_class = form_class
         self.form_kwargs = form_kwargs
@@ -31,7 +32,7 @@ class Link(object):
         assert False
     
     def get_absolute_url(self):
-        return self.resource.get_link_url(self)
+        return self.state.get_link_url(self)
     
     def get_link_factor(self):
         if self.link_factor:
@@ -120,6 +121,23 @@ class State(dict):
                      'ln_links': [],
                      'idempotent_links': [],
                      'extra_get_params':{},})
+    
+    def fork(self, resource=None, data=None, meta=None):
+        new_state = copy(self)
+        
+        for key, value in new_state.items():
+            if isinstance(value, (dict, list, tuple, set)):
+                new_state[key] = copy(value)
+        
+        if resource is not None:
+            new_state.resource = resource
+        if data is not None:
+            new_state.update(data)
+        if meta is not None:
+            new_state.meta = meta
+        else:
+            new_state.meta = copy(self.meta)
+        return new_state
     
     def get_embedded_links(self):
         return self.resource.get_embedded_links() + self['embedded_links']

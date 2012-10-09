@@ -124,7 +124,8 @@ class InlineModelResourceTestCase(ResourceTestCase):
         view(request, pk=self.user.pk)
         
         media_type, response_type, link = self.resource.generate_response.call_args[0]
-        state = link.resource.state
+        state = link.state
+        print state
         
         self.assertEqual(len(state.get_resource_items()), self.user.groups.all().count())
     

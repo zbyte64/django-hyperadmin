@@ -1,5 +1,3 @@
-from urllib import urlencode
-
 from django import forms
 from django.middleware.csrf import get_token
 
@@ -57,10 +55,7 @@ class UploadLinkForm(forms.Form):
         form_kwargs = {'initial':{'name':name, 'overwrite':overwrite}}
         link = self.resource.get_create_link(form_kwargs=form_kwargs, rel='direct-upload')
         link.form.add_csrf_field(self.request)
-        
         response_type = self.request.META.get('HTTP_ACCEPT', None)
         if response_type:
-            params = {'_HTTP_ACCEPT': response_type}
-            link.url = '%s?%s' % (link.url, urlencode(params))
-        
+            link.state['extra_get_params']['_HTTP_ACCEPT'] = response_type
         return link
