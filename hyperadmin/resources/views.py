@@ -18,7 +18,22 @@ class ConditionalAccessMixin(object):
     # def dispatch(self, request, *args, **kwargs):
     #     return super(ConditionalAccessMixin, self).dispatch(request, *args, **kwargs)
 
-class ResourceViewMixin(ConditionalAccessMixin):
+class GetPatchMetaMixin(object):
+    get_to_meta_map = {
+        '_HTTP_ACCEPT':'HTTP_ACCEPT',
+        '_CONTENT_TYPE':'CONTENT_TYPE',
+    }
+    
+    @property
+    def patched_meta(self):
+        if not hasattr(self, '_patched_meta'):
+            self._patched_meta = dict(self.request.META)
+            for src, dst in self.get_to_meta_map.iteritems():
+                if src in self.request.GET:
+                    self._patched_meta[dst] = self.request.GET[src]
+        return self._patched_meta
+
+class ResourceViewMixin(GetPatchMetaMixin, ConditionalAccessMixin):
     resource = None
     resource_site = None
     view_class = None
@@ -26,13 +41,13 @@ class ResourceViewMixin(ConditionalAccessMixin):
     def get_response_type(self):
         return mimeparse.best_match(
             self.resource_site.media_types.keys(), 
-            self.request.META.get('HTTP_ACCEPT', '')
+            self.patched_meta.get('HTTP_ACCEPT', '')
         )
     
     def get_request_type(self):
         return mimeparse.best_match(
             self.resource_site.media_types.keys(), 
-            self.request.META.get('CONTENT_TYPE', self.request.META.get('HTTP_ACCEPT', ''))
+            self.patched_meta.get('CONTENT_TYPE', self.patched_meta.get('HTTP_ACCEPT', ''))
         )
     
     def get_request_media_type(self):
