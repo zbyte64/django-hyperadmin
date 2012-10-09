@@ -38,27 +38,35 @@ class ResourceViewMixin(GetPatchMetaMixin, ConditionalAccessMixin):
     resource_site = None
     view_class = None
     
-    def get_response_type(self):
+    def get_response_type(self, patch_meta=False):
+        if patch_meta:
+            src = self.patched_meta
+        else:
+            src = self.request.META
         return mimeparse.best_match(
             self.resource_site.media_types.keys(), 
-            self.patched_meta.get('HTTP_ACCEPT', '')
+            src.get('HTTP_ACCEPT', '')
         )
     
-    def get_request_type(self):
+    def get_request_type(self, patch_meta=False):
+        if patch_meta:
+            src = self.patched_meta
+        else:
+            src = self.request.META
         return mimeparse.best_match(
             self.resource_site.media_types.keys(), 
-            self.patched_meta.get('CONTENT_TYPE', self.patched_meta.get('HTTP_ACCEPT', ''))
+            src.get('CONTENT_TYPE', src.get('HTTP_ACCEPT', ''))
         )
     
     def get_request_media_type(self):
-        content_type = self.get_request_type()
+        content_type = self.get_request_type(patch_meta=True)
         media_type_cls = self.resource_site.media_types.get(content_type, None)
         if media_type_cls is None:
             raise ValueError('Unrecognized request content type: %s' % content_type)
         return media_type_cls(self)
     
     def get_response_media_type(self):
-        content_type = self.get_response_type()
+        content_type = self.get_response_type(patch_meta=True)
         media_type_cls = self.resource_site.media_types.get(content_type, None)
         if media_type_cls is None:
             raise ValueError('Unrecognized response content type: %s' % content_type)
