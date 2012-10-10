@@ -10,12 +10,12 @@ class IframeMediaType(MediaType):
     template_name = 'hyperadmin/iframe/resource.html'
     response_class = TemplateResponse
     recognized_media_types = [
-        'text/html-iframe-transport',#;app/yourtype
+        'text/html-iframe-transport;level=1',
     ]
     
     def get_response_type(self):
-        response_type = self.view.get_response_type(patch_meta=True)
-        effective_type = response_type.split(',',1)[-1]
+        response_type = self.view.patched_meta.get('HTTP_ACCEPT', '')
+        effective_type = response_type.split(self.recognized_media_types[0], 1)[-1]
         return mimeparse.best_match(
             self.site.media_types.keys(),
             effective_type
@@ -23,6 +23,7 @@ class IframeMediaType(MediaType):
     
     def get_response_media_type(self):
         content_type = self.get_response_type()
+        assert content_type not in self.recognized_media_types
         media_type_cls = self.site.media_types.get(content_type, None)
         if media_type_cls is None:
             raise ValueError('Unrecognized response content type: %s' % content_type)
@@ -44,8 +45,6 @@ class IframeMediaType(MediaType):
     def serialize(self, content_type, link, state):
         if self.detect_redirect(link):
             return self.handle_redirect(link)
-        
-        print 'iframe handler'
         
         context = self.get_context_data(link=link, state=state)
         response = self.response_class(request=self.request, template=self.get_template_names(), context=context)

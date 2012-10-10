@@ -89,6 +89,7 @@ class CollectionJSON(MediaType):
             return self.handle_redirect(link)
         data = self.prepare_collection(link, state)
         content = json.dumps({"collection":data}, cls=DjangoJSONEncoder)
+        assert content_type in self.recognized_media_types, "%s no in %s" % (content_type, self.recognized_media_types)
         return http.HttpResponse(content, content_type)
     
     def deserialize(self):

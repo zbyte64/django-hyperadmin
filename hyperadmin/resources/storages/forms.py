@@ -57,5 +57,5 @@ class UploadLinkForm(forms.Form):
         link.form.add_csrf_field(self.request)
         response_type = self.request.META.get('HTTP_ACCEPT', None)
         if response_type:
-            link.state['extra_get_params']['_HTTP_ACCEPT'] = 'text/html-iframe-transport; q=1.0,'+response_type
+            link.state['extra_get_params']['_HTTP_ACCEPT'] = 'text/html-iframe-transport;level=1,'+response_type
         return link
