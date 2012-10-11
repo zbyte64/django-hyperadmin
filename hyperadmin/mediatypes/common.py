@@ -37,6 +37,9 @@ class MediaType(object):
         return False
     
     def serialize(self, content_type, link, state):
+        '''
+        Return an HttpResponse
+        '''
         raise NotImplementedError
     
     def deserialize(self):

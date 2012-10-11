@@ -2,12 +2,66 @@
 Media types
 ===========
 
-TODO
+.. automodule:: hyperadmin.mediatypes
 
-* Supported Media Formats:
- * application/vnd.Collection+JSON
- * application/vnd.Collection.next+JSON
- * application/vnd.Collection.hyperadmin+JSON - for the emberjs client
- * application/text-html - for browsing
- * application/json - plain json serialization
- * text/javascript - for jsonp
+
+MediaType Interface
+===================
+
+.. automodule:: hyperadmin.mediatypes.common
+
+.. autoclass:: MediaType
+   :members:
+   :undoc-members:
+
+
+JSON
+=====
+
+.. automodule:: hyperadmin.mediatypes.json
+
+.. autoclass:: JSON
+   :members:
+   :undoc-members:
+
+.. autoclass:: JSONP
+   :members:
+   :undoc-members:
+
+
+HTML
+====
+
+.. automodule:: hyperadmin.mediatypes.html5
+
+.. autoclass:: Html5MediaType
+   :members:
+   :undoc-members:
+
+
+Collection JSON
+===============
+
+.. automodule:: hyperadmin.mediatypes.collectionjson
+
+.. autoclass:: CollectionJSON
+   :members:
+   :undoc-members:
+
+.. autoclass:: CollectionNextJSON
+   :members:
+   :undoc-members:
+
+.. autoclass:: CollectionHyperAdminJSON
+   :members:
+   :undoc-members:
+
+iFrame
+======
+
+.. automodule:: hyperadmin.mediatypes.iframe
+
+.. autoclass:: IframeMediaType
+   :members:
+   :undoc-members:
+

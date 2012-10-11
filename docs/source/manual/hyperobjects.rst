@@ -2,28 +2,36 @@
 Hyperobjects
 ============
 
-.. module:: hyperadmin.hyperobjects
+.. automodule:: hyperadmin.hyperobjects
 
-Links
-=====
-
-The ``Link`` class respresent an action that can be taken on a resource or the current action being taken. Resources constructs a set of links for a given state or resouce item. The media type serializes these links. 
-
-.. class:: Links
-
-    The :class:`~hyperadmin.hyperobjects.Link`
-
-    .. method:: submit(state, submit_kwargs)
-
-        returns a link representing the result of submiting the link
-        
 
 State
 =====
 
-TODO
+.. autoclass:: State
+   :members:
+   :undoc-members:
+
+
+Links
+=====
+
+.. autoclass:: Link
+   :members:
+   :undoc-members:
+
 
 ResourceItem
 ============
 
-TODO
+.. autoclass:: ResourceItem
+   :members:
+   :undoc-members:
+
+
+Namespace
+=========
+
+.. autoclass:: Namespace
+   :members:
+   :undoc-members:
