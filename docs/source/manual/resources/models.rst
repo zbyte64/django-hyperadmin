@@ -8,10 +8,6 @@ Model Resources
 ModelResource
 -------------
 
-.. autoclass:: ModelResource
-   :members:
-   :undoc-members:
-
 API Endpoints
 -------------
 
@@ -40,3 +36,22 @@ Registering a model with hyperadmin::
     
     hyperadmin.site.register(MyModel, MyModelResource)
 
+
+Methods
+-------
+
+.. autoclass:: ModelResource
+   :members:
+   :undoc-members:
+
+
+-------------------
+InlineModelResource
+-------------------
+
+Methods
+-------
+
+.. autoclass:: InlineModelResource
+   :members:
+   :undoc-members:
