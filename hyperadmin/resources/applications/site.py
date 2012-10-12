@@ -48,8 +48,12 @@ class SiteResource(BaseResource):
     def get_items(self):
         applications = self.applications.items()
         apps = [entry[1] for entry in sorted(applications, key=lambda x: x[0])]
-        apps.append(self.auth_resource)
-        return apps
+        all_apps = list()
+        for app in apps:
+            all_apps.append(app)
+            all_apps.extend(app.get_items())
+        all_apps.append(self.auth_resource)
+        return all_apps
     
     def get_resource_items(self):
         return [self.get_resource_item(item) for item in self.get_items()]
