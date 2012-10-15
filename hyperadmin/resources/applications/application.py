@@ -2,10 +2,12 @@ from django.conf.urls.defaults import patterns, url, include
 
 from hyperadmin.resources import BaseResource
 from hyperadmin.resources.applications import views
+from hyperadmin.resources.applications.forms import ViewResourceForm
 
 class ApplicationResource(BaseResource):
     resource_class = 'resourcelisting'
     list_view = views.ApplicationResourceView
+    form_class = ViewResourceForm
     
     def __init__(self, app_name, site):
         super(ApplicationResource, self).__init__(resource_adaptor=dict(), site=site, parent_resource=site.site_resource)

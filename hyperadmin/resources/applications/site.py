@@ -2,10 +2,12 @@ from django.conf.urls.defaults import patterns, url, include
 
 from hyperadmin.resources import BaseResource
 from hyperadmin.resources.applications import views
+from hyperadmin.resources.applications.forms import ViewResourceForm
 
 class SiteResource(BaseResource):
     resource_class = 'resourcelisting'
     list_view = views.SiteResourceView
+    form_class = ViewResourceForm
     
     def __init__(self, site, auth_resource=None):
         super(SiteResource, self).__init__(resource_adaptor=dict(), site=site)
@@ -61,12 +63,6 @@ class SiteResource(BaseResource):
     def get_item_url(self, item):
         if hasattr(item.instance, 'get_absolute_url'):
             return item.instance.get_absolute_url()
-    
-    def get_item_embedded_links(self, item):
-        #relationships go here
-        if hasattr(item.instance, 'get_child_resource_links'): #AKA application resource
-            return item.instance.get_child_resource_links()
-        return []
     
     def get_absolute_url(self):
         return self.reverse('index')

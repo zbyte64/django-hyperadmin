@@ -93,6 +93,10 @@ class CRUDResource(BaseResource):
         create_link = Link(**link_kwargs)
         return create_link
     
+    def get_restful_create_link(self, **kwargs):
+        kwargs['url'] = self.get_absolute_url()
+        return self.get_create_link(**kwargs)
+    
     def get_update_link(self, item, form_kwargs=None, **kwargs):
         if form_kwargs is None:
             form_kwargs = {}

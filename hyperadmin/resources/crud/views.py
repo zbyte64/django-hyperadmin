@@ -34,6 +34,13 @@ class CRUDResourceViewMixin(ResourceViewMixin):
                             'form_kwargs': form_kwargs,})
         return self.resource.get_create_link(**link_kwargs)
     
+    def get_restful_create_link(self, **form_kwargs):
+        form_kwargs.update(self.get_form_kwargs())
+        link_kwargs = self.get_link_kwargs()
+        link_kwargs.update({'form_class': self.get_form_class(),
+                            'form_kwargs': form_kwargs,})
+        return self.resource.get_restful_create_link(**link_kwargs)
+    
     def get_update_link(self, **form_kwargs):
         item = self.get_item()
         form_kwargs.update(self.get_form_kwargs())
@@ -90,7 +97,7 @@ class CRUDListView(CRUDView):
         if not self.can_add():
             return http.HttpResponseForbidden(_(u"You may not add an object"))
         form_kwargs = self.get_request_form_kwargs()
-        form_link = self.get_create_link(**form_kwargs)
+        form_link = self.get_restful_create_link(**form_kwargs)
         response_link = form_link.submit()
         return self.resource.generate_response(self.get_response_media_type(), self.get_response_type(), response_link)
     
