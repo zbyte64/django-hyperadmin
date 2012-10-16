@@ -20,12 +20,14 @@ class Html5MediaType(MediaType):
                    'meta':state.meta,
                    'state':state,}
         
-        resource_item = state.item
-        
         context['namespaces'] = state.get_namespaces()
         
         if 'display_fields' in state.meta:
             context['display_fields'] = state.meta['display_fields']
+        
+        view_class_context = 'get_%s_context_data' % self.view.view_class
+        if hasattr(self, view_class_context):
+            context = getattr(self, view_class_context)(link, state, context)
         
         return context
     

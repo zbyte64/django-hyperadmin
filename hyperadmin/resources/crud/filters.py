@@ -55,10 +55,12 @@ class BaseChoicesFilter(BaseFilter):
         for choice in self.choices(state):
             kwargs = dict(link_kwargs)
             classes = kwargs.get('classes', [])
+            kwargs['group'] = self.title
             kwargs['classes'] = classes
             if choice.get('selected', False):
                 classes.append('selected')
-            kwargs['prompt'] = '%s: %s' % (self.title, force_unicode(choice['display']))
+            #CONSIDER prompt may want to include group if not supported
+            kwargs['prompt'] = force_unicode(choice['display'])
             kwargs['url'] = u'./' + choice['query_string']
             links.append(self.make_link(**kwargs))
         return links

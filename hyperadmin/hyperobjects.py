@@ -11,7 +11,7 @@ class Link(object):
     Represents an available action or state transition.
     """
     def __init__(self, url, resource, method='GET', form=None, form_class=None, form_kwargs=None, link_factor=None,
-                 classes=[], descriptors=None, rel=None, prompt=None, cu_headers=None, cr_headers=None, on_submit=None):
+                 descriptors=None, prompt=None, cu_headers=None, cr_headers=None, on_submit=None, **cl_headers):
         self._url = url
         self._method = str(method).upper() #CM
         self.resource = resource
@@ -20,13 +20,25 @@ class Link(object):
         self.form_class = form_class
         self.form_kwargs = form_kwargs
         self.link_factor = link_factor
-        self.classes = classes
-        self.descriptors = descriptors
-        self.rel = rel #CL #CONSIDER they may be other cls, this should be a dictionary, classes is also a CL
+        self.descriptors = descriptors #is this needed?
+        self.cl_headers = cl_headers
         self.prompt = prompt
         self.cu_headers = cu_headers
         self.cr_headers = cr_headers
         self.on_submit = on_submit
+    
+    @property
+    def rel(self):
+        return self.cl_headers.get('rel', None)
+    
+    @property
+    def classes(self):
+        if not 'classes' in self.cl_headers:
+            if 'class' in self.cl_headers:
+                self.cl_headers['classes'] = self.cl_header['class'].split()
+            else:
+                self.cl_headers['classes'] = []
+        return self.cl_headers['classes']
     
     def get_absolute_url(self):
         """

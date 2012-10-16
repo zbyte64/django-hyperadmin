@@ -24,15 +24,15 @@ class StoragePaginator(object):
         links = list()
         if self.path:
             url = './%s' % self.state.get_query_string({}, ['path'])
-            link = Link(url=url, resource=self, prompt=u"Directory: /", classes=['filter', 'directory'], rel="filter")
+            link = Link(url=url, resource=self, prompt=u"/", classes=['filter', 'directory'], rel="filter", group="directory")
             links.append(link)
         for directory in self.dirs:
             url = './%s' % self.state.get_query_string({'path':directory})
-            link = Link(url=url, resource=self, prompt=u"Directory: %s" % directory, classes=['filter', 'directory'], rel="filter")
+            link = Link(url=url, resource=self, prompt=directory, classes=['filter', 'directory'], rel="filter", group="directory")
             links.append(link)
         if '/' in self.path:
             url = './%s' % self.state.get_query_string({'path':self.path[:self.path.rfind('/')]})
-            link = Link(url=url, resource=self, prompt=u"Directory: ../", classes=['filter', 'directory'], rel="filter")
+            link = Link(url=url, resource=self, prompt=u"../", classes=['filter', 'directory'], rel="filter", group="directory")
             links.append(link)
         return links, items
 
