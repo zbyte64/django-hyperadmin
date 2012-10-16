@@ -1,3 +1,5 @@
+from copy import deepcopy
+
 from django.conf.urls.defaults import patterns, url, include
 from django.utils.functional import update_wrapper
 from django import forms
@@ -8,7 +10,7 @@ from hyperadmin.resources.models import views
 from hyperadmin.resources.models.changelist import ModelChangeList
 
 
-class ModelResource(CRUDResource):
+class BaseModelResource(CRUDResource):
     #TODO support the following:
     #raw_id_fields = ()
     fields = None
@@ -42,15 +44,7 @@ class ModelResource(CRUDResource):
     detail_view = views.ModelDetailView
     delete_view = views.ModelDeleteView
     
-    def __init__(self, *args, **kwargs):
-        super(ModelResource, self).__init__(*args, **kwargs)
-        self.model = self.resource_adaptor
-        self.inline_instances = list()
-        for inline_cls in self.inlines:
-            self.register_inline(inline_cls)
-    
-    def register_inline(self, inline_cls):
-        self.inline_instances.append(inline_cls(self))
+    donot_copy = CRUDResource.donot_copy + ['model']
     
     @property
     def opts(self):
@@ -67,17 +61,8 @@ class ModelResource(CRUDResource):
     def get_prompt(self):
         return self.resource_name
     
-    def get_urls(self):
-        urlpatterns = super(ModelResource, self).get_urls()
-        for inline in self.inline_instances:
-            urlpatterns += patterns('',
-                url(r'^(?P<pk>\w+)/%s/' % inline.rel_name,
-                    include(inline.urls),),
-            )
-        return urlpatterns
-    
     def get_view_kwargs(self):
-        kwargs = super(ModelResource, self).get_view_kwargs()
+        kwargs = super(BaseModelResource, self).get_view_kwargs()
         kwargs['model'] = self.model
         return kwargs
     
@@ -85,7 +70,7 @@ class ModelResource(CRUDResource):
         return self.get_queryset(user=self.state['auth'])
     
     def get_changelist_kwargs(self):
-        kwargs = super(ModelResource, self).get_changelist_kwargs()
+        kwargs = super(BaseModelResource, self).get_changelist_kwargs()
         kwargs.update({'list_filter': self.list_filter,
                        'search_fields': self.search_fields,
                        'date_hierarchy': self.date_hierarchy,})
@@ -145,6 +130,40 @@ class ModelResource(CRUDResource):
                 #TODO formfield overides
                 #TODO fields
         return AdminForm
+
+class ModelResource(BaseModelResource):
+    donot_copy = BaseModelResource.donot_copy + ['inline_instances']
+    
+    def __init__(self, *args, **kwargs):
+        super(ModelResource, self).__init__(*args, **kwargs)
+        self.initialize_inlines()
+    
+    @property
+    def model(self):
+        return self.resource_adaptor
+    
+    def __deepcopy__(self, memo):
+        acopy = super(ModelResource, self).__deepcopy__(memo)
+        acopy.inline_instances = deepcopy([inline for inline in self.inline_instances], memo)
+        memo[id(self.inline_instances)] = acopy.inline_instances
+        return acopy
+    
+    def initialize_inlines(self):
+        self.inline_instances = list()
+        for inline_cls in self.inlines:
+            self.register_inline(inline_cls)
+    
+    def register_inline(self, inline_cls):
+        self.inline_instances.append(inline_cls(self))
+    
+    def get_urls(self):
+        urlpatterns = super(ModelResource, self).get_urls()
+        for inline in self.inline_instances:
+            urlpatterns += patterns('',
+                url(r'^(?P<pk>\w+)/%s/' % inline.rel_name,
+                    include(inline.urls),),
+            )
+        return urlpatterns
     
     def get_item_embedded_links(self, item):
         links = super(ModelResource, self).get_item_embedded_links(item=item)
@@ -170,7 +189,7 @@ class ModelResource(CRUDResource):
             namespaces[name] = namespace
         return namespaces
 
-class InlineModelResource(ModelResource):
+class InlineModelResource(BaseModelResource):
     list_view = views.InlineModelListView
     add_view = views.InlineModelCreateView
     detail_view = views.InlineModelDetailView
@@ -180,6 +199,8 @@ class InlineModelResource(ModelResource):
     fk_name = None
     rel_name = None
     
+    donot_copy = BaseModelResource.donot_copy + ['fk', 'rel_name']
+    
     def __init__(self, parent):
         super(InlineModelResource, self).__init__(resource_adaptor=self.model, site=parent.site, parent_resource=parent)
         
@@ -188,7 +209,6 @@ class InlineModelResource(ModelResource):
         self.fk = _get_foreign_key(self.parent.resource_adaptor, self.model, self.fk_name)
         if self.rel_name is None:
             self.rel_name = RelatedObject(self.fk.rel.to, self.model, self.fk).get_accessor_name()
-        self.inline_instances = []
     
     def get_queryset(self, parent, user):
         queryset = self.resource_adaptor.objects.all()

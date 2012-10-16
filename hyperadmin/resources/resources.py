@@ -43,6 +43,7 @@ class BaseResource(object):
         new = copy(self)
         new.__dict__.update(deepcopy(self.__dict__, memo))
         new.state = new.create_state()
+        memo[id(self.state)] = new.state
         return new
     
     def get_app_name(self):
