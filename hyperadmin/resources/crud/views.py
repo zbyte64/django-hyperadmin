@@ -66,8 +66,9 @@ class CRUDResourceViewMixin(ResourceViewMixin):
         item = self.get_item()
         return self.resource.get_restful_delete_link(item=item, form_kwargs=form_kwargs)
     
-    def get_list_link(self):
+    def get_list_link(self, **kwargs):
         link_kwargs = self.get_link_kwargs()
+        link_kwargs['url'] = self.request.get_full_path()
         return self.resource.get_resource_link(**link_kwargs)
 
 class CRUDView(CRUDResourceViewMixin, View):
