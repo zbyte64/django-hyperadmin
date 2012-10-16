@@ -286,7 +286,7 @@ class StorageResourceTestCase(ResourceTestCase):
         
         media_type, response_type, link = self.resource.generate_response.call_args[0]
         
-        self.assertEqual(link.rel, 'item')
+        self.assertEqual(link.rel, 'update')
         #if not rel
         #self.assertTrue(link.form.errors)
 
