@@ -97,6 +97,10 @@ class CRUDResource(BaseResource):
         kwargs['url'] = self.get_absolute_url()
         return self.get_create_link(**kwargs)
     
+    def get_item_link(self, item, **kwargs):
+        kwargs['on_submit'] = lambda link, submit_kwargs: self.get_update_link(item)
+        return super(CRUDResource, self).get_item_link(item, **kwargs)
+    
     def get_update_link(self, item, form_kwargs=None, **kwargs):
         if form_kwargs is None:
             form_kwargs = {}
@@ -171,7 +175,8 @@ class CRUDResource(BaseResource):
     
     def get_outbound_links(self):
         links = super(CRUDResource, self).get_outbound_links()
-        links.append(self.get_create_link(link_factor='LO'))
+        if not self.state.item:
+            links.append(self.get_create_link(link_factor='LO'))
         return links
     
     def get_item_outbound_links(self, item):

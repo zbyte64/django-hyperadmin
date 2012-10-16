@@ -133,6 +133,9 @@ class Link(object):
         '''
         on_submit = self.on_submit
         
+        if on_submit is None:
+            pass #TODO follow link
+        
         return on_submit(link=self, submit_kwargs=kwargs)
     
     def clone(self, **kwargs):
@@ -292,6 +295,9 @@ class Namespace(object):
     
     def get_namespaces(self):
         return dict()
+    
+    def get_prompt(self):
+        return self.state.resource.get_prompt()
 
 class ResourceItem(object):
     '''
@@ -317,6 +323,9 @@ class ResourceItem(object):
     
     def get_idempotent_links(self):
         return self.resource.get_item_idempotent_links(self)
+    
+    def get_item_link(self):
+        return self.resource.get_item_link(self)
     
     def get_absolute_url(self):
         return self.resource.get_item_url(self)

@@ -165,19 +165,6 @@ class ModelResource(BaseModelResource):
             )
         return urlpatterns
     
-    def get_item_embedded_links(self, item):
-        links = super(ModelResource, self).get_item_embedded_links(item=item)
-        inline_links = list()
-        for inline in self.inline_instances:
-            inline = inline.fork_state(parent=item.instance, auth=self.state['auth'])
-            url = inline.get_absolute_url()
-            link = Link(url=url,
-                        resource=inline,
-                        prompt='inlines: %s' % inline.get_prompt(),
-                        rel='inline-%s' % inline.rel_name,)
-            inline_links.append(link)
-        return links + inline_links
-    
     def get_item_namespaces(self, item):
         namespaces = super(ModelResource, self).get_item_namespaces(item)
         
