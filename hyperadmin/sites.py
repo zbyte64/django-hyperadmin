@@ -6,7 +6,7 @@ from django.conf.urls.defaults import patterns
 from django.core.urlresolvers import reverse
 from django.utils.datastructures import SortedDict
 from django.utils.functional import update_wrapper
-from django.http import HttpResponse
+from django.http import HttpResponse, HttpResponseRedirect
 from django.utils.encoding import iri_to_uri
 
 from hyperadmin.resources.applications.site import SiteResource
@@ -84,6 +84,10 @@ class ResourceSite(object):
         return csrf_exempt(permission_check(view))
     
     def api_permission_check(self, request):
+        if not request.user.is_authenticated():
+            redirect_to = self.reverse('authentication')
+            response = HttpResponseRedirect(redirect_to)
+            return response
         if not request.user.is_staff:
             redirect_to = self.reverse('authentication')
             response = HttpResponse('Unauthorized', status=401)
