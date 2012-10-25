@@ -65,14 +65,19 @@ class CRUDResourceViewMixin(ResourceViewMixin):
         return self.resource.get_restful_update_link(**link_kwargs)
     
     def get_delete_link(self, form_kwargs=None, **link_kwargs):
-        item = self.get_item()
-        return self.resource.get_delete_link(item=item, form_kwargs=form_kwargs)
+        link_kwargs.update({'form_kwargs':form_kwargs,
+                            'item':self.get_item(),})
+        link_kwargs = self.get_link_kwargs(**link_kwargs)
+        return self.resource.get_delete_link(**link_kwargs)
     
     def get_restful_delete_link(self, form_kwargs=None, **link_kwargs):
-        item = self.get_item()
-        return self.resource.get_restful_delete_link(item=item, form_kwargs=form_kwargs)
+        link_kwargs.update({'form_kwargs':form_kwargs,
+                            'item':self.get_item(),})
+        link_kwargs = self.get_link_kwargs(**link_kwargs)
+        return self.resource.get_restful_delete_link(**link_kwargs)
     
     def get_list_link(self, form_kwargs=None, **link_kwargs):
+        link_kwargs['form_kwargs'] = form_kwargs
         link_kwargs = self.get_link_kwargs(**link_kwargs)
         return self.resource.get_resource_link(**link_kwargs)
 
@@ -89,7 +94,7 @@ class CRUDCreateView(CRUDView):
         if not self.can_add():
             return http.HttpResponseForbidden(_(u"You may not add an object"))
         form_kwargs = self.get_request_form_kwargs()
-        form_link = self.get_create_link(**form_kwargs)
+        form_link = self.get_create_link(form_kwargs=form_kwargs, use_request_url=True)
         response_link = form_link.submit()
         return self.resource.generate_response(self.get_response_media_type(), self.get_response_type(), response_link)
 
@@ -103,7 +108,7 @@ class CRUDListView(CRUDView):
         if not self.can_add():
             return http.HttpResponseForbidden(_(u"You may not add an object"))
         form_kwargs = self.get_request_form_kwargs()
-        form_link = self.get_restful_create_link(**form_kwargs)
+        form_link = self.get_restful_create_link(form_kwargs=form_kwargs, use_request_url=True)
         response_link = form_link.submit()
         return self.resource.generate_response(self.get_response_media_type(), self.get_response_type(), response_link)
     
@@ -171,7 +176,7 @@ class CRUDDetailView(CRUDDetailMixin, CRUDView):
             return http.HttpResponseForbidden(_(u"You may not modify that object"))
         
         form_kwargs = self.get_request_form_kwargs()
-        form_link = self.get_update_link(**form_kwargs)
+        form_link = self.get_update_link(form_kwargs=form_kwargs, use_request_url=True)
         response_link = form_link.submit()
         return self.resource.generate_response(self.get_response_media_type(), self.get_response_type(), response_link)
     

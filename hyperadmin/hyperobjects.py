@@ -11,7 +11,7 @@ class Link(object):
     """
     Represents an available action or state transition.
     """
-    def __init__(self, url, resource, method='GET', form=None, form_class=None, form_kwargs=None, link_factor=None,
+    def __init__(self, url, resource, method='GET', form=None, form_class=None, form_kwargs=None, link_factor=None, include_form_params_in_url=False,
                  descriptors=None, prompt=None, cu_headers=None, cr_headers=None, on_submit=None, **cl_headers):
         self._url = url
         self._method = str(method).upper() #CM
@@ -21,6 +21,7 @@ class Link(object):
         self.form_class = form_class
         self.form_kwargs = form_kwargs
         self.link_factor = link_factor
+        self.include_form_params_in_url = include_form_params_in_url
         self.descriptors = descriptors #is this needed?
         self.cl_headers = cl_headers
         self.prompt = prompt
@@ -40,6 +41,23 @@ class Link(object):
             else:
                 self.cl_headers['classes'] = []
         return self.cl_headers['classes']
+    
+    def get_base_url(self):
+        #include_form_params_in_url=False
+        if self.is_simple_link and self.include_form_params_in_url: #TODO absorb this in link._url
+            if '?' in self._url:
+                base_url, url_params = self._url.split('?', 1)
+            else:
+                base_url, url_params = self._url, ''
+            params = QueryDict(url_params, mutable=True)
+            form = self.get_form()
+            #extract get params
+            for field in form:
+                val = field.value()
+                if val is not None:
+                    params[field.html_name] = val
+            return '%s?%s' % (base_url, params.urlencode())
+        return self._url
     
     def get_absolute_url(self):
         """
@@ -213,8 +231,8 @@ class State(dict):
         self['idemptotent_links'].append(link)
     
     def get_link_url(self, link):
-        url = link._url
-        params = self.get('extra_get_params', None)
+        url = link.get_base_url()
+        params = self.get('extra_get_params', None) or QueryDict('', mutable=True)
         if params:
             params = copy(params)
             if '?' in url:
