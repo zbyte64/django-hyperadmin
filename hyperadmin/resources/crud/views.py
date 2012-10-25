@@ -12,11 +12,13 @@ class CRUDResourceViewMixin(ResourceViewMixin):
             return self.form_class
         return self.resource.get_form_class()
     
-    def get_form_kwargs(self):
-        return {}
+    def get_form_kwargs(self, **kwargs):
+        return kwargs
     
-    def get_link_kwargs(self):
-        return {}
+    def get_link_kwargs(self, **kwargs):
+        if kwargs.pop('use_request_url', False):
+            kwargs['url'] = self.request.get_full_path()
+        return kwargs
     
     def can_add(self):
         return self.resource.has_add_permission(self.request.user)
@@ -27,48 +29,51 @@ class CRUDResourceViewMixin(ResourceViewMixin):
     def can_delete(self, instance=None):
         return self.resource.has_delete_permission(self.request.user, instance)
     
-    def get_create_link(self, **form_kwargs):
-        form_kwargs.update(self.get_form_kwargs())
-        link_kwargs = self.get_link_kwargs()
+    def get_create_link(self, form_kwargs=None, **link_kwargs):
+        if form_kwargs is None: form_kwargs = dict()
+        form_kwargs = self.get_form_kwargs(**form_kwargs)
         link_kwargs.update({'form_class': self.get_form_class(),
                             'form_kwargs': form_kwargs,})
+        link_kwargs = self.get_link_kwargs(**link_kwargs)
         return self.resource.get_create_link(**link_kwargs)
     
-    def get_restful_create_link(self, **form_kwargs):
-        form_kwargs.update(self.get_form_kwargs())
-        link_kwargs = self.get_link_kwargs()
+    def get_restful_create_link(self, form_kwargs=None, **link_kwargs):
+        if form_kwargs is None: form_kwargs = dict()
+        form_kwargs = self.get_form_kwargs(**form_kwargs)
         link_kwargs.update({'form_class': self.get_form_class(),
                             'form_kwargs': form_kwargs,})
+        link_kwargs = self.get_link_kwargs(**link_kwargs)
         return self.resource.get_restful_create_link(**link_kwargs)
     
-    def get_update_link(self, **form_kwargs):
+    def get_update_link(self, form_kwargs=None, **link_kwargs):
         item = self.get_item()
-        form_kwargs.update(self.get_form_kwargs())
-        link_kwargs = self.get_link_kwargs()
+        if form_kwargs is None: form_kwargs = dict()
+        form_kwargs = self.get_form_kwargs(**form_kwargs)
         link_kwargs.update({'form_class': self.get_form_class(),
                             'form_kwargs': form_kwargs,
                             'item':item})
+        link_kwargs = self.get_link_kwargs(**link_kwargs)
         return self.resource.get_update_link(**link_kwargs)
     
-    def get_restful_update_link(self, item, **form_kwargs):
-        form_kwargs.update(self.get_form_kwargs())
-        link_kwargs = self.get_link_kwargs()
+    def get_restful_update_link(self, item, form_kwargs=None, **link_kwargs):
+        if form_kwargs is None: form_kwargs = dict()
+        form_kwargs = self.get_form_kwargs(**form_kwargs)
         link_kwargs.update({'form_class': self.get_form_class(),
                             'form_kwargs': form_kwargs,
                             'item':item})
+        link_kwargs = self.get_link_kwargs(**link_kwargs)
         return self.resource.get_restful_update_link(**link_kwargs)
     
-    def get_delete_link(self, **form_kwargs):
+    def get_delete_link(self, form_kwargs=None, **link_kwargs):
         item = self.get_item()
         return self.resource.get_delete_link(item=item, form_kwargs=form_kwargs)
     
-    def get_restful_delete_link(self, **form_kwargs):
+    def get_restful_delete_link(self, form_kwargs=None, **link_kwargs):
         item = self.get_item()
         return self.resource.get_restful_delete_link(item=item, form_kwargs=form_kwargs)
     
-    def get_list_link(self, **kwargs):
-        link_kwargs = self.get_link_kwargs()
-        link_kwargs['url'] = self.request.get_full_path()
+    def get_list_link(self, form_kwargs=None, **link_kwargs):
+        link_kwargs = self.get_link_kwargs(**link_kwargs)
         return self.resource.get_resource_link(**link_kwargs)
 
 class CRUDView(CRUDResourceViewMixin, View):
@@ -78,7 +83,7 @@ class CRUDCreateView(CRUDView):
     view_class = 'change_form'
     
     def get(self, request, *args, **kwargs):
-        return self.resource.generate_response(self.get_response_media_type(), self.get_response_type(), self.get_create_link())
+        return self.resource.generate_response(self.get_response_media_type(), self.get_response_type(), self.get_create_link(use_request_url=True))
     
     def post(self, request, *args, **kwargs):
         if not self.can_add():
@@ -92,7 +97,7 @@ class CRUDListView(CRUDView):
     view_class = 'change_list'
     
     def get(self, request, *args, **kwargs):
-        return self.resource.generate_response(self.get_response_media_type(), self.get_response_type(), self.get_list_link())
+        return self.resource.generate_response(self.get_response_media_type(), self.get_response_type(), self.get_list_link(use_request_url=True))
     
     def post(self, request, *args, **kwargs):
         if not self.can_add():
@@ -136,13 +141,13 @@ class CRUDDetailMixin(object):
         return self.resource.get_resource_item(self.object)
     
     def get(self, request, *args, **kwargs):
-        return self.resource.generate_response(self.get_response_media_type(), self.get_response_type(), self.get_update_link())
+        return self.resource.generate_response(self.get_response_media_type(), self.get_response_type(), self.get_update_link(use_request_url=True))
 
 class CRUDDeleteView(CRUDDetailMixin, CRUDView):
     view_class = 'delete_confirmation'
     
     def get(self, request, *args, **kwargs):
-        return self.resource.generate_response(self.get_response_media_type(), self.get_response_type(), self.get_delete_link())
+        return self.resource.generate_response(self.get_response_media_type(), self.get_response_type(), self.get_delete_link(use_request_url=True))
     
     def post(self, request, *args, **kwargs):
         self.object = self.get_object()
@@ -158,7 +163,7 @@ class CRUDDetailView(CRUDDetailMixin, CRUDView):
     view_class = 'change_form'
     
     def get(self, request, *args, **kwargs):
-        return self.resource.generate_response(self.get_response_media_type(), self.get_response_type(), self.get_update_link())
+        return self.resource.generate_response(self.get_response_media_type(), self.get_response_type(), self.get_update_link(use_request_url=True))
     
     def put(self, request, *args, **kwargs):
         self.object = self.get_object()

@@ -1,4 +1,4 @@
-from sites import site
+from hyperadmin.sites import site
 
 def autodiscover():
     """
@@ -15,10 +15,10 @@ def autodiscover():
         mod = import_module(app)
         # Attempt to import the app's admin module.
         try:
-            import_module('%s.admin' % app)
+            import_module('%s.resources' % app)
         except:
             # Decide whether to bubble up this error. If the app just
             # doesn't have an admin module, we can ignore the error
             # attempting to import it, otherwise we want it to bubble up.
-            if module_has_submodule(mod, 'admin'):
+            if module_has_submodule(mod, 'resources'):
                 raise
