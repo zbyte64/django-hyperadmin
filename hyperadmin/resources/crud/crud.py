@@ -97,6 +97,9 @@ class CRUDResource(BaseResource):
         kwargs['url'] = self.get_absolute_url()
         return self.get_create_link(**kwargs)
     
+    def show_create_link(self):
+        return not self.state.item and not self.state.has_view_class('change_form')
+    
     def get_item_link(self, item, **kwargs):
         kwargs['on_submit'] = lambda link, submit_kwargs: self.get_update_link(item)
         return super(CRUDResource, self).get_item_link(item, **kwargs)
@@ -120,6 +123,9 @@ class CRUDResource(BaseResource):
         kwargs['method'] = 'PUT'
         return self.get_update_link(**kwargs)
     
+    def show_update_link(self, item):
+        return not self.state.has_view_class('delete_confirmation')
+    
     def get_delete_link(self, item, **kwargs):
         link_kwargs = {'url':self.get_delete_url(item),
                        'resource':self,
@@ -135,6 +141,9 @@ class CRUDResource(BaseResource):
         kwargs['url'] = item.get_absolute_url()
         kwargs['method'] = 'DELETE'
         return self.get_delete_link(item, **kwargs)
+    
+    def show_delete_link(self, item):
+        return not self.state.has_view_class('delete_confirmation')
     
     def handle_create_submission(self, link, submit_kwargs):
         form = link.get_form(**submit_kwargs)
@@ -175,30 +184,31 @@ class CRUDResource(BaseResource):
     
     def get_outbound_links(self):
         links = super(CRUDResource, self).get_outbound_links()
-        if not self.state.item:
+        if self.show_create_link():
             links.append(self.get_create_link(link_factor='LO'))
         return links
     
     def get_item_outbound_links(self, item):
         links = super(CRUDResource, self).get_item_outbound_links(item)
-        links.append(self.get_delete_link(item=item, link_factor='LO'))
+        if self.show_delete_link(item):
+            links.append(self.get_delete_link(item=item, link_factor='LO'))
         return links
     
     def get_idempotent_links(self):
         links = super(CRUDResource, self).get_idempotent_links()
-        if not self.state.item: #only display a create link if we are not viewing a specific item
+        if self.show_create_link():
             links.append(self.get_create_link())
         return links
     
     def get_item_ln_links(self, item):
         links = super(CRUDResource, self).get_item_ln_links(item)
-        if self.state.get('view_class', None) != 'delete_confirmation':
+        if self.show_update_link():
             links.append(self.get_update_link(item=item))
         return links
     
     def get_item_idempotent_links(self, item):
         links = super(CRUDResource, self).get_item_idempotent_links(item)
-        if self.state.get('view_class', None) == 'delete_confirmation':
+        if self.show_delete_link(item):
             links.append(self.get_delete_link(item=item))
         else:
             links.append(self.get_restful_delete_link(item=item))
@@ -225,13 +235,13 @@ class CRUDResource(BaseResource):
         '''
         if 'page' in self.state:
             return self.state['page'].object_list
-        if self.state.get('view_class', None) == 'change_form':
+        if self.state.has_view_class('change_form'):
             return []
         return self.get_active_index()
     
     def get_resource_items(self):
         instances = self.get_instances()
-        if self.state.get('view_class', None) == 'change_list':
+        if self.state.has_view_class('change_list'):
             return [self.get_list_resource_item(instance) for instance in instances]
         return [self.get_resource_item(instance) for instance in instances]
     

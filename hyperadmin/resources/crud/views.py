@@ -86,6 +86,7 @@ class CRUDView(CRUDResourceViewMixin, View):
 
 class CRUDCreateView(CRUDView):
     view_class = 'change_form'
+    view_classes = ['add_form']
     
     def get(self, request, *args, **kwargs):
         return self.resource.generate_response(self.get_response_media_type(), self.get_response_type(), self.get_create_link(use_request_url=True))

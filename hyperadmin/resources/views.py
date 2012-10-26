@@ -46,6 +46,7 @@ class ResourceViewMixin(GetPatchMetaMixin, ConditionalAccessMixin):
     resource = None
     resource_site = None
     view_class = None
+    view_classes = []
     
     def get_response_type(self, patch_meta=True):
         if patch_meta:
@@ -95,11 +96,17 @@ class ResourceViewMixin(GetPatchMetaMixin, ConditionalAccessMixin):
     def get_state_class(self):
         return self.resource.get_state_class()
     
+    def get_view_classes(self):
+        view_classes = list(self.view_classes)
+        view_classes.append(self.view_class)
+        return view_classes
+    
     def get_state_data(self):
         data = super(ResourceViewMixin, self).get_state_data()
         data.update(self.kwargs)
         data.update({'auth':self.request.user,
                      'view_class':self.view_class,
+                     'view_classes':self.get_view_classes(),
                      'item':self.get_item(),
                      'params':self.request.GET.copy(),
                      'args':self.args,})

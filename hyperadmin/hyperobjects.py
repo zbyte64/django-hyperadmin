@@ -258,6 +258,10 @@ class State(dict):
     
     item = property(_get_item, _set_item)
     
+    def has_view_class(self, cls):
+        view_classes = self.get('view_classes', [])
+        return cls in view_classes
+    
     @property
     def params(self):
         """
