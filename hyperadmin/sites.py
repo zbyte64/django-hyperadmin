@@ -49,9 +49,9 @@ class ResourceSite(object):
         params.update(kwargs)
         return params
     
-    def register_application(self, app_name, **options):
+    def register_application(self, app_name, app_class=None, **options):
         if app_name not in self.applications:
-            app_class = self.get_application_resource_class()
+            app_class = app_class or self.get_application_resource_class()
             kwargs = self.get_application_resource_kwargs(app_name=app_name, **options)
             self.applications[app_name] = app_class(**kwargs)
         return self.applications[app_name]
