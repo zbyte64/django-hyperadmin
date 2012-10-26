@@ -34,13 +34,27 @@ class ResourceSite(object):
             return resources
         model = model_or_iterable
         resource = admin_class(resource_adaptor=model, site=self, **options)
+        #TODO we should know the app name before creating the resource
         app_name = resource.app_name
-        if app_name not in self.applications:
-            self.applications[app_name] = self.application_resource_class(app_name, self)
-        resource.parent = self.applications[app_name] #TODO clean up
+        resource.parent = self.register_application(app_name)
         self.applications[app_name].register_resource(resource)
         self.registry[model] = resource
         return resource
+    
+    def get_application_resource_class(self):
+        return self.application_resource_class
+    
+    def get_application_resource_kwargs(self, **kwargs):
+        params = {'site':self}
+        params.update(kwargs)
+        return params
+    
+    def register_application(self, app_name, **options):
+        if app_name not in self.applications:
+            app_class = self.get_application_resource_class()
+            kwargs = self.get_application_resource_kwargs(app_name=app_name, **options)
+            self.applications[app_name] = app_class(**kwargs)
+        return self.applications[app_name]
     
     def register_media_type(self, media_type, media_type_handler):
         self.media_types[media_type] = media_type_handler

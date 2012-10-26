@@ -150,21 +150,29 @@ class CRUDResource(BaseResource):
         if form.is_valid():
             instance = form.save()
             resource_item = self.get_resource_item(instance)
-            return self.get_item_link(resource_item)
+            return self.on_create_success(resource_item)
         return link.clone(form=form)
+    
+    def on_create_success(self, item):
+        return self.get_item_link(item)
     
     def handle_update_submission(self, link, submit_kwargs):
         form = link.get_form(**submit_kwargs)
         if form.is_valid():
             instance = form.save()
             resource_item = self.get_resource_item(instance)
-            #or send the update link?
-            return self.get_update_link(resource_item)
+            return self.on_update_success(resource_item)
         return link.clone(form=form)
+    
+    def on_update_success(self, item):
+        return self.get_update_link(item)
     
     def handle_delete_submission(self, link, submit_kwargs):
         instance = self.state.item.instance
         instance.delete()
+        return self.on_delete_success(self.state.item)
+    
+    def on_delete_success(self, item):
         return self.get_resource_link()
     
     def has_add_permission(self, user):
