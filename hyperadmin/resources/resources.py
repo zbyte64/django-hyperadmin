@@ -41,6 +41,7 @@ class BaseResource(object):
                 memo[id(val)] = val
         
         new = copy(self)
+        memo[id(self)] = new
         new.__dict__.update(deepcopy(self.__dict__, memo))
         new.state = new.create_state()
         memo[id(self.state)] = new.state
