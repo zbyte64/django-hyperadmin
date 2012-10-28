@@ -116,6 +116,7 @@ class CRUDResource(BaseResource):
                        'form_kwargs':form_kwargs,
                        'prompt':'update',
                        'rel':'update',}
+        link_kwargs.update(kwargs)
         update_link = Link(**link_kwargs)
         return update_link
     
@@ -132,6 +133,7 @@ class CRUDResource(BaseResource):
                        'on_submit':self.handle_delete_submission,
                        'rel':'delete',
                        'prompt':'delete',
+                       'class':'btn-danger', #TODO
                        'method':'POST'}
         link_kwargs.update(kwargs)
         delete_link = Link(**link_kwargs)
@@ -224,12 +226,6 @@ class CRUDResource(BaseResource):
     
     def get_item_breadcrumb(self, item):
         return self.get_item_link(item, rel='breadcrumb')
-    
-    def get_breadcrumbs(self):
-        breadcrumbs = super(CRUDResource, self).get_breadcrumbs()
-        if self.state.item:
-            breadcrumbs.append(self.get_item_breadcrumb(self.state.item))
-        return breadcrumbs
     
     def get_list_resource_item_class(self):
         return self.list_resource_item_class

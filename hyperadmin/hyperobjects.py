@@ -37,7 +37,7 @@ class Link(object):
     def classes(self):
         if not 'classes' in self.cl_headers:
             if 'class' in self.cl_headers:
-                self.cl_headers['classes'] = self.cl_header['class'].split()
+                self.cl_headers['classes'] = self.cl_headers['class'].split()
             else:
                 self.cl_headers['classes'] = []
         return self.cl_headers['classes']
@@ -58,6 +58,22 @@ class Link(object):
                     params[field.html_name] = val
             return '%s?%s' % (base_url, params.urlencode())
         return self._url
+    
+    def clone_into_links(self):
+        assert self.is_simple_link
+        links = list()
+        #TODO find a better way
+        form = self.get_form()
+        options = [(field, key) for key, field in form.fields.iteritems() if hasattr(field, 'choices')]
+        for option_field, key in options:
+            for val, label in option_field.choices:
+                if not val:
+                    continue
+                form_kwargs = copy(self.form_kwargs)
+                form_kwargs['initial'] = {key: val}
+                option = self.clone(prompt=label, form_kwargs=form_kwargs, include_form_params_in_url=True)
+                links.append(option)
+        return links
     
     def get_absolute_url(self):
         """

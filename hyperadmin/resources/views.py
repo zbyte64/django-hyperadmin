@@ -82,6 +82,9 @@ class ResourceViewMixin(GetPatchMetaMixin, ConditionalAccessMixin):
             raise ValueError('Unrecognized response content type: %s' % content_type)
         return media_type_cls(self)
     
+    def generate_response(self, link):
+        return self.resource.generate_response(self.get_response_media_type(), self.get_response_type(), link)
+    
     def get_request_form_kwargs(self):
         media_type = self.get_request_media_type()
         form_kwargs = media_type.deserialize()
