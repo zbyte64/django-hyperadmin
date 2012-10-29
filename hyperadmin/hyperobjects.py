@@ -60,7 +60,7 @@ class Link(object):
         return self._url
     
     def clone_into_links(self):
-        assert self.is_simple_link
+        assert self.get_link_factor() == 'LT'
         links = list()
         #TODO find a better way
         form = self.get_form()

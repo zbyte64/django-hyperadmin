@@ -64,6 +64,11 @@ class SiteResource(BaseResource):
         if hasattr(item.instance, 'get_absolute_url'):
             return item.instance.get_absolute_url()
     
+    def get_item_outbound_links(self, item):
+        links = super(SiteResource, self).get_item_outbound_links(item)
+        links.extend(item.instance.get_outbound_links())
+        return links
+    
     def get_absolute_url(self):
         return self.reverse('index')
     

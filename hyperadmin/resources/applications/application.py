@@ -55,7 +55,12 @@ class ApplicationResource(BaseResource):
     
     def get_resource_items(self):
         return [self.get_resource_item(item) for item in self.get_items()]
-        
+    
+    def get_item_outbound_links(self, item):
+        links = super(ApplicationResource, self).get_item_outbound_links(item)
+        links.extend(item.instance.get_outbound_links())
+        return links
+    
     def get_child_resource_links(self):
         links = list()
         for key, resource in self.resource_adaptor.iteritems():
