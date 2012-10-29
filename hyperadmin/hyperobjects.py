@@ -44,7 +44,7 @@ class Link(object):
     
     def get_base_url(self):
         #include_form_params_in_url=False
-        if self.is_simple_link and self.include_form_params_in_url: #TODO absorb this in link._url
+        if self.get_link_factor() == 'LT' and self.include_form_params_in_url: #TODO absorb this in link._url
             if '?' in self._url:
                 base_url, url_params = self._url.split('?', 1)
             else:
