@@ -48,9 +48,6 @@ class AuthResource(BaseResource):
         )
         return urlpatterns
     
-    def get_form_class(self):
-        return self.form_class
-    
     def get_absolute_url(self):
         return self.reverse('authentication')
     

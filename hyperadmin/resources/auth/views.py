@@ -34,19 +34,19 @@ class AuthenticationResourceView(AuthViewMixin, View):
     view_class = 'login'
     
     def get(self, request, *args, **kwargs):
-        return self.resource.generate_response(self.get_response_media_type(), self.get_response_type(), self.get_login_link())
+        return self.generate_response(self.get_login_link())
     
     def post(self, request, *args, **kwargs):
         form_kwargs = self.get_request_form_kwargs()
         form_link = self.get_active_link(**form_kwargs)
         response_link = form_link.submit()
-        return self.resource.generate_response(self.get_response_media_type(), self.get_response_type(), response_link)
+        return self.generate_response(response_link)
     
     def delete(self, request, *args, **kwargs):
         form_kwargs = self.get_request_form_kwargs()
         form_link = self.get_restful_logout_link(**form_kwargs)
         response_link = form_link.submit()
-        return self.resource.generate_response(self.get_response_media_type(), self.get_response_type(), response_link)
+        return self.generate_response(response_link)
 
 class AuthenticationLogoutView(AuthViewMixin, View):
     view_class = 'logout'
@@ -55,5 +55,5 @@ class AuthenticationLogoutView(AuthViewMixin, View):
         form_kwargs = self.get_request_form_kwargs()
         form_link = self.get_logout_link(**form_kwargs)
         response_link = form_link.submit()
-        return self.resource.generate_response(self.get_response_media_type(), self.get_response_type(), response_link)
+        return self.generate_response(response_link)
 
