@@ -22,19 +22,19 @@ SEARCH_VAR = 'q'
 class SearchFilter(BaseFilter):
     title = _('Search')
     
-    def __init__(self, section, search_fields):
-        super(SearchFilter, self).__init__(section)
+    def __init__(self, index, search_fields):
+        super(SearchFilter, self).__init__(index)
         self.search_fields = search_fields
     
-    def value(self, state):
-        return state.params.get(SEARCH_VAR, '')
+    def value(self):
+        return self.state.params.get(SEARCH_VAR, '')
     
-    def is_active(self, state):
-        return bool(self.value(state))
+    def is_active(self):
+        return bool(self.value())
     
-    def filter_index(self, state, active_index):
+    def filter_index(self, active_index):
         use_distinct = False
-        query = self.value(state)
+        query = self.value()
         
         def construct_search(field_name):
             if field_name.startswith('^'):
@@ -66,25 +66,25 @@ class FieldFilter(BaseChoicesFilter):
     _field_list_filters = []
     _take_priority_index = 0
 
-    def __init__(self, field, field_path, section):
+    def __init__(self, field, field_path, index):
         self.field = field
         self.field_path = field_path
         self.title = getattr(field, 'verbose_name', field_path)
         self.used_parameters = dict()
-        super(FieldFilter, self).__init__(section)
+        super(FieldFilter, self).__init__(index)
 
-    def is_active(self, state):
+    def is_active(self):
         return bool(self.used_parameters)
     
-    def populate_state(self, state):
-        params = state.params.copy()
+    def populate_state(self):
+        params = self.state.params.copy()
         self.used_parameters = dict()
         for p in self.expected_parameters():
             if p in params:
                 value = params[p]
                 self.used_parameters[p] = prepare_lookup_value(p, value)
 
-    def filter_index(self, state, active_index):
+    def filter_index(self, active_index):
         return active_index.filter(**self.used_parameters)
     
     @classmethod
@@ -100,22 +100,22 @@ class FieldFilter(BaseChoicesFilter):
             cls._field_list_filters.append((test, list_filter_class))
 
     @classmethod
-    def create(cls, field, field_path, section):
+    def create(cls, field, field_path, index):
         for test, list_filter_class in cls._field_list_filters:
             if not test(field):
                 continue
-            return list_filter_class(field, field_path, section)
+            return list_filter_class(field, field_path, index)
 
 
 class RelatedFieldFilter(FieldFilter):
-    def __init__(self, field, field_path, section):
+    def __init__(self, field, field_path, index):
         other_model = get_model_from_relation(field)
         rel_name = other_model._meta.pk.name
         self.lookup_kwarg = '%s__%s__exact' % (field_path, rel_name)
         self.lookup_kwarg_isnull = '%s__isnull' % field_path
         self.lookup_choices = field.get_choices(include_blank=False)
         super(RelatedFieldFilter, self).__init__(
-            field, field_path, section)
+            field, field_path, index)
         if hasattr(field, 'verbose_name'):
             self.lookup_title = field.verbose_name
         else:
@@ -131,27 +131,27 @@ class RelatedFieldFilter(FieldFilter):
             extra = 0
         return len(self.lookup_choices) + extra > 1
     
-    def is_active(self, state):
+    def is_active(self):
         if not self.has_output():
             return False
-        return super(RelatedFieldFilter, self).is_active(state)
+        return super(RelatedFieldFilter, self).is_active()
 
     def expected_parameters(self):
         return [self.lookup_kwarg, self.lookup_kwarg_isnull]
     
-    def choices(self, state):
+    def choices(self):
         from django.contrib.admin.views.main import EMPTY_CHANGELIST_VALUE
-        lookup_val, lookup_val_isnull = self.values(state)
+        lookup_val, lookup_val_isnull = self.values()
         yield {
             'selected': lookup_val is None and not lookup_val_isnull,
-            'query_string': state.get_query_string({},
+            'query_string': self.state.get_query_string({},
                 [self.lookup_kwarg, self.lookup_kwarg_isnull]),
             'display': _('All'),
         }
         for pk_val, val in self.lookup_choices:
             yield {
                 'selected': lookup_val == smart_unicode(pk_val),
-                'query_string': state.get_query_string({
+                'query_string': self.state.get_query_string({
                     self.lookup_kwarg: pk_val,
                 }, [self.lookup_kwarg_isnull]),
                 'display': val,
@@ -161,7 +161,7 @@ class RelatedFieldFilter(FieldFilter):
                     and self.field.null):
             yield {
                 'selected': bool(lookup_val_isnull),
-                'query_string': state.get_query_string({
+                'query_string': self.state.get_query_string({
                     self.lookup_kwarg_isnull: 'True',
                 }, [self.lookup_kwarg]),
                 'display': EMPTY_CHANGELIST_VALUE,
@@ -173,23 +173,23 @@ FieldFilter.register(lambda f: (
 
 
 class BooleanFieldFilter(FieldFilter):
-    def __init__(self, field, field_path, section):
+    def __init__(self, field, field_path, index):
         self.lookup_kwarg = '%s__exact' % field_path
         self.lookup_kwarg2 = '%s__isnull' % field_path
-        super(BooleanFieldFilter, self).__init__(field, field_path, section)
+        super(BooleanFieldFilter, self).__init__(field, field_path, index)
 
     def expected_parameters(self):
         return [self.lookup_kwarg, self.lookup_kwarg2]
 
-    def choices(self, state):
-        lookup_val, lookup_val2 = self.values(state)
+    def choices(self):
+        lookup_val, lookup_val2 = self.values()
         for lookup, title in (
                 (None, _('All')),
                 ('1', _('Yes')),
                 ('0', _('No'))):
             yield {
                 'selected': lookup_val == lookup and not lookup_val2,
-                'query_string': state.get_query_string({
+                'query_string': self.state.get_query_string({
                         self.lookup_kwarg: lookup,
                     }, [self.lookup_kwarg2]),
                 'display': title,
@@ -197,7 +197,7 @@ class BooleanFieldFilter(FieldFilter):
         if isinstance(self.field, models.NullBooleanField):
             yield {
                 'selected': lookup_val2 == 'True',
-                'query_string': state.get_query_string({
+                'query_string': self.state.get_query_string({
                         self.lookup_kwarg2: 'True',
                     }, [self.lookup_kwarg]),
                 'display': _('Unknown'),
@@ -208,25 +208,25 @@ FieldFilter.register(lambda f: isinstance(f,
 
 
 class ChoicesFieldFilter(FieldFilter):
-    def __init__(self, field, field_path, section):
+    def __init__(self, field, field_path, index):
         self.lookup_kwarg = '%s__exact' % field_path
         super(ChoicesFieldFilter, self).__init__(
-            field, field_path, section)
+            field, field_path, index)
 
     def expected_parameters(self):
         return [self.lookup_kwarg]
 
-    def choices(self, state):
-        lookup_val = self.values(state)[0]
+    def choices(self):
+        lookup_val = self.values()[0]
         yield {
             'selected': lookup_val is None,
-            'query_string': state.get_query_string({}, [self.lookup_kwarg]),
+            'query_string': self.state.get_query_string({}, [self.lookup_kwarg]),
             'display': _('All')
         }
         for lookup, title in self.field.flatchoices:
             yield {
                 'selected': smart_unicode(lookup) == lookup_val,
-                'query_string': state.get_query_string({
+                'query_string': self.state.get_query_string({
                                     self.lookup_kwarg: lookup}),
                 'display': title,
             }
@@ -235,7 +235,7 @@ FieldFilter.register(lambda f: bool(f.choices), ChoicesFieldFilter)
 
 
 class DateFieldFilter(FieldFilter):
-    def __init__(self, field, field_path, section):
+    def __init__(self, field, field_path, index):
         now = datetime.datetime.now()
         # When time zone support is enabled, convert "now" to the user's time
         # zone so Django's definition of "Today" matches what the user expects.
@@ -274,10 +274,10 @@ class DateFieldFilter(FieldFilter):
             }),
         )
         super(DateFieldFilter, self).__init__(
-            field, field_path, section)
+            field, field_path, index)
     
-    def populate_state(self, state):
-        params = state.params
+    def populate_state(self):
+        params = self.state.params
         self.field_generic = '%s__' % self.field_path
         self.date_params = dict([(k, v) for k, v in params.items()
                                  if k.startswith(self.field_generic)])
@@ -286,11 +286,11 @@ class DateFieldFilter(FieldFilter):
     def expected_parameters(self):
         return [self.lookup_kwarg_since, self.lookup_kwarg_until]
 
-    def choices(self, state):
+    def choices(self):
         for title, param_dict in self.links:
             yield {
                 'selected': self.date_params == param_dict,
-                'query_string': state.get_query_string(
+                'query_string': self.state.get_query_string(
                                     param_dict, [self.field_generic]),
                 'display': title,
             }
@@ -303,9 +303,9 @@ FieldFilter.register(
 # if a field is eligible to use the BooleanFieldFilter, that'd be much
 # more appropriate, and the AllValuesFieldFilter won't get used for it.
 class AllValuesFieldFilter(FieldFilter):
-    def __init__(self, field, field_path, section):
+    def __init__(self, field, field_path, index):
         super(AllValuesFieldFilter, self).__init__(
-            field, field_path, section)
+            field, field_path, index)
         
         model = self.resource.model
         
@@ -328,13 +328,13 @@ class AllValuesFieldFilter(FieldFilter):
     def expected_parameters(self):
         return [self.lookup_kwarg, self.lookup_kwarg_isnull]
 
-    def choices(self, state):
-        lookup_val, lookup_val_isnull = self.valeus(state)
+    def choices(self):
+        lookup_val, lookup_val_isnull = self.valeus()
         from django.contrib.admin.views.main import EMPTY_CHANGELIST_VALUE
         yield {
             'selected': (lookup_val is None
                 and lookup_val_isnull is None),
-            'query_string': state.get_query_string({},
+            'query_string': self.state.get_query_string({},
                 [self.lookup_kwarg, self.lookup_kwarg_isnull]),
             'display': _('All'),
         }
@@ -346,7 +346,7 @@ class AllValuesFieldFilter(FieldFilter):
             val = smart_unicode(val)
             yield {
                 'selected': lookup_val == val,
-                'query_string': state.get_query_string({
+                'query_string': self.state.get_query_string({
                     self.lookup_kwarg: val,
                 }, [self.lookup_kwarg_isnull]),
                 'display': val,
@@ -354,7 +354,7 @@ class AllValuesFieldFilter(FieldFilter):
         if include_none:
             yield {
                 'selected': bool(lookup_val_isnull),
-                'query_string': state.get_query_string({
+                'query_string': self.state.get_query_string({
                     self.lookup_kwarg_isnull: 'True',
                 }, [self.lookup_kwarg]),
                 'display': EMPTY_CHANGELIST_VALUE,

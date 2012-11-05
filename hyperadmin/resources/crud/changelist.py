@@ -11,7 +11,7 @@ class ChangeList(object):
         self.state = state
     
     def detect_sections(self):
-        for key, index in self.resource.get_indexes():
+        for key, index in self.resource.get_indexes().iteritems():
             section = FilterSection(name=key, changelist=self, resource=self.resource, index=index)
             self.sections[key] = section
     
@@ -22,10 +22,11 @@ class ChangeList(object):
         for section in self.sections.itervalues():
             section.populate_state()
         active_section = self.get_active_section()
-        state = self.state
-        state['paginator'] = active_section.get_paginator()
-        page_num = int(self.state.params.get(self.page_var, 1))
-        state['page'] = state['paginator'].page(page_num)
+        if active_section:
+            state = self.state
+            state['paginator'] = active_section.get_paginator()
+            page_num = int(self.state.params.get(self.page_var, 1))
+            state['page'] = state['paginator'].page(page_num)
     
     def make_link(self, **kwargs):
         return self.resource.get_resource_link(**kwargs)
@@ -67,7 +68,7 @@ class FilterSection(object):
         return self.index.get_filter_links(**link_kwargs)
     
     def get_paginator(self, **kwargs):
-        params = self.resource.get_paginator_kwargs()
+        params = self.changelist.get_paginator_kwargs()
         params.update(kwargs)
         return self.index.get_paginator(**params)
     

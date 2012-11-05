@@ -1,61 +1,12 @@
-from hyperadmin.resources.crud.changelist import ChangeList, FilterSection
-from hyperadmin.resources.models.filters import FieldFilter, SearchFilter
-
-from django.db import models
-from django.contrib.admin.util import get_fields_from_path
-try:
-    from django.contrib.admin.util import lookup_needs_distinct
-except ImportError:
-    from hyperadmin.resources.models.util import lookup_needs_distinct
+from hyperadmin.resources.crud.changelist import ChangeList
 
 class ModelChangeList(ChangeList):
-    def __init__(self, resource, list_filter, search_fields, date_hierarchy):
-        super(ModelChangeList, self).__init__(resource)
-        self.list_filter = list_filter
-        self.search_fields = search_fields
-        self.date_hierarchy = date_hierarchy
-        self.detect_sections()
-    
     @property
     def model(self):
         return self.resource.model
     
-    def detect_sections(self):
-        filter_section = self.register_section('filter', FilterSection)
-        if self.list_filter:
-            for list_filter in self.list_filter:
-                use_distinct = False
-                if callable(list_filter):
-                    # This is simply a custom list filter class.
-                    spec = list_filter(section=filter_section)
-                else:
-                    field_path = None
-                    if isinstance(list_filter, (tuple, list)):
-                        # This is a custom FieldListFilter class for a given field.
-                        field, field_list_filter_class = list_filter
-                    else:
-                        # This is simply a field name, so use the default
-                        # FieldListFilter class that has been registered for
-                        # the type of the given field.
-                        field, field_list_filter_class = list_filter, FieldFilter.create
-                    if not isinstance(field, models.Field):
-                        field_path = field
-                        field = get_fields_from_path(self.model, field_path)[-1]
-                    spec = field_list_filter_class(field, field_path=field_path, section=filter_section)
-                    # Check if we need to use distinct()
-                    use_distinct = (use_distinct or
-                                    lookup_needs_distinct(self.resource.opts,
-                                                          field_path))
-                if spec:
-                    filter_section.filters.append(spec)
-        
-        search_section = self.register_section('search', FilterSection)
-        if self.search_fields:
-            search_section.register_filter(SearchFilter, search_fields=self.search_fields)
-        
-        date_section = self.register_section('date', FilterSection)
-        if self.date_hierarchy:
-            pass
+    def get_active_section(self):
+        return self.sections['filter']
     
     def get_paginator_kwargs(self):
         return {'per_page':self.resource.list_per_page,}
@@ -84,4 +35,4 @@ class ModelChangeList(ChangeList):
                     links.append(self.get_resource_link(url=header["url_remove"], prompt=prompt, classes=classes+["remove"], rel="sortby"))
                     links.append(self.get_resource_link(url=header["url_toggle"], prompt=prompt, classes=classes+["toggle"], rel="sortby"))
         return links
- 
+

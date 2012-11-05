@@ -5,18 +5,17 @@ from django.utils.encoding import force_unicode
 class BaseFilter(object):
     title = None  # Human-readable title to appear in the right sidebar.
     
-    def __init__(self, section):
-        self.section = section
-        self.resource = section.resource
-        self.changelist = section.changelist
-        self.state = section.state
+    def __init__(self, index):
+        self.index = index
+        self.resource = index.resource
+        self.state = index.state
         if self.title is None:
             raise ImproperlyConfigured(
                 "The filter '%s' does not specify "
                 "a 'title'." % self.__class__.__name__)
     
     def make_link(self, **kwargs):
-        return self.section.make_link(**kwargs)
+        return self.index.make_link(**kwargs)
     
     def populate_state(self):
         pass
@@ -73,8 +72,8 @@ class SimpleFilter(BaseChoicesFilter):
     # The parameter that should be used in the query string for that filter.
     parameter_name = None
 
-    def __init__(self, section):
-        super(SimpleFilter, self).__init__(section)
+    def __init__(self, index):
+        super(SimpleFilter, self).__init__(index)
         if self.parameter_name is None:
             raise ImproperlyConfigured(
                 "The list filter '%s' does not specify "

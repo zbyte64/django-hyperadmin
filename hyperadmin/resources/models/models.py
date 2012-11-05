@@ -69,12 +69,56 @@ class BaseModelResource(CRUDResource):
     def get_active_index(self, **kwargs):
         return self.get_queryset(user=self.state['auth'])
     
-    def get_changelist_kwargs(self):
-        kwargs = super(BaseModelResource, self).get_changelist_kwargs()
-        kwargs.update({'list_filter': self.list_filter,
-                       'search_fields': self.search_fields,
-                       'date_hierarchy': self.date_hierarchy,})
-        return kwargs
+    def get_index_query(self, name):
+        return self.get_active_index()
+    
+    def get_indexes(self):
+        from hyperadmin.resources.indexes import Index
+        from hyperadmin.resources.models.filters import FieldFilter, SearchFilter
+
+        from django.db import models
+        from django.contrib.admin.util import get_fields_from_path
+        try:
+            from django.contrib.admin.util import lookup_needs_distinct
+        except ImportError:
+            from hyperadmin.resources.models.util import lookup_needs_distinct
+        
+        index = Index('filter', self)
+        if self.list_filter:
+            for list_filter in self.list_filter:
+                use_distinct = False
+                if callable(list_filter):
+                    # This is simply a custom list filter class.
+                    spec = list_filter(index=index)
+                else:
+                    field_path = None
+                    if isinstance(list_filter, (tuple, list)):
+                        # This is a custom FieldListFilter class for a given field.
+                        field, field_list_filter_class = list_filter
+                    else:
+                        # This is simply a field name, so use the default
+                        # FieldListFilter class that has been registered for
+                        # the type of the given field.
+                        field, field_list_filter_class = list_filter, FieldFilter.create
+                    if not isinstance(field, models.Field):
+                        field_path = field
+                        field = get_fields_from_path(self.model, field_path)[-1]
+                    spec = field_list_filter_class(field, field_path=field_path, index=index)
+                    # Check if we need to use distinct()
+                    use_distinct = (use_distinct or
+                                    lookup_needs_distinct(self.opts,
+                                                          field_path))
+                if spec:
+                    index.filters.append(spec)
+        
+        if self.search_fields:
+            index.register_filter(SearchFilter, search_fields=self.search_fields)
+        '''
+        date_section = self.register_section('date', FilterSection)
+        if self.date_hierarchy:
+            pass
+        '''
+        return {'filter':index}
     
     def lookup_allowed(self, lookup, value):
         return True #TODO

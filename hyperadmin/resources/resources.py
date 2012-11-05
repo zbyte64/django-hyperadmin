@@ -90,8 +90,8 @@ class BaseResource(object):
     def get_indexes(self):
         return {}
     
-    def get_index(self, name):
-        return self.get_indexes()[name]
+    def get_index_query(self, name):
+        raise NotImplementedError
     
     def get_index_queries(self):
         return []

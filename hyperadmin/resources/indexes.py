@@ -8,24 +8,27 @@ class Index(object):
         self.filters = list()
     
     def register_filter(self, a_filter, **kwargs):
-        kwargs['section'] = self
+        kwargs['index'] = self
         self.filters.append(a_filter(**kwargs))
     
     def populate_state(self):
         for a_filter in self.filters:
-            a_filter.populate_state(self.state)
+            a_filter.populate_state()
     
-    def get_index(self):
-        return self.resource.get_index(self.name)
+    def get_index_query(self):
+        return self.resource.get_index_query(self.name)
     
     def get_filtered_index(self):
-        active_index = self.get_index()
+        active_index = self.get_index_query()
         for a_filter in self.filters:
             if a_filter.is_active():
                 new_index = a_filter.filter_index(active_index)
                 if new_index is not None:
                     active_index = new_index
         return active_index
+    
+    def make_link(self, **kwargs):
+        return self.resource.get_resource_link(**kwargs)
     
     def get_filter_links(self, **link_kwargs):
         links = list()

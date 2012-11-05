@@ -37,13 +37,12 @@ class StoragePaginator(object):
         return links, items
 
 class StorageChangeList(ChangeList):
-    def populate_state(self, state):
+    def populate_state(self):
         for section in self.sections.itervalues():
-            section.populate_state(state)
-        index = self.get_instances(state)
-        paginator = self.get_paginator(index, storage=self.resource.storage, state=state)
-        state['paginator'] = paginator
-        state['page'] = paginator
-        state['links'] = paginator.links
-        
+            section.populate_state()
+        index = self.resource.get_active_index()
+        paginator = StoragePaginator(index, storage=self.resource.storage, state=self.state)
+        self.state['paginator'] = paginator
+        self.state['page'] = paginator
+        self.state['links'] = paginator.links
 
