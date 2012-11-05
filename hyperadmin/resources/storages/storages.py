@@ -86,8 +86,8 @@ class StorageResource(CRUDResource):
         path = self.state.params.get('path', '')
         return self.get_listing(path)
     
-    def get_templated_queries(self):
-        links = super(StorageResource, self).get_templated_queries()
+    def get_index_queries(self):
+        links = super(StorageResource, self).get_index_queries()
         if 'links' in self.state:
             links += self.state['links']
         return links
