@@ -186,8 +186,8 @@ class CRUDResource(BaseResource):
     def has_delete_permission(self, user, obj=None):
         return True
     
-    def get_templated_queries(self):
-        links = super(CRUDResource, self).get_templated_queries()
+    def get_index_queries(self):
+        links = super(CRUDResource, self).get_index_queries()
         if 'changelist' in self.state:
             links += self.get_changelist_links()
         return links
@@ -259,7 +259,8 @@ class CRUDResource(BaseResource):
         return self.ordering or ()  # otherwise we might try to *None, which is bad ;)
     
     def get_changelist_kwargs(self):
-        return {'resource': self}
+        return {'resource': self,
+                'state':self.state,}
     
     def get_changelist_class(self):
         return self.changelist_class
@@ -269,7 +270,7 @@ class CRUDResource(BaseResource):
         kwargs = self.get_changelist_kwargs()
         changelist = changelist_class(**kwargs)
         changelist.detect_sections()
-        changelist.populate_state(self.state)
+        changelist.populate_state()
         return changelist
     
     def get_changelist_links(self):

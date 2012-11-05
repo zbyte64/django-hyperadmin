@@ -87,6 +87,15 @@ class BaseResource(object):
     def get_item_outbound_links(self, item):
         return []
     
+    def get_indexes(self):
+        return {}
+    
+    def get_index(self, name):
+        return self.get_indexes()[name]
+    
+    def get_index_queries(self):
+        return []
+    
     def get_templated_queries(self):
         return []
     

@@ -192,6 +192,7 @@ class State(dict):
         self.update({'embedded_links': [],
                      'outbound_links': [],
                      'templated_queries': [],
+                     'index_queries':[],
                      'ln_links': [],
                      'idempotent_links': [],
                      'extra_get_params':{},})
@@ -227,6 +228,12 @@ class State(dict):
     
     def add_outbound_link(self, link):
         self['outbound_links'].append(link)
+    
+    def get_index_queries(self):
+        return self.resource.get_index_queries() + self['index_queries']
+    
+    def add_index_query(self, link):
+        self['index_queries'].append(link)
     
     def get_templated_queries(self):
         return self.resource.get_templated_queries() + self['templated_queries']

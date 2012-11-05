@@ -9,6 +9,7 @@ class BaseFilter(object):
         self.section = section
         self.resource = section.resource
         self.changelist = section.changelist
+        self.state = section.state
         if self.title is None:
             raise ImproperlyConfigured(
                 "The filter '%s' does not specify "
@@ -17,16 +18,16 @@ class BaseFilter(object):
     def make_link(self, **kwargs):
         return self.section.make_link(**kwargs)
     
-    def populate_state(self, state):
+    def populate_state(self):
         pass
     
-    def get_links(self, state, **link_kwargs):
+    def get_links(self, **link_kwargs):
         """
         Returns links representing the filterable actions.
         """
         return []
     
-    def filter_index(self, state, active_index):
+    def filter_index(self, active_index):
         """
         Returns the filtered queryset.
         """
@@ -39,20 +40,20 @@ class BaseFilter(object):
         """
         raise NotImplementedError
     
-    def is_active(self, state):
+    def is_active(self):
         return False
     
-    def values(self, state):
+    def values(self):
         vals = list()
-        filter_params = state.params
+        filter_params = self.state.params
         for param in self.expected_parameters():
             vals.append(filter_params.get(param, None))
         return vals
 
 class BaseChoicesFilter(BaseFilter):
-    def get_links(self, state, **link_kwargs):
+    def get_links(self, **link_kwargs):
         links = list()
-        for choice in self.choices(state):
+        for choice in self.choices():
             kwargs = dict(link_kwargs)
             classes = kwargs.get('classes', [])
             kwargs['group'] = self.title
@@ -65,7 +66,7 @@ class BaseChoicesFilter(BaseFilter):
             links.append(self.make_link(**kwargs))
         return links
     
-    def choices(self, state):
+    def choices(self):
         return []
 
 class SimpleFilter(BaseChoicesFilter):
@@ -103,16 +104,16 @@ class SimpleFilter(BaseChoicesFilter):
     def expected_parameters(self):
         return [self.parameter_name]
     
-    def choices(self, state):
+    def choices(self):
         yield {
             'selected': self.value() is None,
-            'query_string': state.get_query_string({}, [self.parameter_name]),
+            'query_string': self.state.get_query_string({}, [self.parameter_name]),
             'display': _('All'),
         }
         for lookup, title in self.lookup_choices:
             yield {
                 'selected': self.value() == lookup,
-                'query_string': state.get_query_string({
+                'query_string': self.state.get_query_string({
                     self.parameter_name: lookup,
                 }, []),
                 'display': title,
