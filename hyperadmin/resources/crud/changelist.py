@@ -36,7 +36,8 @@ class ChangeList(object):
         for section in self.sections.itervalues():
             links.extend(section.get_filter_links(rel=section.name))
         active_section = self.get_active_section()
-        links += active_section.get_pagination_links()
+        if active_section:
+            links += active_section.get_pagination_links()
         return links
     
     def get_paginator_kwargs(self):
