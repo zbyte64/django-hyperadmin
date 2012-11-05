@@ -11,14 +11,14 @@ class ModelChangeList(ChangeList):
     def get_paginator_kwargs(self):
         return {'per_page':self.resource.list_per_page,}
     
-    def get_links(self, state):
-        links = super(ModelChangeList, self).get_links(state)
-        #links += self.getchangelist_sort_links(state)
+    def get_links(self):
+        links = super(ModelChangeList, self).get_links()
+        #links += self.getchangelist_sort_links()
         return links
     
-    def get_changelist_sort_links(self, state):
+    def get_changelist_sort_links(self):
         links = list()
-        changelist = state['changelist']
+        changelist = self.state['changelist']
         from django.contrib.admin.templatetags.admin_list import result_headers
         for header in result_headers(changelist):
             if header.get("sortable", False):

@@ -54,6 +54,7 @@ class FilterSection(object):
         self.changelist = changelist
         self.resource = resource
         self.index = index
+        self.state = resource.state
     
     def make_link(self, **kwargs):
         return self.changelist.make_link(**kwargs)
