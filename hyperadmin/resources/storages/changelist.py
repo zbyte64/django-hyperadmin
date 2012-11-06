@@ -40,7 +40,7 @@ class StorageChangeList(ChangeList):
     def populate_state(self):
         for section in self.sections.itervalues():
             section.populate_state()
-        index = self.resource.get_active_index()
+        index = self.resource.get_primary_query()
         paginator = StoragePaginator(index, storage=self.resource.storage, state=self.state)
         self.state['paginator'] = paginator
         self.state['page'] = paginator

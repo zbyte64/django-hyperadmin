@@ -1,11 +1,12 @@
 class Index(object):
     paginator_class = None
     
-    def __init__(self, name, resource):
+    def __init__(self, name, resource, query):
         self.name = name
         self.resource = resource
         self.state = self.resource.state
         self.filters = list()
+        self.query = query
     
     def register_filter(self, a_filter, **kwargs):
         kwargs['index'] = self
@@ -16,7 +17,7 @@ class Index(object):
             a_filter.populate_state()
     
     def get_index_query(self):
-        return self.resource.get_index_query(self.name)
+        return self.query
     
     def get_filtered_index(self):
         active_index = self.get_index_query()
@@ -48,4 +49,7 @@ class Index(object):
     
     def get_master_link(self):
         pass
+
+class PrimaryIndex(Index):
+    pass
 

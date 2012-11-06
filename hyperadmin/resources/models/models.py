@@ -66,11 +66,8 @@ class BaseModelResource(CRUDResource):
         kwargs['model'] = self.model
         return kwargs
     
-    def get_active_index(self, **kwargs):
+    def get_primary_query(self, **kwargs):
         return self.get_queryset(user=self.state['auth'])
-    
-    def get_index_query(self, name):
-        return self.get_active_index()
     
     def get_indexes(self):
         from hyperadmin.resources.indexes import Index
@@ -83,7 +80,11 @@ class BaseModelResource(CRUDResource):
         except ImportError:
             from hyperadmin.resources.models.util import lookup_needs_distinct
         
-        index = Index('filter', self)
+        indexes = super(BaseModelResource, self).get_indexes()
+        
+        index = Index('filter', self, self.get_index_query('filter'))
+        indexes['filter'] = index
+        
         if self.list_filter:
             for list_filter in self.list_filter:
                 use_distinct = False
@@ -118,7 +119,7 @@ class BaseModelResource(CRUDResource):
         if self.date_hierarchy:
             pass
         '''
-        return {'filter':index}
+        return indexes
     
     def lookup_allowed(self, lookup, value):
         return True #TODO
@@ -248,7 +249,7 @@ class InlineModelResource(BaseModelResource):
             queryset = queryset.none()
         return queryset
     
-    def get_active_index(self, **kwargs):
+    def get_primary_query(self, **kwargs):
         return self.get_queryset(parent=self.state['parent'], user=self.state['auth'])
     
     def get_base_url_name(self):

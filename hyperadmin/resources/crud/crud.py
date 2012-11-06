@@ -3,6 +3,7 @@ from django.core.paginator import Paginator
 
 from hyperadmin.hyperobjects import Link
 from hyperadmin.resources.resources import BaseResource
+from hyperadmin.resources.indexes import PrimaryIndex
 from hyperadmin.resources.crud.changelist import ChangeList
 from hyperadmin.resources.crud.hyperobjects import ListResourceItem
 
@@ -186,6 +187,12 @@ class CRUDResource(BaseResource):
     def has_delete_permission(self, user, obj=None):
         return True
     
+    def get_indexes(self):
+        return {'primary':PrimaryIndex('primary', self, self.get_index_query('primary'))}
+    
+    def get_index_query(self, name):
+        return self.get_primary_query()
+    
     def get_index_queries(self):
         links = super(CRUDResource, self).get_index_queries()
         if 'changelist' in self.state:
@@ -241,7 +248,7 @@ class CRUDResource(BaseResource):
             return self.state['page'].object_list
         if self.state.has_view_class('change_form'):
             return []
-        return self.get_active_index()
+        return self.get_primary_query()
     
     def get_resource_items(self):
         instances = self.get_instances()
@@ -249,7 +256,7 @@ class CRUDResource(BaseResource):
             return [self.get_list_resource_item(instance) for instance in instances]
         return [self.get_resource_item(instance) for instance in instances]
     
-    def get_active_index(self, **kwargs):
+    def get_primary_query(self, **kwargs):
         return self.resource_adaptor.objects.all()
     
     def get_ordering(self):

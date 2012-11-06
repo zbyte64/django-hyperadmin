@@ -82,7 +82,7 @@ class StorageResource(CRUDResource):
         except NotImplementedError:
             return [], [] #dirs, files
     
-    def get_active_index(self):
+    def get_primary_query(self):
         path = self.state.params.get('path', '')
         return self.get_listing(path)
     
