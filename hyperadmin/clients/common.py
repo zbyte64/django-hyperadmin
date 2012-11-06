@@ -18,8 +18,12 @@ class Client(object):
         pass
     
     def urls(self):
-        return self.get_urls(), self.app_name, self.name
+        return self, self.app_name, self.name
     urls = property(urls)
+    
+    @property
+    def urlpatterns(self):
+        return self.get_urls()
     
     def reverse(self, name, *args, **kwargs):
         return reverse('%s:%s' % (self.name, name), args=args, kwargs=kwargs, current_app=self.app_name)

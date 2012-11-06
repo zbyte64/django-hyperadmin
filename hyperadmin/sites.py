@@ -73,11 +73,15 @@ class ResourceSite(object):
         urlpatterns += self.site_resource.get_urls()
         return urlpatterns
     
+    @property
+    def urlpatterns(self):
+        return self.get_urls()
+    
     def get_extra_urls(self):
         return patterns('',)
     
     def urls(self):
-        return self.get_urls(), None, self.name
+        return self, None, self.name
     urls = property(urls)
     
     def get_view_kwargs(self):
