@@ -9,8 +9,8 @@ class ApplicationResource(BaseResource):
     list_view = views.ApplicationResourceView
     form_class = ViewResourceForm
     
-    def __init__(self, app_name, site):
-        super(ApplicationResource, self).__init__(resource_adaptor=dict(), site=site, parent_resource=site.site_resource)
+    def __init__(self, app_name, **kwargs):
+        super(ApplicationResource, self).__init__(resource_adaptor=dict(), **kwargs)
         self._app_name = app_name
     
     def get_app_name(self):

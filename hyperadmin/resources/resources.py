@@ -18,20 +18,32 @@ class BaseResource(object):
     form_class = EmptyForm
     donot_copy = ['state'] #indicates which attributes should not be deepcopied
     
-    def __init__(self, resource_adaptor, site, parent_resource=None):
+    def __init__(self, resource_adaptor, global_state, parent_resource=None):
         self.resource_adaptor = resource_adaptor
-        self.site = site
+        self.global_state = global_state
         self.parent = parent_resource
         self.state = self.create_state()
     
+    @property
+    def site(self):
+        return self.state.site
+    
     def create_state(self):
-        state = self.get_state_class()(resource=self, meta={})
-        state['resource'] = self
+        state = self.get_state_class()(**self.get_state_kwargs())
         return state
     
-    def fork_state(self, **kwargs):
+    def get_state_kwargs(self):
+        return {
+            'resource': self,
+            'meta': {},
+            'global_state': self.global_state,
+        }
+    
+    def fork_state(self, global_state=None, **kwargs):
         new_resource = copy(self)
-        new_resource.state = self.state.fork(resource=new_resource, data=kwargs)
+        if global_state:
+            new_resource.global_state = global_state
+        new_resource.state = self.state.fork(resource=new_resource, global_state=global_state, data=kwargs)
         return new_resource
     
     def __deepcopy__(self, memo):
@@ -63,7 +75,7 @@ class BaseResource(object):
     urls = property(urls)
     
     def reverse(self, name, *args, **kwargs):
-        return self.site.reverse(name, *args, **kwargs)
+        return self.state.reverse(name, *args, **kwargs)
     
     def as_view(self, view, cacheable=False):
         return self.site.as_view(view, cacheable)

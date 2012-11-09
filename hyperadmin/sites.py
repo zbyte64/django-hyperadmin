@@ -11,6 +11,7 @@ from django.utils.encoding import iri_to_uri
 
 from hyperadmin.resources.applications.site import SiteResource
 from hyperadmin.resources.applications.application import ApplicationResource
+from hyperadmin.hyperobjects import GlobalState
 
 import collections
 
@@ -18,13 +19,41 @@ import collections
 class ResourceSite(object):
     site_resource_class = SiteResource
     application_resource_class = ApplicationResource
+    state_class = GlobalState
     
     def __init__(self, name='hyperadmin'):
         self.name = name
         self.media_types = dict()
         self.applications = dict()
         self.registry = dict()
-        self.site_resource = self.site_resource_class(self)
+        self.state = self.create_state()
+        self.site_resource = self.site_resource_class(**self.get_resource_kwargs())
+    
+    def create_state(self):
+        state = self.get_state_class()(**self.get_state_kwargs())
+        return state
+    
+    def get_state_kwargs(self):
+        return {'site':self}
+    
+    def get_state_class(self):
+        return self.state_class
+    
+    def get_all_resources(self):
+        ret = [self.site_resource]
+        ret.extend(self.applications.values())
+        ret.extend(self.registry.values())
+        return ret
+    
+    def fork_state(self, **kwargs):
+        new_site = copy(self)
+        new_site.state = self.state.fork(**kwargs)
+        new_site.site_resource = new_site.site_resource.fork_state(global_state=new_site.state)
+        for key, res in new_site.applications.items():
+            new_site.applications[key] = res.fork_state(global_state=new_site.state)
+        for key, res in new_site.registry.items():
+            new_site.registry[key] = res.fork_state(global_state=new_site.state)
+        return new_site
     
     def register(self, model_or_iterable, admin_class, **options):
         if isinstance(model_or_iterable, collections.Iterable):
@@ -33,27 +62,33 @@ class ResourceSite(object):
                 resources.append(self.register(model, admin_class, **options))
             return resources
         model = model_or_iterable
-        resource = admin_class(resource_adaptor=model, site=self, **options)
-        #TODO we should know the app name before creating the resource
+        kwargs = self.get_resource_kwargs(resource_adaptor=model, **options)
+        resource = admin_class(**kwargs)
         app_name = resource.app_name
         resource.parent = self.register_application(app_name)
         self.applications[app_name].register_resource(resource)
         self.registry[model] = resource
         return resource
     
+    def get_resource_kwargs(self, **kwargs):
+        params = {'global_state': self.state}
+        params.update(kwargs)
+        return params
+    
     def get_application_resource_class(self):
         return self.application_resource_class
     
     def get_application_resource_kwargs(self, **kwargs):
-        params = {'site':self}
-        params.update(kwargs)
+        params = self.get_resource_kwargs(**kwargs)
+        params['parent_resource'] = self.site_resource
         return params
     
     def register_application(self, app_name, app_class=None, **options):
         if app_name not in self.applications:
             app_class = app_class or self.get_application_resource_class()
             kwargs = self.get_application_resource_kwargs(app_name=app_name, **options)
-            self.applications[app_name] = app_class(**kwargs)
+            app_resource = app_class(**kwargs)
+            self.applications[app_name] = app_resource
         return self.applications[app_name]
     
     def register_media_type(self, media_type, media_type_handler):
