@@ -11,7 +11,7 @@ from django.utils.encoding import iri_to_uri
 
 from hyperadmin.resources.applications.site import SiteResource
 from hyperadmin.resources.applications.application import ApplicationResource
-from hyperadmin.hyperobjects import GlobalState
+from hyperadmin.hyperobjects import State
 
 import collections
 
@@ -19,11 +19,10 @@ import collections
 class ResourceSite(object):
     site_resource_class = SiteResource
     application_resource_class = ApplicationResource
-    state_class = GlobalState
+    state_class = State
     
     def __init__(self, name='hyperadmin'):
         self.name = name
-        self.media_types = dict()
         self.applications = dict()
         self.registry = dict()
         self.state = self.create_state()
@@ -34,26 +33,15 @@ class ResourceSite(object):
         return state
     
     def get_state_kwargs(self):
-        return {'site':self}
+        return {'data':{'site':self,
+                        'media_types': dict(),}}
     
     def get_state_class(self):
         return self.state_class
     
-    def get_all_resources(self):
-        ret = [self.site_resource]
-        ret.extend(self.applications.values())
-        ret.extend(self.registry.values())
-        return ret
-    
-    def fork_state(self, **kwargs):
-        new_site = copy(self)
-        new_site.state = self.state.fork(**kwargs)
-        new_site.site_resource = new_site.site_resource.fork_state(global_state=new_site.state)
-        for key, res in new_site.applications.items():
-            new_site.applications[key] = res.fork_state(global_state=new_site.state)
-        for key, res in new_site.registry.items():
-            new_site.registry[key] = res.fork_state(global_state=new_site.state)
-        return new_site
+    @property
+    def media_types(self):
+        return self.state['media_types']
     
     def register(self, model_or_iterable, admin_class, **options):
         if isinstance(model_or_iterable, collections.Iterable):
@@ -71,7 +59,7 @@ class ResourceSite(object):
         return resource
     
     def get_resource_kwargs(self, **kwargs):
-        params = {'global_state': self.state}
+        params = {'site_state': self.state}
         params.update(kwargs)
         return params
     

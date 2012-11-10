@@ -234,7 +234,7 @@ class InlineModelResource(BaseModelResource):
     donot_copy = BaseModelResource.donot_copy + ['fk', 'rel_name']
     
     def __init__(self, parent):
-        super(InlineModelResource, self).__init__(resource_adaptor=self.model, global_state=parent.global_state, parent_resource=parent)
+        super(InlineModelResource, self).__init__(resource_adaptor=self.model, site_state=parent.site_state, parent_resource=parent)
         
         from django.db.models.fields.related import RelatedObject
         from django.forms.models import _get_foreign_key

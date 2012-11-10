@@ -3,7 +3,7 @@ from copy import copy, deepcopy
 from django import forms
 from django.conf.urls.defaults import patterns
 
-from hyperadmin.hyperobjects import Link, ResourceItem, State
+from hyperadmin.hyperobjects import Link, ResourceItem, ResourceState, global_state
 
 
 class EmptyForm(forms.Form):
@@ -14,13 +14,13 @@ class EmptyForm(forms.Form):
 class BaseResource(object):
     resource_class = '' #hint to the client how this resource is used
     resource_item_class = ResourceItem
-    state_class = State
+    state_class = ResourceState
     form_class = EmptyForm
     donot_copy = ['state'] #indicates which attributes should not be deepcopied
     
-    def __init__(self, resource_adaptor, global_state, parent_resource=None):
+    def __init__(self, resource_adaptor, site_state, parent_resource=None):
         self.resource_adaptor = resource_adaptor
-        self.global_state = global_state
+        self.site_state = site_state
         self.parent = parent_resource
         self.state = self.create_state()
     
@@ -36,14 +36,12 @@ class BaseResource(object):
         return {
             'resource': self,
             'meta': {},
-            'global_state': self.global_state,
+            'substates': [self.site_state],
         }
     
-    def fork_state(self, global_state=None, **kwargs):
+    def fork_state(self, **kwargs):
         new_resource = copy(self)
-        if global_state:
-            new_resource.global_state = global_state
-        new_resource.state = self.state.fork(resource=new_resource, global_state=global_state, data=kwargs)
+        new_resource.state = self.state.fork(resource=new_resource, data=kwargs)
         return new_resource
     
     def __deepcopy__(self, memo):
@@ -85,7 +83,8 @@ class BaseResource(object):
     
     def get_view_kwargs(self):
         return {'resource':self,
-                'resource_site':self.site,}
+                'resource_site':self.site,
+                'global_state':dict(global_state),} #store a snapshot of the current global state
     
     def get_embedded_links(self):
         return []

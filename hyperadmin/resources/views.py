@@ -2,6 +2,8 @@ from django import http
 
 import mimeparse
 
+from hyperadmin.hyperobjects import set_global_state
+
 
 class ConditionalAccessMixin(object):
     etag_function = None
@@ -45,6 +47,7 @@ class GetPatchMetaMixin(object):
 class ResourceViewMixin(GetPatchMetaMixin, ConditionalAccessMixin):
     resource = None
     resource_site = None
+    global_state = None
     view_class = None
     view_classes = []
     
@@ -119,8 +122,13 @@ class ResourceViewMixin(GetPatchMetaMixin, ConditionalAccessMixin):
         self.request = request
         self.args = args
         self.kwargs = kwargs
-        self.fork_state()
-        return super(ResourceViewMixin, self).dispatch(request, *args, **kwargs)
+        state_params = self.global_state or {}
+        with set_global_state(**state_params):
+            self.fork_state()
+            response = super(ResourceViewMixin, self).dispatch(request, *args, **kwargs)
+            if hasattr(response, 'render'):
+                response.render()
+            return response
     
     def fork_state(self):
         self.resource = self.resource.fork_state(**self.get_state_data())
