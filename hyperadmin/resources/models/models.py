@@ -1,5 +1,3 @@
-from copy import deepcopy
-
 from django.conf.urls.defaults import patterns, url, include
 from django.utils.functional import update_wrapper
 from django import forms
@@ -186,12 +184,6 @@ class ModelResource(BaseModelResource):
     @property
     def model(self):
         return self.resource_adaptor
-    
-    def __deepcopy__(self, memo):
-        acopy = super(ModelResource, self).__deepcopy__(memo)
-        acopy.inline_instances = deepcopy([inline for inline in self.inline_instances], memo)
-        memo[id(self.inline_instances)] = acopy.inline_instances
-        return acopy
     
     def initialize_inlines(self):
         self.inline_instances = list()

@@ -1,4 +1,4 @@
-from copy import copy, deepcopy
+from copy import copy
 
 from django import forms
 from django.conf.urls.defaults import patterns
@@ -43,19 +43,6 @@ class BaseResource(object):
         new_resource = copy(self)
         new_resource.state = self.state.fork(resource=new_resource, data=kwargs)
         return new_resource
-    
-    def __deepcopy__(self, memo):
-        for attr in self.donot_copy:
-            if hasattr(self, attr):
-                val = getattr(self, attr)
-                memo[id(val)] = val
-        
-        new = copy(self)
-        memo[id(self)] = new
-        new.__dict__.update(deepcopy(self.__dict__, memo))
-        new.state = new.create_state()
-        memo[id(self.state)] = new.state
-        return new
     
     def get_app_name(self):
         raise NotImplementedError

@@ -274,6 +274,12 @@ class State(MergeDict):
     def __setitem__(self, key, value):
         self.active_dictionary[key] = value
     
+    def __delitem__(self, key):
+        del self.active_dictionary[key]
+    
+    def pop(self, key, default=None):
+        return self.active_dictionary.pop(key, default)
+    
     def update(self, other_dict):
         self.active_dictionary.update(other_dict)
     
