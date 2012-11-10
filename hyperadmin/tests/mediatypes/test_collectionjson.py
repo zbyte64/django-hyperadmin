@@ -41,7 +41,7 @@ class CollectionJsonTestCase(MediaTypeTestCase):
         self.assertEqual(len(json_items), 1)
     
     def test_site_resource_serialize(self):
-        site_resource = SiteResource(global_state={'site':site})
+        site_resource = SiteResource(site_state={'site':site})
         link = site_resource.get_resource_link()
         state = self.resource.state
         state['auth'] = self.user
@@ -52,7 +52,7 @@ class CollectionJsonTestCase(MediaTypeTestCase):
         #assert False, str(json_items)
     
     def test_application_resource_serialize(self):
-        app_resource = ApplicationResource(global_state={'site':site}, app_name='testapp')
+        app_resource = ApplicationResource(site_state={'site':site}, app_name='testapp')
         return
         #TODO patch reverse
         link = app_resource.get_resource_link()
