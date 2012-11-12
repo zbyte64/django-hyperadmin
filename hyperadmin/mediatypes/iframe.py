@@ -3,7 +3,7 @@ import mimeparse
 from django.template.response import TemplateResponse
 from django.middleware.csrf import CsrfViewMiddleware
 
-from common import MediaType
+from hyperadmin.mediatypes.common import MediaType
 
 
 class IframeMediaType(MediaType):

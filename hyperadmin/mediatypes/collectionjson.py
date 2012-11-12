@@ -3,7 +3,8 @@ from django.utils import simplejson as json
 from django.utils.encoding import force_unicode
 from django import http
 
-from common import MediaType
+from hyperadmin.mediatypes.common import MediaType
+
 
 class CollectionJSON(MediaType):
     recognized_media_types = [

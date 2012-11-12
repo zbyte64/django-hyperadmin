@@ -5,7 +5,7 @@ from django.utils.cache import add_never_cache_headers
 
 import mimeparse
 
-from hyperadmin.hyperobjects import set_global_state
+from hyperadmin.hyperobjects import patch_global_state
 
 
 class ConditionalAccessMixin(object):
@@ -128,7 +128,8 @@ class ResourceViewMixin(GetPatchMetaMixin, ConditionalAccessMixin):
         self.args = args
         self.kwargs = kwargs
         state_params = self.global_state or {}
-        with set_global_state(**state_params):
+        #TODO rpatch_global_state
+        with patch_global_state(**state_params):
             self.fork_state()
             permission_response = self.resource.api_permission_check(self.request)
             if permission_response is not None:

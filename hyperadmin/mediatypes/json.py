@@ -2,7 +2,7 @@ from django.core.serializers.json import DjangoJSONEncoder
 from django.utils import simplejson as json
 from django import http
 
-from common import MediaType
+from hyperadmin.mediatypes.common import MediaType
 
 class JSON(MediaType):
     recognized_media_types = [

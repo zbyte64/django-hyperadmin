@@ -248,7 +248,7 @@ class GlobalState(object):
 
 global_state = GlobalState()
 
-class set_global_state(object):
+class patch_global_state(object):
     def __init__(self, **kwargs):
         self.kwargs = kwargs
     

@@ -2,7 +2,8 @@ from django.template.response import TemplateResponse
 from django.middleware.csrf import CsrfViewMiddleware
 from django.conf import settings
 
-from common import MediaType
+from hyperadmin.mediatypes.common import MediaType
+
 
 class Html5MediaType(MediaType):
     template_name = 'hyperadmin/html5/resource.html'
