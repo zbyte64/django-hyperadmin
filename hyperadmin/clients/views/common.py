@@ -1,5 +1,3 @@
-from django.views.generic import View, TemplateView
-
 from hyperadmin.hyperobjects import patch_global_state
 from hyperadmin.mediatypes.passthrough import Passthrough
 
@@ -55,38 +53,5 @@ class ClientMixin(object):
         context['link'] = self.get_link()
         return context
 
-class ListView(ClientMixin, TemplateView):
-    view_classes = ['change_list']
-    #TODO option for add params for filters
-    
-    def get_context_data(self, **kwargs):
-        context = super(ListView, self).get_context_data(**kwargs)
-        context['resource_items'] = context['state'].get_resource_items()
-        context['object_list'] = [ri.instance for ri in context['resource_items']]
-        #TODO pagination & links
-        self.get_change_list_context_data(context['link'], context['state'], context)
-        return context
-    
-    def get_change_list_context_data(self, link, state, context):
-        #TODO absorb in index api
-        links = state.get_index_queries()
-        context['pagination_links'] = [link for link in links if link.rel == 'pagination']
-        filter_links = dict()
-        #TODO ignore filter links for params that are set
-        for link in links :
-            if link.rel == 'filter':
-                section = link.cl_headers.get('group', link.prompt)
-                filter_links.setdefault(section, [])
-                filter_links[section].append(link)
-        context['filter_links'] = filter_links
-        return context
-
-class DetailView(ClientMixin, TemplateView):
-    view_classes = ['change_form']
-    
-    def get_context_data(self, **kwargs):
-        context = super(DetailView, self).get_context_data(**kwargs)
-        context['resource_item'] = context['state'].item
-        context['object'] = context['resource_item'].instance
-        return context
+#CONSIDER: should we expose CRUD functionality as default and have the process entirely controlled by permissions?
 
