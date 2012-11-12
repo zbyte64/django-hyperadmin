@@ -1,5 +1,4 @@
 from django.conf.urls.defaults import patterns, url, include
-from django.utils.functional import update_wrapper
 from django import forms
 
 from hyperadmin.hyperobjects import Link, Namespace
@@ -247,32 +246,33 @@ class InlineModelResource(BaseModelResource):
     def get_base_url_name(self):
         return '%s_%s_%s_' % (self.parent.app_name, self.parent.resource_name, self.rel_name)
     
-    def get_urls(self):
-        def wrap(view, cacheable=False):
-            def wrapper(*args, **kwargs):
-                return self.as_view(view, cacheable)(*args, **kwargs)
-            return update_wrapper(wrapper, view)
-        
+    def get_view_endpoints(self):
+        endpoints = super(CRUDResource, self).get_view_endpoints()
         init = self.get_view_kwargs()
         base_name = self.get_base_url_name()
         
-        # Admin-site-wide views.
-        urlpatterns = self.get_extra_urls()
-        urlpatterns += patterns('',
-            url(r'^$',
-                wrap(self.list_view.as_view(**init)),
-                name='%slist' % (base_name)),
-            url(r'^add/$',
-                wrap(self.add_view.as_view(**init)),
-                name='%sadd' % (base_name)),
-            url(r'^(?P<inline_pk>\w+)/$',
-                wrap(self.detail_view.as_view(**init)),
-                name='%sdetail' % (base_name)),
-            url(r'^(?P<inline_pk>\w+)/delete/$',
-                wrap(self.detail_view.as_view(**init)),
-                name='%sdelete' % (base_name)),
-        )
-        return urlpatterns
+        endpoints.append({
+            'url': r'^$',
+            'view': self.list_view.as_view(**init),
+            'name': '%slist' % base_name,
+        })
+        endpoints.append({
+            'url': r'^add/$',
+            'view': self.add_view.as_view(**init),
+            'name': '%sadd' % base_name,
+        })
+        endpoints.append({
+            'url': r'^(?P<inline_pk>\w+)/$',
+            'view': self.detail_view.as_view(**init),
+            'name': '%sdetail' % base_name,
+        })
+        endpoints.append({
+            'url': r'^(?P<inline_pk>\w+)/delete/$',
+            'view': self.delete_view.as_view(**init),
+            'name': '%sdelete' % base_name,
+        })
+        
+        return endpoints
     
     def get_add_url(self):
         pk = self.state['parent'].pk

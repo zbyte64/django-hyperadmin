@@ -1,4 +1,7 @@
 from django import http
+from django.views.decorators.csrf import csrf_exempt
+from django.utils.decorators import method_decorator
+from django.utils.cache import add_never_cache_headers
 
 import mimeparse
 
@@ -50,6 +53,7 @@ class ResourceViewMixin(GetPatchMetaMixin, ConditionalAccessMixin):
     global_state = None
     view_class = None
     view_classes = []
+    cacheable = False
     
     def get_response_type(self, patch_meta=True):
         if patch_meta:
@@ -118,6 +122,7 @@ class ResourceViewMixin(GetPatchMetaMixin, ConditionalAccessMixin):
                      'args':self.args,})
         return data
     
+    @method_decorator(csrf_exempt)
     def dispatch(self, request, *args, **kwargs):
         self.request = request
         self.args = args
@@ -125,7 +130,12 @@ class ResourceViewMixin(GetPatchMetaMixin, ConditionalAccessMixin):
         state_params = self.global_state or {}
         with set_global_state(**state_params):
             self.fork_state()
+            permission_response = self.resource.api_permission_check(self.request)
+            if permission_response is not None:
+                return permission_response
             response = super(ResourceViewMixin, self).dispatch(request, *args, **kwargs)
+            if not self.cacheable:
+                add_never_cache_headers(response)
             if hasattr(response, 'render'):
                 response.render()
             return response

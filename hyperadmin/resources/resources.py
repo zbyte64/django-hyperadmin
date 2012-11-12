@@ -1,7 +1,7 @@
 from copy import copy
 
 from django import forms
-from django.conf.urls.defaults import patterns
+from django.conf.urls.defaults import patterns, url
 
 from hyperadmin.hyperobjects import Link, ResourceItem, ResourceState, global_state
 
@@ -48,8 +48,25 @@ class BaseResource(object):
         raise NotImplementedError
     app_name = property(get_app_name)
     
+    def get_view_endpoints(self):
+        """
+        Returns a list of dictionaries containing the following elements:
+        
+        * url: relative regex url
+        * view: the view object
+        * name: name for urlresolver
+        
+        """
+        return []
+    
     def get_urls(self):
         urlpatterns = self.get_extra_urls()
+        for endpoint in self.get_view_endpoints():
+            urlpatterns += patterns('',
+                url(endpoint['url'],
+                    endpoint['view'],
+                    name=endpoint['name'],),
+            )
         return urlpatterns
     
     def get_extra_urls(self):
@@ -62,11 +79,8 @@ class BaseResource(object):
     def reverse(self, name, *args, **kwargs):
         return self.state.reverse(name, *args, **kwargs)
     
-    def as_view(self, view, cacheable=False):
-        return self.site.as_view(view, cacheable)
-    
-    def as_nonauthenticated_view(self, view, cacheable=False):
-        return self.site.as_nonauthenticated_view(view, cacheable)
+    def api_permission_check(self, request):
+        return self.site.api_permission_check(request)
     
     def get_view_kwargs(self):
         return {'resource':self,

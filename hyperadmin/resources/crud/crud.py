@@ -1,4 +1,3 @@
-from django.conf.urls.defaults import patterns, url
 from django.core.paginator import Paginator
 
 from hyperadmin.hyperobjects import Link
@@ -37,30 +36,33 @@ class CRUDResource(BaseResource):
     def get_prompt(self):
         return self.resource_name
     
-    def get_urls(self):
-        def wrap(view, cacheable=False):
-            return self.as_view(view, cacheable)
-        
+    def get_view_endpoints(self):
+        endpoints = super(CRUDResource, self).get_view_endpoints()
         init = self.get_view_kwargs()
-        
-        # Admin-site-wide views.
         base_name = self.get_base_url_name()
-        urlpatterns = self.get_extra_urls()
-        urlpatterns += patterns('',
-            url(r'^$',
-                wrap(self.list_view.as_view(**init)),
-                name='%slist' % base_name),
-            url(r'^add/$',
-                wrap(self.add_view.as_view(**init)),
-                name='%sadd' % base_name),
-            url(r'^(?P<pk>\w+)/$',
-                wrap(self.detail_view.as_view(**init)),
-                name='%sdetail' % base_name),
-            url(r'^(?P<pk>\w+)/delete/$',
-                wrap(self.delete_view.as_view(**init)),
-                name='%sdelete' % base_name),
-        )
-        return urlpatterns
+        
+        endpoints.append({
+            'url': r'^$',
+            'view': self.list_view.as_view(**init),
+            'name': '%slist' % base_name,
+        })
+        endpoints.append({
+            'url': r'^add/$',
+            'view': self.add_view.as_view(**init),
+            'name': '%sadd' % base_name,
+        })
+        endpoints.append({
+            'url': r'^(?P<pk>\w+)/$',
+            'view': self.detail_view.as_view(**init),
+            'name': '%sdetail' % base_name,
+        })
+        endpoints.append({
+            'url': r'^(?P<pk>\w+)/delete/$',
+            'view': self.delete_view.as_view(**init),
+            'name': '%sdelete' % base_name,
+        })
+        
+        return endpoints
     
     def get_add_url(self):
         return self.reverse('%sadd' % self.get_base_url_name())

@@ -23,18 +23,22 @@ class SiteResource(BaseResource):
         return self.site.name
     app_name = property(get_app_name)
     
-    def get_urls(self):
-        def wrap(view, cacheable=False):
-            return self.as_view(view, cacheable)
-        
+    def get_view_endpoints(self):
+        endpoints = super(SiteResource, self).get_view_endpoints()
         init = self.get_view_kwargs()
         
-        # Admin-site-wide views.
-        urlpatterns = self.get_extra_urls()
+        list_view = {
+            'url': r'^$',
+            'view': self.list_view.as_view(**init),
+            'name': 'index',
+        }
+        endpoints.append(list_view)
+        
+        return endpoints
+    
+    def get_urls(self):
+        urlpatterns = super(SiteResource, self).get_urls()
         urlpatterns += patterns('',
-            url(r'^$',
-                wrap(self.list_view.as_view(**init)),
-                name='index'),
             url(r'^-authentication/',
                 include(self.auth_resource.urls)),
         )

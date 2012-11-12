@@ -1,4 +1,3 @@
-from django.conf.urls.defaults import patterns, url
 from django.contrib.auth import logout
 
 from hyperadmin.hyperobjects import Link, ResourceItem
@@ -30,23 +29,25 @@ class AuthResource(BaseResource):
     def get_prompt(self):
         return self.resource_name
     
-    def get_urls(self):
-        def wrap(view, cacheable=False):
-            return self.as_nonauthenticated_view(view, cacheable)
-        
+    def get_view_endpoints(self):
+        endpoints = super(AuthResource, self).get_view_endpoints()
         init = self.get_view_kwargs()
         
-        # Admin-site-wide views.
-        urlpatterns = self.get_extra_urls()
-        urlpatterns += patterns('',
-            url(r'^$',
-                wrap(self.detail_view.as_view(**init)),
-                name='authentication'),
-            url(r'^logout/$',
-                wrap(self.logout_view.as_view(**init)),
-                name='logout'),
-        )
-        return urlpatterns
+        endpoints.append({
+            'url': r'^$',
+            'view': self.detail_view.as_view(**init),
+            'name': 'authentication',
+        })
+        endpoints.append({
+            'url': r'^logout/$',
+            'view': self.logout_view.as_view(**init),
+            'name': 'logout',
+        })
+        
+        return endpoints
+    
+    def api_permission_check(self, request):
+        return None #resource is accessible to all
     
     def get_absolute_url(self):
         return self.reverse('authentication')

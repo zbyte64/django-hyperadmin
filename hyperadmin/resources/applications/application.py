@@ -17,18 +17,21 @@ class ApplicationResource(BaseResource):
         return self._app_name
     app_name = property(get_app_name)
     
-    def get_urls(self):
-        def wrap(view, cacheable=False):
-            return self.as_view(view, cacheable)
-        
+    def get_view_endpoints(self):
+        endpoints = super(ApplicationResource, self).get_view_endpoints()
         init = self.get_view_kwargs()
         
-        urlpatterns = self.get_extra_urls()
-        urlpatterns += patterns('',
-            url(r'^$',
-                wrap(self.list_view.as_view(**init)),
-                name=self.app_name),
-        )
+        list_view = {
+            'url': r'^$',
+            'view': self.list_view.as_view(**init),
+            'name': self.app_name,
+        }
+        endpoints.append(list_view)
+        
+        return endpoints
+    
+    def get_urls(self):
+        urlpatterns = super(ApplicationResource, self).get_urls()
         for key, resource in self.resource_adaptor.iteritems():
             urlpatterns += patterns('',
                 url(r'^%s/' % key, include(resource.urls))

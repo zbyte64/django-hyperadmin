@@ -1,8 +1,5 @@
 import os
 
-from django.conf.urls.defaults import patterns, url
-from django.utils.functional import update_wrapper
-
 from hyperadmin.hyperobjects import Link
 from hyperadmin.resources.crud.crud import CRUDResource
 from hyperadmin.resources.storages import views
@@ -43,35 +40,38 @@ class StorageResource(CRUDResource):
     def get_upload_link_form_class(self):
         return self.upload_link_form_class
     
-    def get_urls(self):
-        def wrap(view, cacheable=False):
-            def wrapper(*args, **kwargs):
-                return self.as_view(view, cacheable)(*args, **kwargs)
-            return update_wrapper(wrapper, view)
-        
+    def get_view_endpoints(self):
+        endpoints = super(CRUDResource, self).get_view_endpoints()
         init = self.get_view_kwargs()
-        
-        # Admin-site-wide views.
         base_name = self.get_base_url_name()
-        urlpatterns = self.get_extra_urls()
-        urlpatterns += patterns('',
-            url(r'^$',
-                wrap(self.list_view.as_view(**init)),
-                name='%slist' % base_name),
-            url(r'^add/$',
-                wrap(self.add_view.as_view(**init)),
-                name='%sadd' % base_name),
-            url(r'^upload-link/$',
-                wrap(self.upload_link_view.as_view(**init)),
-                name='%suploadlink' % base_name),
-            url(r'^(?P<path>.+)/$',
-                wrap(self.detail_view.as_view(**init)),
-                name='%sdetail' % base_name),
-            url(r'^(?P<path>.+)/delete/$',
-                wrap(self.delete_view.as_view(**init)),
-                name='%sdelete' % base_name),
-        )
-        return urlpatterns
+        
+        endpoints.append({
+            'url': r'^$',
+            'view': self.list_view.as_view(**init),
+            'name': '%slist' % base_name,
+        })
+        endpoints.append({
+            'url': r'^add/$',
+            'view': self.add_view.as_view(**init),
+            'name': '%sadd' % base_name,
+        })
+        endpoints.append({
+            'url': r'^upload-link/$',
+            'view': self.upload_link_view.as_view(**init),
+            'name': '%suploadlink' % base_name,
+        })
+        endpoints.append({
+            'url': r'^(?P<path>.+)/$',
+            'view': self.detail_view.as_view(**init),
+            'name': '%sdetail' % base_name,
+        })
+        endpoints.append({
+            'url': r'^(?P<path>.+)/delete/$',
+            'view': self.delete_view.as_view(**init),
+            'name': '%sdelete' % base_name,
+        })
+        
+        return endpoints
     
     def get_listing(self, path):
         try:

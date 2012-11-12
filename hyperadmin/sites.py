@@ -1,9 +1,6 @@
-from django.views.decorators.cache import never_cache
-from django.views.decorators.csrf import csrf_exempt
 from django.conf.urls.defaults import patterns
 from django.core.urlresolvers import reverse
 from django.utils.datastructures import SortedDict
-from django.utils.functional import update_wrapper
 from django.http import HttpResponse, HttpResponseRedirect
 from django.utils.encoding import iri_to_uri
 
@@ -108,20 +105,6 @@ class ResourceSite(object):
     def get_view_kwargs(self):
         return {'resource_site':self,}
     
-    def as_view(self, view, cacheable=False):
-        if not cacheable:
-            view = never_cache(view)
-        
-        def permission_check(view):
-            def wrapper(request, *args, **kwargs):
-                response = self.api_permission_check(request)
-                if response:
-                    return response
-                return view(request, *args, **kwargs)
-            return update_wrapper(wrapper, view)
-        
-        return csrf_exempt(permission_check(view))
-    
     def api_permission_check(self, request):
         if not request.user.is_authenticated():
             redirect_to = self.reverse('authentication')
@@ -132,11 +115,6 @@ class ResourceSite(object):
             response = HttpResponse('Unauthorized', status=401)
             response['Location'] = iri_to_uri(redirect_to)
             return response
-    
-    def as_nonauthenticated_view(self, view, cacheable=False):
-        if not cacheable:
-            view = never_cache(view)
-        return csrf_exempt(view)
     
     def get_related_resource_from_field(self, field):
         #TODO make more dynamic

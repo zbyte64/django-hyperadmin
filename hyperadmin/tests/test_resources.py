@@ -2,6 +2,7 @@ from StringIO import StringIO
 
 from django.utils import unittest
 from django.contrib.auth.models import User, Group
+from django.http import HttpResponse
 from django.core.files.base import ContentFile
 
 from hyperadmin.resources.models.models import ModelResource, InlineModelResource
@@ -30,7 +31,7 @@ class ResourceTestCase(unittest.TestCase):
         
         self.user = User.objects.get_or_create(username='superuser', is_staff=True, is_active=True, is_superuser=True)[0]
         self.resource = self.register_resource()
-        self.resource.generate_response = MagicMock()
+        self.resource.generate_response = MagicMock(side_effect=HttpResponse)
         self.factory = SuperUserRequestFactory(user=self.user, HTTP_ACCEPT='text/html')
         
         self.resolver = GenericURLResolver(r'^', self.site.get_urls())
