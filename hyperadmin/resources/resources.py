@@ -55,7 +55,6 @@ class BaseResource(object):
         * url: relative regex url
         * view: the view object
         * name: name for urlresolver
-        
         """
         return []
     
