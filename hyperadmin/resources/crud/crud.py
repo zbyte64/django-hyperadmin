@@ -5,6 +5,7 @@ from hyperadmin.resources.resources import BaseResource
 from hyperadmin.resources.indexes import PrimaryIndex
 from hyperadmin.resources.crud.changelist import ChangeList
 from hyperadmin.resources.crud.hyperobjects import ListResourceItem
+from hyperadmin.resources.crud.endpoints import ListEndpoint, CreateEndpoint, DetailEndpoint, DeleteEndpoint
 
 
 class CRUDResource(BaseResource):
@@ -37,32 +38,21 @@ class CRUDResource(BaseResource):
     
     def get_view_endpoints(self):
         endpoints = super(CRUDResource, self).get_view_endpoints()
-        init = self.get_view_kwargs()
-        base_name = self.get_base_url_name()
-        
-        endpoints.append({
-            'url': r'^$',
-            'view': self.list_view.as_view(**init),
-            'name': '%slist' % base_name,
-        })
-        endpoints.append({
-            'url': r'^add/$',
-            'view': self.add_view.as_view(**init),
-            'name': '%sadd' % base_name,
-        })
-        endpoints.append({
-            'url': r'^(?P<pk>\w+)/$',
-            'view': self.detail_view.as_view(**init),
-            'name': '%sdetail' % base_name,
-        })
-        endpoints.append({
-            'url': r'^(?P<pk>\w+)/delete/$',
-            'view': self.delete_view.as_view(**init),
-            'name': '%sdelete' % base_name,
-        })
-        
+        endpoints.extend([
+            ListEndpoint(self),
+            CreateEndpoint(self),
+            DetailEndpoint(self),
+            DeleteEndpoint(self),
+        ])
         return endpoints
     
+    def get_absolute_url(self):
+        return self.links['list'].get_url()
+    
+    def get_item_url(self, item):
+        return self.links['update'].get_url(item=item)
+    
+    '''
     def get_add_url(self):
         return self.reverse('%sadd' % self.get_base_url_name())
     
@@ -178,7 +168,7 @@ class CRUDResource(BaseResource):
     
     def on_delete_success(self, item):
         return self.get_resource_link()
-    
+    '''
     def has_add_permission(self, user):
         return True
     
@@ -199,7 +189,7 @@ class CRUDResource(BaseResource):
         if 'changelist' in self.state:
             links += self.get_changelist_links()
         return links
-    
+    '''
     def get_outbound_links(self):
         links = super(CRUDResource, self).get_outbound_links()
         if self.show_create_link():
@@ -231,7 +221,7 @@ class CRUDResource(BaseResource):
         else:
             links.append(self.get_restful_delete_link(item=item))
         return links
-    
+    '''
     def get_item_breadcrumb(self, item):
         return self.get_item_link(item, rel='breadcrumb')
     

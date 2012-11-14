@@ -50,6 +50,7 @@ class GetPatchMetaMixin(object):
 class ResourceViewMixin(GetPatchMetaMixin, ConditionalAccessMixin):
     resource = None
     resource_site = None
+    endpoint = None
     global_state = None
     state_class = EndpointState
     view_class = None
@@ -112,16 +113,22 @@ class ResourceViewMixin(GetPatchMetaMixin, ConditionalAccessMixin):
         view_classes.append(self.view_class)
         return view_classes
     
+    def get_session_data(self):
+        #TODO consult site object
+        data = {'request': self.request}
+        if hasattr(self.request, 'user'):
+            data['auth'] = self.request.user
+        return data
+    
     def get_state_data(self):
         data = super(ResourceViewMixin, self).get_state_data()
         data.update(self.kwargs)
-        data.update({'auth':self.request.user,
-                     'view_class':self.view_class,
+        data.update({'view_class':self.view_class,
                      'view_classes':self.get_view_classes(),
                      'item':self.get_item(),
                      'params':self.request.GET.copy(),
                      'args':self.args,
-                     'endpoint':self,})
+                     'endpoint':self.endpoint,})
         return data
     
     def get_state_kwargs(self):
@@ -139,11 +146,13 @@ class ResourceViewMixin(GetPatchMetaMixin, ConditionalAccessMixin):
         self.state = self.create_state()
         #self.resource = self.resource.fork_state(endpoint_state=self.state, **self.state)
         #self.state['resource_state'] = self.resource.state
-        state_params = self.global_state or {}
         #TODO endpoint_state has special meaning: 
         #self.site.fork_for_endpoint(self)?
-        #state_params['endpoint_state'] = self.state 
-        with self.resource.site_state.push_state(state_params):
+        #state_params['endpoint_state'] = self.state
+        session_params = self.get_session_data()
+        if self.global_state:
+            session_params.update(self.global_state)
+        with self.state.push_session(session_params):
             with self.resource.state.patch_state(endpoint_state=self.state, **self.state):
                 #TODO anything we return must preserve the state @-@
                 permission_response = self.resource.api_permission_check(self.request)

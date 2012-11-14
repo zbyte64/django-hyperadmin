@@ -3,6 +3,8 @@ from django.conf.urls.defaults import patterns, url, include
 from hyperadmin.resources import BaseResource
 from hyperadmin.resources.applications import views
 from hyperadmin.resources.applications.forms import ViewResourceForm
+from hyperadmin.resources.applications.endpoints import ListEndpoint
+
 
 class SiteResource(BaseResource):
     resource_class = 'resourcelisting'
@@ -25,15 +27,7 @@ class SiteResource(BaseResource):
     
     def get_view_endpoints(self):
         endpoints = super(SiteResource, self).get_view_endpoints()
-        init = self.get_view_kwargs()
-        
-        list_view = {
-            'url': r'^$',
-            'view': self.list_view.as_view(**init),
-            'name': 'index',
-        }
-        endpoints.append(list_view)
-        
+        endpoints.append(ListEndpoint(resource=self))
         return endpoints
     
     def get_urls(self):
@@ -74,7 +68,7 @@ class SiteResource(BaseResource):
         return links
     
     def get_absolute_url(self):
-        return self.reverse('index')
+        return self.links['list'].get_url()
     
     @property
     def applications(self):

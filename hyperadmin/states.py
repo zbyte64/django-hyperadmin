@@ -97,17 +97,54 @@ class GlobalStatePatch(object):
     def __exit__(self, type, value, traceback):
         self.global_state.pop_stack()
 
+class SessionState(GlobalState):
+    @property
+    def active_dictionary(self):
+        stack = self.get_stack()
+        if not len(stack.dicts):
+            stack.dicts.append(dict())
+        return stack.dicts[0]
+    
+    def __setitem__(self, key, value):
+        self.active_dictionary[key] = value
+    
+    def __delitem__(self, key):
+        del self.active_dictionary[key]
+    
+    def pop(self, key, default=None):
+        return self.active_dictionary.pop(key, default)
+    
+    def update(self, other_dict):
+        self.active_dictionary.update(other_dict)
+    
+    #context functions
+    def patch_state(self, **kwargs):
+        return GlobalStatePatch(self, kwargs)
+    
+    def push_state(self, state):
+        return GlobalStatePatch(self, state)
+
+SESSION_STATE = SessionState()
+SESSION_STATE.__doc__ = '''
+Variables that should be accessible to all resources and endpoints go here.
+Typically put in "auth" which is the user object making the requests
+'''
+
 class State(MergeDict):
     def __init__(self, substates=[], data={}):
         self.active_dictionary = dict()
         self.substates = substates
-        self.global_state = GlobalState()
+        self.session = self.get_session()
+        self.global_state = GlobalState() #TODO minimize the need for this as much as possible
         dictionaries = self.get_dictionaries()
         super(State, self).__init__(*dictionaries)
         self.update(data)
     
+    def get_session(self):
+        return SESSION_STATE
+    
     def get_dictionaries(self):
-        return [self.global_state, self.active_dictionary] + self.substates
+        return [self.session, self.global_state, self.active_dictionary] + self.substates
     
     def __copy__(self):
         substates = self.global_state.dicts + [self.active_dictionary] + list(self.substates)
@@ -132,11 +169,19 @@ class State(MergeDict):
     
     def push_state(self, state):
         return GlobalStatePatch(self.global_state, state)
+    
+    def patch_session(self, **kwargs):
+        return self.session.patch_state(**kwargs)
+    
+    def push_session(self, state):
+        return self.session.push_state(state)
 
 class SiteState(State):
     pass
 
 class ResourceBoundMixin(object):
+    #contianer = resource or endpoint
+    
     @property
     def site(self):
         return self['site']
@@ -163,22 +208,40 @@ class ResourceBoundMixin(object):
     meta = property(_get_meta, _set_meta)
     
     def get_embedded_links(self):
-        return self.resource.get_embedded_links() + self.get('embedded_links', [])
+        return self.container.get_embedded_links() + self.get('embedded_links', [])
     
     def get_outbound_links(self):
-        return self.resource.get_outbound_links() + self.get('outbound_links', [])
+        return self.container.get_outbound_links() + self.get('outbound_links', [])
     
     def get_index_queries(self):
-        return self.resource.get_index_queries() + self.get('index_queries', [])
+        return self.container.get_index_queries() + self.get('index_queries', [])
     
     def get_templated_queries(self):
-        return self.resource.get_templated_queries() + self.get('templated_queries', [])
+        return self.container.get_templated_queries() + self.get('templated_queries', [])
     
     def get_ln_links(self):
-        return self.resource.get_ln_links() + self.get('ln_links', [])
+        return self.container.get_ln_links() + self.get('ln_links', [])
     
     def get_idempotent_links(self):
-        return self.resource.get_idempotent_links() + self.get('idempotent_links', [])
+        return self.container.get_idempotent_links() + self.get('idempotent_links', [])
+    
+    def get_item_embedded_links(self, item):
+        return self.container.get_item_embedded_links(item)
+    
+    def get_item_outbound_links(self, item):
+        return self.container.get_item_outbound_links(item)
+    
+    def get_item_templated_queries(self, item):
+        return self.container.get_item_templated_queries(item)
+    
+    def get_item_ln_links(self, item):
+        return self.container.get_item_ln_links(item)
+    
+    def get_item_idempotent_links(self, item):
+        return self.container.get_item_idempotent_links(item)
+    
+    def get_item_link(self, item):
+        return self.container.get_item_link(item)
     
     def get_link_url(self, link):
         url = link.get_base_url()
@@ -257,7 +320,7 @@ class ResourceState(ResourceBoundMixin, State):
         super(ResourceState, self).__init__(substates=substates, data=data)
     
     def get_dictionaries(self):
-        return [self.global_state, self.active_dictionary, self.site_state] + self.substates
+        return [self.session, self.global_state, self.active_dictionary, self.site_state] + self.substates
     
     def __copy__(self):
         substates = self.global_state.dicts + [self.active_dictionary] + list(self.substates)
@@ -267,6 +330,10 @@ class ResourceState(ResourceBoundMixin, State):
     @property
     def resource(self):
         return self['resource']
+    
+    @property
+    def container(self):
+        return self.resource
     
     @property
     def namespace(self):
@@ -298,8 +365,12 @@ class EndpointState(ResourceBoundMixin, State):
     def endpoint(self):
         return self['endpoint']
     
+    @property
+    def container(self):
+        return self.endpoint
+    
     def get_dictionaries(self):
-        return [self.global_state, self.active_dictionary, self.resource_state] + self.substates
+        return [self.session, self.global_state, self.active_dictionary, self.resource_state] + self.substates
     
     def add_embedded_link(self, link):
         self['embedded_links'].append(link)

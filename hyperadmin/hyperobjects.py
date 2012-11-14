@@ -212,22 +212,22 @@ class ResourceItem(object):
         return self.state.resource
     
     def get_embedded_links(self):
-        return self.resource.get_item_embedded_links(self)
+        return self.state.get_item_embedded_links(self)
     
     def get_outbound_links(self):
-        return self.resource.get_item_outbound_links(self)
+        return self.state.get_item_outbound_links(self)
     
     def get_templated_queries(self):
-        return self.resource.get_item_templated_queries(self)
+        return self.state.get_item_templated_queries(self)
     
     def get_ln_links(self):
-        return self.resource.get_item_ln_links(self)
+        return self.state.get_item_ln_links(self)
     
     def get_idempotent_links(self):
-        return self.resource.get_item_idempotent_links(self)
+        return self.state.get_item_idempotent_links(self)
     
     def get_item_link(self):
-        return self.resource.get_item_link(self)
+        return self.state.get_item_link(self)
     
     def get_absolute_url(self):
         return self.resource.get_item_url(self)

@@ -5,6 +5,7 @@ from hyperadmin.hyperobjects import Link, Namespace
 from hyperadmin.resources.crud.crud import CRUDResource
 from hyperadmin.resources.models import views
 from hyperadmin.resources.models.changelist import ModelChangeList
+from hyperadmin.resources.models.endpoints import InlineListEndpoint, InlineCreateEndpoint, InlineDetailEndpoint, InlineDeleteEndpoint
 
 
 class BaseModelResource(CRUDResource):
@@ -203,6 +204,8 @@ class ModelResource(BaseModelResource):
         for inline in self.inline_instances:
             name = 'inline-%s' % inline.rel_name
             inline = inline.fork_state(parent=item.instance, auth=self.state['auth'], namespace=name)
+            assert inline.state.resource == inline
+            assert inline.endpoints.values()[0].resource == inline
             link = inline.get_resource_link()
             namespace = Namespace(name=name, link=link, state=inline.state)
             namespaces[name] = namespace
@@ -242,32 +245,14 @@ class InlineModelResource(BaseModelResource):
     
     def get_view_endpoints(self):
         endpoints = super(CRUDResource, self).get_view_endpoints()
-        init = self.get_view_kwargs()
-        base_name = self.get_base_url_name()
-        
-        endpoints.append({
-            'url': r'^$',
-            'view': self.list_view.as_view(**init),
-            'name': '%slist' % base_name,
-        })
-        endpoints.append({
-            'url': r'^add/$',
-            'view': self.add_view.as_view(**init),
-            'name': '%sadd' % base_name,
-        })
-        endpoints.append({
-            'url': r'^(?P<inline_pk>\w+)/$',
-            'view': self.detail_view.as_view(**init),
-            'name': '%sdetail' % base_name,
-        })
-        endpoints.append({
-            'url': r'^(?P<inline_pk>\w+)/delete/$',
-            'view': self.delete_view.as_view(**init),
-            'name': '%sdelete' % base_name,
-        })
-        
+        endpoints.extend([
+            InlineListEndpoint(self),
+            InlineCreateEndpoint(self),
+            InlineDetailEndpoint(self),
+            InlineDeleteEndpoint(self),
+        ])
         return endpoints
-    
+    '''
     def get_add_url(self):
         pk = self.state['parent'].pk
         return self.reverse('%sadd' % self.get_base_url_name(), pk=pk)
@@ -276,15 +261,12 @@ class InlineModelResource(BaseModelResource):
         instance = item.instance
         pk = getattr(instance, self.fk.name).pk
         return self.reverse('%sdelete' % self.get_base_url_name(), pk=pk, inline_pk=instance.pk)
-    
+    '''
     def get_item_url(self, item):
-        instance = item.instance
-        pk = getattr(instance, self.fk.name).pk
-        return self.reverse('%sdetail' % self.get_base_url_name(), pk=pk, inline_pk=instance.pk)
+        return self.links['update'].get_url(item)
     
     def get_absolute_url(self):
-        pk = self.state['parent'].pk
-        return self.reverse('%slist' % self.get_base_url_name(), pk=pk)
+        return self.links['list'].get_url()
     
     def get_breadcrumbs(self):
         breadcrumbs = self.parent.get_breadcrumbs()

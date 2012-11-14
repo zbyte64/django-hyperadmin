@@ -1,7 +1,8 @@
 from copy import copy
 
 from django import forms
-from django.conf.urls.defaults import patterns, url
+from django.conf.urls.defaults import patterns
+from django.utils.datastructures import SortedDict
 
 from hyperadmin.hyperobjects import Link, ResourceItem
 from hyperadmin.states import ResourceState
@@ -45,6 +46,10 @@ class BaseResource(object):
     
     def fork_state(self, **kwargs):
         new_resource = copy(self)
+        #TODO this is not ideal...
+        for uncache in ('_endpoints', '_links'):
+            if hasattr(new_resource, uncache):
+                delattr(new_resource, uncache)
         new_resource.state = self.state.copy()
         new_resource.state['resource'] = new_resource
         new_resource.state.update(kwargs)
@@ -53,6 +58,9 @@ class BaseResource(object):
     def get_app_name(self):
         raise NotImplementedError
     app_name = property(get_app_name)
+    
+    def get_base_url_name(self):
+        return self.app_name
     
     def get_view_endpoints(self):
         """
@@ -64,14 +72,27 @@ class BaseResource(object):
         """
         return []
     
+    @property
+    def endpoints(self):
+        if not hasattr(self, '_endpoints'):
+            self._endpoints = SortedDict()
+            for endpoint in self.get_view_endpoints():
+                assert hasattr(endpoint, 'name_suffix')
+                self._endpoints[endpoint.name_suffix] = endpoint
+        return self._endpoints
+    
+    @property
+    def links(self):
+        if not hasattr(self, '_links'):
+            self._links = dict()
+            for endpoint in self.endpoints.itervalues():
+                self._links.update(endpoint.get_links())
+        return self._links
+    
     def get_urls(self):
         urlpatterns = self.get_extra_urls()
-        for endpoint in self.get_view_endpoints():
-            urlpatterns += patterns('',
-                url(endpoint['url'],
-                    endpoint['view'],
-                    name=endpoint['name'],),
-            )
+        urls = [endpoint.get_url_object() for endpoint in self.endpoints.itervalues()]
+        urlpatterns += patterns('', *urls)
         return urlpatterns
     
     def get_extra_urls(self):

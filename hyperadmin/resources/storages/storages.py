@@ -5,6 +5,7 @@ from hyperadmin.resources.crud.crud import CRUDResource
 from hyperadmin.resources.storages import views
 from hyperadmin.resources.storages.forms import UploadForm, UploadLinkForm
 from hyperadmin.resources.storages.changelist import StorageChangeList, StoragePaginator
+from hyperadmin.resources.storages.endpoints import ListEndpoint, CreateEndpoint, CreateUploadEndpoint, DetailEndpoint, DeleteEndpoint
 
 
 class StorageResource(CRUDResource):
@@ -42,35 +43,13 @@ class StorageResource(CRUDResource):
     
     def get_view_endpoints(self):
         endpoints = super(CRUDResource, self).get_view_endpoints()
-        init = self.get_view_kwargs()
-        base_name = self.get_base_url_name()
-        
-        endpoints.append({
-            'url': r'^$',
-            'view': self.list_view.as_view(**init),
-            'name': '%slist' % base_name,
-        })
-        endpoints.append({
-            'url': r'^add/$',
-            'view': self.add_view.as_view(**init),
-            'name': '%sadd' % base_name,
-        })
-        endpoints.append({
-            'url': r'^upload-link/$',
-            'view': self.upload_link_view.as_view(**init),
-            'name': '%suploadlink' % base_name,
-        })
-        endpoints.append({
-            'url': r'^(?P<path>.+)/$',
-            'view': self.detail_view.as_view(**init),
-            'name': '%sdetail' % base_name,
-        })
-        endpoints.append({
-            'url': r'^(?P<path>.+)/delete/$',
-            'view': self.delete_view.as_view(**init),
-            'name': '%sdelete' % base_name,
-        })
-        
+        endpoints.extend([
+            ListEndpoint(self),
+            CreateEndpoint(self),
+            CreateUploadEndpoint(self),
+            DetailEndpoint(self),
+            DeleteEndpoint(self),
+        ])
         return endpoints
     
     def get_listing(self, path):
@@ -85,6 +64,18 @@ class StorageResource(CRUDResource):
     def get_primary_query(self):
         path = self.state.params.get('path', '')
         return self.get_listing(path)
+    
+    def get_instances(self):
+        '''
+        Returns a set of native objects for a given state
+        '''
+        if 'page' in self.state:
+            return self.state['page'].object_list
+        if self.state.has_view_class('change_form'):
+            return []
+        dirs, files = self.get_primary_query()
+        instances = [views.BoundFile(self.storage, file_name) for file_name in files]
+        return instances
     
     def get_index_queries(self):
         links = super(StorageResource, self).get_index_queries()
@@ -102,46 +93,13 @@ class StorageResource(CRUDResource):
         kwargs['resource'] = self
         return kwargs
     
-    def get_upload_link(self, form_kwargs=None, **kwargs):
-        if form_kwargs is None:
-            form_kwargs = {}
-        form_kwargs = self.get_upload_link_form_kwargs(**form_kwargs)
-        
-        link_kwargs = {'url':self.get_upload_link_url(),
-                       'resource':self,
-                       'on_submit':self.handle_upload_link_submission,
-                       'method':'POST',
-                       'form_kwargs':form_kwargs,
-                       'form_class': self.get_upload_link_form_class(),
-                       'prompt':'create upload link',
-                       'rel':'upload-link',}
-        link_kwargs.update(kwargs)
-        create_link = Link(**link_kwargs)
-        return create_link
-    
-    def get_upload_link_url(self):
-        return self.reverse('%suploadlink' % self.get_base_url_name())
-    
     def get_item_url(self, item):
-        instance = item.instance
-        return self.reverse('%sdetail' % self.get_base_url_name(), path=instance.name)
+        return self.links['update'].get_url(item=item)
     
-    def get_delete_url(self, item):
-        instance = item.instance
-        return self.reverse('%sdelete' % self.get_base_url_name(), path=instance.name)
-    
-    def handle_upload_link_submission(self, link, submit_kwargs):
-        form = link.get_form(**submit_kwargs)
-        if form.is_valid():
-            #presumably this special form returns a link
-            upload_link = form.save()
-            return upload_link
-        return link.clone(form=form)
-    
-    def get_outbound_links(self):
-        links = super(StorageResource, self).get_outbound_links()
-        links.append(self.get_upload_link(link_factor='LO'))
-        return links
+    #def get_outbound_links(self):
+    #    links = super(StorageResource, self).get_outbound_links()
+    #    links.append(self.get_upload_link(link_factor='LO'))
+    #    return links
     
     def get_item_storage_link(self, item, **kwargs):
         link_kwargs = {'url':item.instance.url,
