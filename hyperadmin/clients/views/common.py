@@ -1,4 +1,3 @@
-from hyperadmin.hyperobjects import patch_global_state
 from hyperadmin.mediatypes.passthrough import Passthrough
 
 
@@ -32,13 +31,11 @@ class ClientMixin(object):
     def get_api_response(self):
         if not hasattr(self, '_api_response'):
             endpoint = self.get_api_endpoint()
-            patch_params = self.get_global_state()
-            #TODO patch_endpoint_state(params={})
-            #TODO consider: patching global state should be silod to a particular api site
-            with patch_global_state(**patch_params):
-                api_args = self.get_api_args()
-                api_kwargs = self.get_api_kwargs()
-                self._api_response = endpoint['view'](self.request, *api_args, **api_kwargs)
+            assert endpoint is not None, 'Failed to look up endpint for: %s in %s' % (self.url_name, [e['name'] for e in self.resource.get_view_endpoints()])
+            
+            api_args = self.get_api_args()
+            api_kwargs = self.get_api_kwargs()
+            self._api_response = endpoint['view'](self.request, *api_args, **api_kwargs)
         return self._api_response
     
     def get_state(self):
@@ -52,6 +49,18 @@ class ClientMixin(object):
         context['state'] = self.get_state()
         context['link'] = self.get_link()
         return context
+    
+    def dispatch(self, request, *args, **kwargs):
+        self.request = request
+        self.args = args
+        self.kwargs = kwargs
+        #TODO use an alternative template response class instead
+        patch_params = self.get_global_state()
+        with self.client_site.state.patch_state(**patch_params):
+            response = super(ClientMixin, self).dispatch(request, *args, **kwargs)
+            if hasattr(response, 'render'):
+                response.render()
+            return response
 
 #CONSIDER: should we expose CRUD functionality as default and have the process entirely controlled by permissions?
 

@@ -6,7 +6,7 @@ from django.utils.encoding import iri_to_uri
 
 from hyperadmin.resources.applications.site import SiteResource
 from hyperadmin.resources.applications.application import ApplicationResource
-from hyperadmin.hyperobjects import State
+from hyperadmin.states import SiteState
 
 import collections
 
@@ -14,7 +14,7 @@ import collections
 class ResourceSite(object):
     site_resource_class = SiteResource
     application_resource_class = ApplicationResource
-    state_class = State
+    state_class = SiteState
     
     def __init__(self, name='hyperadmin'):
         self.name = name

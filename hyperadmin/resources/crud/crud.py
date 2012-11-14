@@ -9,7 +9,6 @@ from hyperadmin.resources.crud.hyperobjects import ListResourceItem
 
 class CRUDResource(BaseResource):
     resource_class = 'crudresource'
-    donot_copy = BaseResource.donot_copy + ['resource_adaptor']
     
     ordering = None
     list_display = ('__str__',) #TODO should list all field by default

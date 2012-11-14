@@ -1,5 +1,4 @@
 from hyperadmin.clients.common import Client
-from hyperadmin.hyperobjects import patch_global_state
 
 
 class MediaTypeClient(Client):
@@ -21,7 +20,7 @@ class MediaTypeClient(Client):
     def get_urls(self):
         media_types = self.get_media_types()
         try:
-            with patch_global_state(reverse=self.reverse, media_types=media_types) as state:
+            with self.api_endpoint.state.patch_state(reverse=self.reverse, media_types=media_types) as state:
                 urls = self.api_endpoint.get_urls()
                 return urls
         except Exception as error:

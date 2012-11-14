@@ -3,7 +3,8 @@ from copy import copy
 from django import forms
 from django.conf.urls.defaults import patterns, url
 
-from hyperadmin.hyperobjects import Link, ResourceItem, ResourceState, global_state
+from hyperadmin.hyperobjects import Link, ResourceItem
+from hyperadmin.states import ResourceState
 
 
 class EmptyForm(forms.Form):
@@ -16,7 +17,6 @@ class BaseResource(object):
     resource_item_class = ResourceItem
     state_class = ResourceState
     form_class = EmptyForm
-    donot_copy = ['state'] #indicates which attributes should not be deepcopied
     
     def __init__(self, resource_adaptor, site_state, parent_resource=None):
         self.resource_adaptor = resource_adaptor
@@ -34,14 +34,20 @@ class BaseResource(object):
     
     def get_state_kwargs(self):
         return {
-            'resource': self,
-            'meta': {},
-            'substates': [self.site_state],
+            'site_state': self.site_state,
+            'data':self.get_state_data(),
+        }
+    
+    def get_state_data(self):
+        return {
+            'resource': self
         }
     
     def fork_state(self, **kwargs):
         new_resource = copy(self)
-        new_resource.state = self.state.fork(resource=new_resource, data=kwargs)
+        new_resource.state = self.state.copy()
+        new_resource.state['resource'] = new_resource
+        new_resource.state.update(kwargs)
         return new_resource
     
     def get_app_name(self):
@@ -84,7 +90,7 @@ class BaseResource(object):
     def get_view_kwargs(self):
         return {'resource':self,
                 'resource_site':self.site,
-                'global_state':dict(global_state),} #store a snapshot of the current global state
+                'global_state':dict(self.site.state.global_state),} #store a snapshot of the current global state
     
     def get_embedded_links(self):
         return []
@@ -143,8 +149,10 @@ class BaseResource(object):
             kwargs.setdefault('instance', item.instance)
         return kwargs
     
-    def generate_response(self, media_type, content_type, link):
-        return media_type.serialize(content_type=content_type, link=link, state=self.state)
+    def generate_response(self, media_type, content_type, link, state=None):
+        if state is None:
+            state = self.state.get('endpoint_state', self.state)
+        return media_type.serialize(content_type=content_type, link=link, state=state)
     
     def get_related_resource_from_field(self, field):
         return self.site.get_related_resource_from_field(field)

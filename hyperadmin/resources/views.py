@@ -5,7 +5,7 @@ from django.utils.cache import add_never_cache_headers
 
 import mimeparse
 
-from hyperadmin.hyperobjects import patch_global_state
+from hyperadmin.states import EndpointState
 
 
 class ConditionalAccessMixin(object):
@@ -51,6 +51,7 @@ class ResourceViewMixin(GetPatchMetaMixin, ConditionalAccessMixin):
     resource = None
     resource_site = None
     global_state = None
+    state_class = EndpointState
     view_class = None
     view_classes = []
     cacheable = False
@@ -90,7 +91,7 @@ class ResourceViewMixin(GetPatchMetaMixin, ConditionalAccessMixin):
         return media_type_cls(self)
     
     def generate_response(self, link):
-        return self.resource.generate_response(self.get_response_media_type(), self.get_response_type(), link)
+        return self.resource.generate_response(self.get_response_media_type(), self.get_response_type(), link, state=self.state)
     
     def get_request_form_kwargs(self):
         media_type = self.get_request_media_type()
@@ -104,7 +105,7 @@ class ResourceViewMixin(GetPatchMetaMixin, ConditionalAccessMixin):
         return {}
     
     def get_state_class(self):
-        return self.resource.get_state_class()
+        return self.state_class
     
     def get_view_classes(self):
         view_classes = list(self.view_classes)
@@ -119,30 +120,43 @@ class ResourceViewMixin(GetPatchMetaMixin, ConditionalAccessMixin):
                      'view_classes':self.get_view_classes(),
                      'item':self.get_item(),
                      'params':self.request.GET.copy(),
-                     'args':self.args,})
+                     'args':self.args,
+                     'endpoint':self,})
         return data
+    
+    def get_state_kwargs(self):
+        return {
+            'resource_state': self.resource.state,
+            'data':self.get_state_data(),
+            'meta':self.get_meta(),
+        }
     
     @method_decorator(csrf_exempt)
     def dispatch(self, request, *args, **kwargs):
         self.request = request
         self.args = args
         self.kwargs = kwargs
+        self.state = self.create_state()
+        #self.resource = self.resource.fork_state(endpoint_state=self.state, **self.state)
+        #self.state['resource_state'] = self.resource.state
         state_params = self.global_state or {}
-        #TODO rpatch_global_state
-        with patch_global_state(**state_params):
-            self.fork_state()
-            permission_response = self.resource.api_permission_check(self.request)
-            if permission_response is not None:
-                return permission_response
-            response = super(ResourceViewMixin, self).dispatch(request, *args, **kwargs)
-            if not self.cacheable:
-                add_never_cache_headers(response)
-            if hasattr(response, 'render'):
-                response.render()
-            return response
+        #TODO endpoint_state has special meaning: 
+        #self.site.fork_for_endpoint(self)?
+        #state_params['endpoint_state'] = self.state 
+        with self.resource.site_state.push_state(state_params):
+            with self.resource.state.patch_state(endpoint_state=self.state, **self.state):
+                #TODO anything we return must preserve the state @-@
+                permission_response = self.resource.api_permission_check(self.request)
+                if permission_response is not None:
+                    return permission_response
+                response = super(ResourceViewMixin, self).dispatch(request, *args, **kwargs)
+                if not self.cacheable:
+                    add_never_cache_headers(response)
+                if hasattr(response, 'render'):
+                    response.render()
+                return response
     
-    def fork_state(self):
-        self.resource = self.resource.fork_state(**self.get_state_data())
-        self.state = self.resource.state
-        self.state.meta.update(self.get_meta())
+    def create_state(self):
+        state = self.get_state_class()(**self.get_state_kwargs())
+        return state
 

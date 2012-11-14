@@ -7,6 +7,8 @@ from hyperadmin.clients.common import Client
 class BaseDjangoViewsClient(Client):
     """
     Host a set of django views that proxy to an api endpoint.
+    
+    Under the hood we create a new api with our own set of endpoints.
     """
     
     #set to False is we should respect the api endpoint's auth requirements
@@ -49,6 +51,14 @@ class BaseDjangoViewsClient(Client):
     
     def get_html_type_from_field(self, field):
         return self.api_endpoint.get_html_type_from_field(field)
+    
+    @property
+    def state(self):
+        return self.api_endpoint.state
+    
+    @property
+    def media_types(self):
+        return self.api_endpoint.media_types
 
 class DjangoViewsClient(BaseDjangoViewsClient):
     """

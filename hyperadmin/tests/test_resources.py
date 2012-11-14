@@ -31,7 +31,7 @@ class ResourceTestCase(unittest.TestCase):
         
         self.user = User.objects.get_or_create(username='superuser', is_staff=True, is_active=True, is_superuser=True)[0]
         self.resource = self.register_resource()
-        self.resource.generate_response = MagicMock(side_effect=HttpResponse)
+        self.resource.generate_response = MagicMock(return_value=HttpResponse())
         self.factory = SuperUserRequestFactory(user=self.user, HTTP_ACCEPT='text/html')
         
         self.resolver = GenericURLResolver(r'^', self.site.get_urls())
@@ -57,8 +57,8 @@ class ModelResourceTestCase(ResourceTestCase):
         view(request)
         
         media_type, response_type, link = self.resource.generate_response.call_args[0]
-        state = link.resource.state
-        
+        state = link.state
+        assert 'auth' in state
         self.assertEqual(len(state.get_resource_items()), User.objects.count())
         
     

@@ -41,8 +41,6 @@ class BaseModelResource(CRUDResource):
     detail_view = views.ModelDetailView
     delete_view = views.ModelDeleteView
     
-    donot_copy = CRUDResource.donot_copy + ['model']
-    
     @property
     def opts(self):
         return self.resource_adaptor._meta
@@ -174,8 +172,6 @@ class BaseModelResource(CRUDResource):
         return AdminForm
 
 class ModelResource(BaseModelResource):
-    donot_copy = BaseModelResource.donot_copy + ['inline_instances']
-    
     def __init__(self, *args, **kwargs):
         super(ModelResource, self).__init__(*args, **kwargs)
         self.initialize_inlines()
@@ -221,8 +217,6 @@ class InlineModelResource(BaseModelResource):
     model = None
     fk_name = None
     rel_name = None
-    
-    donot_copy = BaseModelResource.donot_copy + ['fk', 'rel_name']
     
     def __init__(self, parent):
         super(InlineModelResource, self).__init__(resource_adaptor=self.model, site_state=parent.site_state, parent_resource=parent)
