@@ -1,10 +1,9 @@
 from hyperadmin.resources.endpoints import EndpointLink, Endpoint
-from hyperadmin.resources.crud.endpoints import ListEndpoint, CreateEndpoint, DetailEndpoint as BaseDetailEndpoint, DeleteEndpoint as BaseDeleteEndpoint
+from hyperadmin.resources.crud.endpoints import ListEndpoint as BaseListEndpoint, CreateEndpoint, DetailEndpoint as BaseDetailEndpoint, DeleteEndpoint as BaseDeleteEndpoint
 
 
 class CreateUploadEndpointLink(EndpointLink):
-    def show_link(self):
-        return True
+    def show_link(self, **kwargs):
         return self.resource.has_add_permission()
     
     def get_link_kwargs(self, **kwargs):
@@ -23,6 +22,15 @@ class CreateUploadEndpointLink(EndpointLink):
                        'rel':'upload-link',}
         link_kwargs.update(kwargs)
         return super(CreateUploadEndpointLink, self).get_link_kwargs(**link_kwargs)
+    
+    def on_success(self, link):
+        return link
+
+class ListEndpoint(BaseListEndpoint):
+    def get_outbound_links(self):
+        links = super(ListEndpoint, self).get_outbound_links()
+        links.add_link('upload', link_factor='LO')
+        return links
 
 class CreateUploadEndpoint(Endpoint):
     name_suffix = 'upload'

@@ -53,7 +53,7 @@ class UploadLinkForm(forms.Form):
         else:
             name = self.storage.get_available_name(path)
         form_kwargs = {'initial':{'name':name, 'overwrite':overwrite}}
-        link = self.resource.get_create_link(form_kwargs=form_kwargs, rel='direct-upload')
+        link = self.resource.links['create'].get_link(form_kwargs=form_kwargs, rel='direct-upload')
         link.form.add_csrf_field(self.request)
         response_type = self.request.META.get('HTTP_ACCEPT', None)
         if response_type:
