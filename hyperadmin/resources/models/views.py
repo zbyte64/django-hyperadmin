@@ -7,7 +7,7 @@ class ModelMixin(object):
     queryset = None
     
     def get_queryset(self):
-        return self.resource.get_queryset(self.request.user)
+        return self.resource.get_queryset()
 
 class ModelCreateView(ModelMixin, CRUDCreateView):
     pass
@@ -38,12 +38,12 @@ class InlineModelMixin(object):
     
     def get_parent(self):
         if not hasattr(self, '_parent'):
-            queryset = self.resource.parent.get_queryset(self.request.user)
+            queryset = self.resource.parent.get_queryset()
             self._parent = queryset.get(pk=self.kwargs['pk'])
         return self._parent
     
     def get_queryset(self):
-        return self.resource.get_queryset(self.get_parent(), self.request.user)
+        return self.resource.get_queryset(self.get_parent())
 
 class InlineModelCreateView(InlineModelMixin, ModelCreateView):
     pass

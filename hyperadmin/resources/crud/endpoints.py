@@ -11,8 +11,7 @@ class ListEndpointLink(EndpointLink):
         return super(ListEndpointLink, self).get_link_kwargs(**link_kwargs)
 
 class CreateEndpointLink(EndpointLink):
-    def show_link(self):
-        return True
+    def show_link(self, **kwargs):
         return self.resource.has_add_permission()
     
     def get_link_kwargs(self, **kwargs):
@@ -32,11 +31,10 @@ class CreateEndpointLink(EndpointLink):
         link_kwargs.update(kwargs)
         return super(CreateEndpointLink, self).get_link_kwargs(**link_kwargs)
 
+#TODO consider: Update vs Detail link
 class UpdateEndpointLink(EndpointLink):
-    def show_link(self):
-        return True
-        return not self.state.has_view_class('delete_confirmation')
-        return self.resource.has_add_permission()
+    def show_link(self, **kwargs):
+        return self.resource.has_change_permission(item=kwargs.get('item', None))
     
     def get_link_kwargs(self, **kwargs):
         item = kwargs.pop('item')
@@ -57,9 +55,8 @@ class UpdateEndpointLink(EndpointLink):
         return super(UpdateEndpointLink, self).get_link_kwargs(**link_kwargs)
 
 class DeleteEndpointLink(EndpointLink):
-    def show_link(self):
-        return True
-        return self.resource.has_delete_permission()
+    def show_link(self, **kwargs):
+        return self.resource.has_delete_permission(item=kwargs.get('item', None))
     
     def get_link_kwargs(self, **kwargs):
         item = kwargs.pop('item')
@@ -90,8 +87,7 @@ class ListEndpoint(Endpoint):
     
     def get_outbound_links(self):
         links = super(ListEndpoint, self).get_outbound_links()
-        if 'create' in self.resource.links and self.resource.links['create'].show_link():
-            links.append(self.resource.links['create'].get_link(link_factor='LO'))
+        links.add_link('create', link_factor='LO')
         return links
 
 class CreateEndpoint(Endpoint):
@@ -118,14 +114,10 @@ class DetailEndpoint(Endpoint):
     
     def get_item_outbound_links(self, item):
         links = super(DetailEndpoint, self).get_item_outbound_links(item)
-        #TODO maybe something like:
-        #self.resources.add_link_if_active(links, 'delete', link_factor='LO')
-        if self.resource.links['delete'].show_link():
-            links.append(self.resource.links['delete'].get_link(link_factor='LO'))
+        links.add_link('delete', item=item, link_factor='LO')
         return links
     
     def get_url(self, item):
-        print 'detail get url:', item
         return super(DetailEndpoint, self).get_url(pk=item.instance.pk)
 
 class DeleteEndpoint(Endpoint):

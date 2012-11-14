@@ -4,7 +4,7 @@ from django import forms
 from django.conf.urls.defaults import patterns
 from django.utils.datastructures import SortedDict
 
-from hyperadmin.hyperobjects import Link, ResourceItem
+from hyperadmin.hyperobjects import Link, LinkCollection, ResourceItem
 from hyperadmin.states import ResourceState
 
 
@@ -114,16 +114,18 @@ class BaseResource(object):
                 'global_state':dict(self.site.state.global_state),} #store a snapshot of the current global state
     
     def get_embedded_links(self):
-        return []
+        return LinkCollection(self)
     
     def get_item_embedded_links(self, item):
-        return []
+        return LinkCollection(self)
     
     def get_outbound_links(self):
-        return self.get_breadcrumbs()
+        links = LinkCollection(self)
+        links.extend(self.get_breadcrumbs())
+        return links
     
     def get_item_outbound_links(self, item):
-        return []
+        return LinkCollection(self)
     
     def get_indexes(self):
         return {}
@@ -132,29 +134,29 @@ class BaseResource(object):
         raise NotImplementedError
     
     def get_index_queries(self):
-        return []
+        return LinkCollection(self)
     
     def get_templated_queries(self):
-        return []
+        return LinkCollection(self)
     
     def get_item_templated_queries(self, item):
-        return []
+        return LinkCollection(self)
     
     #TODO find a better name
     def get_ln_links(self):
-        return []
+        return LinkCollection(self)
     
     #TODO find a better name
     def get_item_ln_links(self, item):
-        return []
+        return LinkCollection(self)
     
     #TODO find a better name
     def get_idempotent_links(self):
-        return []
+        return LinkCollection(self)
     
     #TODO find a better name
     def get_item_idempotent_links(self, item):
-        return []
+        return LinkCollection(self)
     
     def get_item_url(self, item):
         return None
@@ -180,9 +182,6 @@ class BaseResource(object):
     
     def get_html_type_from_field(self, field):
         return self.site.get_html_type_from_field(field)
-    
-    def get_child_resource_links(self):
-        return []
     
     def get_absolute_url(self):
         raise NotImplementedError
@@ -212,7 +211,7 @@ class BaseResource(object):
         return self.get_resource_link(rel='breadcrumb')
     
     def get_breadcrumbs(self):
-        breadcrumbs = []
+        breadcrumbs = LinkCollection(self)
         if self.parent:
             breadcrumbs = self.parent.get_breadcrumbs()
         breadcrumbs.append(self.get_breadcrumb())

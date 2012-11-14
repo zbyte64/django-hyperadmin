@@ -130,6 +130,12 @@ Variables that should be accessible to all resources and endpoints go here.
 Typically put in "auth" which is the user object making the requests
 '''
 
+def push_session(state):
+    return SESSION_STATE.push_state(state)
+
+def patch_session(**kwargs):
+    return SESSION_STATE.patch_state(**kwargs)
+
 class State(MergeDict):
     def __init__(self, substates=[], data={}):
         self.active_dictionary = dict()

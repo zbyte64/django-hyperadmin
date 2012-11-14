@@ -21,13 +21,13 @@ class CRUDResourceViewMixin(ResourceViewMixin):
         return kwargs
     
     def can_add(self):
-        return self.resource.has_add_permission(self.request.user)
+        return self.resource.has_add_permission()
     
-    def can_change(self, instance=None):
-        return self.resource.has_change_permission(self.request.user, instance)
+    def can_change(self, item=None):
+        return self.resource.has_change_permission(item)
     
-    def can_delete(self, instance=None):
-        return self.resource.has_delete_permission(self.request.user, instance)
+    def can_delete(self, item=None):
+        return self.resource.has_delete_permission(item)
     
     def get_create_link(self, form_kwargs=None, **link_kwargs):
         if form_kwargs is None: form_kwargs = dict()
@@ -167,8 +167,7 @@ class CRUDDeleteView(CRUDDetailMixin, CRUDView):
         return self.generate_response(self.get_delete_link(use_request_url=True))
     
     def post(self, request, *args, **kwargs):
-        self.object = self.get_object()
-        if not self.can_delete(self.object):
+        if not self.can_delete(self.get_item()):
             return http.HttpResponseForbidden(_(u"You may not delete that object"))
         
         form_link = self.get_delete_link()
@@ -187,8 +186,7 @@ class CRUDDetailView(CRUDDetailMixin, CRUDView):
         return self.generate_response(self.get_update_link(use_request_url=True))
     
     def put(self, request, *args, **kwargs):
-        self.object = self.get_object()
-        if not self.can_change(self.object):
+        if not self.can_change(self.get_item()):
             return http.HttpResponseForbidden(_(u"You may not modify that object"))
         
         form_kwargs = self.get_request_form_kwargs()
@@ -199,8 +197,7 @@ class CRUDDetailView(CRUDDetailMixin, CRUDView):
     post = put
     
     def delete(self, request, *args, **kwargs):
-        self.object = self.get_object()
-        if not self.can_delete(self.object):
+        if not self.can_delete(self.get_item()):
             return http.HttpResponseForbidden(_(u"You may not delete that object"))
         
         form_link = self.get_restul_delete_link()

@@ -16,7 +16,7 @@ class EndpointLink(object):
     def state(self):
         return self.endpoint.state
     
-    def show_link(self):
+    def show_link(self, **kwargs):
         return True
     
     def get_link_kwargs(self, **kwargs):
@@ -90,7 +90,7 @@ class Endpoint(object):
     def get_url(self, **kwargs):
         return self.resource.reverse(self.get_url_name(), **kwargs)
     
-    #TODO do we define links here?
+    #TODO better name => get_internal_links?
     def get_links(self):
         """
         return a dictionary of endpoint links

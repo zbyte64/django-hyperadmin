@@ -181,6 +181,27 @@ class Link(object):
             setattr(a_clone, key, value)
         return a_clone
 
+class LinkCollection(list):
+    def __init__(self, resource):
+        self.resource_state = resource.state
+    
+    @property
+    def resource(self):
+        return self.resource_state['resource']
+    
+    def add_link(self, link_name, **kwargs):
+        """
+        Adds the specified link from the resource.
+        This will only add the link if it exists and the person is allowed to view it.
+        """
+        if link_name not in self.resource.links:
+            return False
+        endpoint_link = self.resource.links[link_name]
+        if not endpoint_link.show_link(**kwargs):
+            return False
+        link = endpoint_link.get_link(**kwargs)
+        self.append(link)
+        return link
 
 class Namespace(object):
     """
@@ -204,12 +225,16 @@ class ResourceItem(object):
     form_class = None
     
     def __init__(self, resource, instance):
-        self.state = resource.state.get('endpoint_state', resource.state)
+        self.resource_state = resource.state
         self.instance = instance
     
     @property
     def resource(self):
         return self.state.resource
+    
+    @property
+    def state(self):
+        return self.resource_state.get('endpoint_state', self.resource_state)
     
     def get_embedded_links(self):
         return self.state.get_item_embedded_links(self)

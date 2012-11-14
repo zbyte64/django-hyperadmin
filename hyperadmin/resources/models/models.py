@@ -1,7 +1,7 @@
 from django.conf.urls.defaults import patterns, url, include
 from django import forms
 
-from hyperadmin.hyperobjects import Link, Namespace
+from hyperadmin.hyperobjects import Namespace
 from hyperadmin.resources.crud.crud import CRUDResource
 from hyperadmin.resources.models import views
 from hyperadmin.resources.models.changelist import ModelChangeList
@@ -63,7 +63,7 @@ class BaseModelResource(CRUDResource):
         return kwargs
     
     def get_primary_query(self, **kwargs):
-        return self.get_queryset(user=self.state['auth'])
+        return self.get_queryset()
     
     def get_indexes(self):
         from hyperadmin.resources.indexes import Index
@@ -120,13 +120,14 @@ class BaseModelResource(CRUDResource):
     def lookup_allowed(self, lookup, value):
         return True #TODO
     
-    def get_queryset(self, user):
+    def get_queryset(self):
         queryset = self.resource_adaptor.objects.all()
-        if not self.has_change_permission(user):
+        if not self.has_change_permission():
             queryset = queryset.none()
         return queryset
     
-    def has_add_permission(self, user):
+    def has_add_permission(self):
+        user = self.state['auth']
         if self.opts.auto_created:
             # We're checking the rights to an auto-created intermediate model,
             # which doesn't have its own individual permissions. The user needs
@@ -136,7 +137,13 @@ class BaseModelResource(CRUDResource):
         return user.has_perm(
             self.opts.app_label + '.' + self.opts.get_add_permission())
 
-    def has_change_permission(self, user, obj=None):
+    def has_change_permission(self, item=None):
+        user = self.state['auth']
+        
+        if item:
+            obj = item.instance
+        else:
+            obj = None
         opts = self.opts
         if opts.auto_created and hasattr(self, 'parent_model'):
             # The model was auto-created as intermediary for a
@@ -146,15 +153,17 @@ class BaseModelResource(CRUDResource):
                     opts = field.rel.to._meta
                     break
         return user.has_perm(
-            opts.app_label + '.' + opts.get_change_permission())
+            opts.app_label + '.' + opts.get_change_permission(), obj)
 
-    def has_delete_permission(self, user, obj=None):
+    def has_delete_permission(self, item=None):
+        user = self.state['auth']
+        #obj = item.instance
         if self.opts.auto_created:
             # We're checking the rights to an auto-created intermediate model,
             # which doesn't have its own individual permissions. The user needs
             # to have the change permission for the related model in order to
             # be able to do anything with the intermediate model.
-            return self.has_change_permission(user, obj)
+            return self.has_change_permission(item)
         return user.has_perm(
             self.opts.app_label + '.' + self.opts.get_delete_permission())
         
@@ -230,15 +239,15 @@ class InlineModelResource(BaseModelResource):
         if self.rel_name is None:
             self.rel_name = RelatedObject(self.fk.rel.to, self.model, self.fk).get_accessor_name()
     
-    def get_queryset(self, parent, user):
+    def get_queryset(self, parent):
         queryset = self.resource_adaptor.objects.all()
         queryset = queryset.filter(**{self.fk.name:parent})
-        if not self.has_change_permission(user):
+        if not self.has_change_permission():
             queryset = queryset.none()
         return queryset
     
     def get_primary_query(self, **kwargs):
-        return self.get_queryset(parent=self.state['parent'], user=self.state['auth'])
+        return self.get_queryset(parent=self.state['parent'])
     
     def get_base_url_name(self):
         return '%s_%s_%s_' % (self.parent.app_name, self.parent.resource_name, self.rel_name)

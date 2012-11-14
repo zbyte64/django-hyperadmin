@@ -58,13 +58,6 @@ class ApplicationResource(BaseResource):
         links.extend(item.instance.get_outbound_links())
         return links
     
-    def get_child_resource_links(self):
-        links = list()
-        for key, resource in self.resource_adaptor.iteritems():
-            resource_link = resource.get_resource_link(rel='child-resource')
-            links.append(resource_link)
-        return links
-    
     def get_prompt(self):
         return self.app_name.replace('-',' ').replace('_', ' ')
     

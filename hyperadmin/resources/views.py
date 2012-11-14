@@ -5,7 +5,7 @@ from django.utils.cache import add_never_cache_headers
 
 import mimeparse
 
-from hyperadmin.states import EndpointState
+from hyperadmin.states import EndpointState, push_session
 
 
 class ConditionalAccessMixin(object):
@@ -143,7 +143,6 @@ class ResourceViewMixin(GetPatchMetaMixin, ConditionalAccessMixin):
         self.request = request
         self.args = args
         self.kwargs = kwargs
-        self.state = self.create_state()
         #self.resource = self.resource.fork_state(endpoint_state=self.state, **self.state)
         #self.state['resource_state'] = self.resource.state
         #TODO endpoint_state has special meaning: 
@@ -152,7 +151,8 @@ class ResourceViewMixin(GetPatchMetaMixin, ConditionalAccessMixin):
         session_params = self.get_session_data()
         if self.global_state:
             session_params.update(self.global_state)
-        with self.state.push_session(session_params):
+        with push_session(session_params):
+            self.state = self.create_state()
             with self.resource.state.patch_state(endpoint_state=self.state, **self.state):
                 #TODO anything we return must preserve the state @-@
                 permission_response = self.resource.api_permission_check(self.request)

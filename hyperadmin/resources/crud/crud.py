@@ -1,6 +1,5 @@
 from django.core.paginator import Paginator
 
-from hyperadmin.hyperobjects import Link
 from hyperadmin.resources.resources import BaseResource
 from hyperadmin.resources.indexes import PrimaryIndex
 from hyperadmin.resources.crud.changelist import ChangeList
@@ -52,130 +51,13 @@ class CRUDResource(BaseResource):
     def get_item_url(self, item):
         return self.links['update'].get_url(item=item)
     
-    '''
-    def get_add_url(self):
-        return self.reverse('%sadd' % self.get_base_url_name())
-    
-    def get_item_url(self, item):
-        return self.reverse('%sdetail' % self.get_base_url_name(), pk=item.instance.pk)
-    
-    def get_delete_url(self, item):
-        return self.reverse('%sdelete' % self.get_base_url_name(), pk=item.instance.pk)
-    
-    def get_absolute_url(self):
-        return self.reverse('%slist' % self.get_base_url_name())
-    
-    #CRUD Methods are based off: (which backbone appears to agree with)
-    #http://en.wikipedia.org/wiki/Create,_read,_update_and_delete
-    
-    def get_create_link(self, form_kwargs=None, **kwargs):
-        if form_kwargs is None:
-            form_kwargs = {}
-        form_kwargs = self.get_form_kwargs(**form_kwargs)
-        
-        link_kwargs = {'url':self.get_add_url(),
-                       'resource':self,
-                       'on_submit':self.handle_create_submission,
-                       'method':'POST',
-                       'form_kwargs':form_kwargs,
-                       'form_class': self.get_form_class(),
-                       'prompt':'create',
-                       'rel':'create',}
-        link_kwargs.update(kwargs)
-        create_link = Link(**link_kwargs)
-        return create_link
-    
-    def get_restful_create_link(self, **kwargs):
-        kwargs['url'] = self.get_absolute_url()
-        return self.get_create_link(**kwargs)
-    
-    def show_create_link(self):
-        return not self.state.item and not self.state.has_view_class('change_form')
-    
-    def get_item_link(self, item, **kwargs):
-        kwargs['on_submit'] = lambda link, submit_kwargs: self.get_update_link(item)
-        return super(CRUDResource, self).get_item_link(item, **kwargs)
-    
-    def get_update_link(self, item, form_kwargs=None, **kwargs):
-        if form_kwargs is None:
-            form_kwargs = {}
-        form_kwargs = self.get_form_kwargs(item, **form_kwargs)
-        link_kwargs = {'url':item.get_absolute_url(),
-                       'resource':self,
-                       'on_submit':self.handle_update_submission,
-                       'method':'POST',
-                       'form_class':item.get_form_class(),
-                       'form_kwargs':form_kwargs,
-                       'prompt':'update',
-                       'rel':'update',}
-        link_kwargs.update(kwargs)
-        update_link = Link(**link_kwargs)
-        return update_link
-    
-    def get_restful_update_link(self, **kwargs):
-        kwargs['method'] = 'PUT'
-        return self.get_update_link(**kwargs)
-    
-    def show_update_link(self, item):
-        return not self.state.has_view_class('delete_confirmation')
-    
-    def get_delete_link(self, item, **kwargs):
-        link_kwargs = {'url':self.get_delete_url(item),
-                       'resource':self,
-                       'on_submit':self.handle_delete_submission,
-                       'rel':'delete',
-                       'prompt':'delete',
-                       'class':'btn-danger', #TODO
-                       'method':'POST'}
-        link_kwargs.update(kwargs)
-        delete_link = Link(**link_kwargs)
-        return delete_link
-    
-    def get_restful_delete_link(self, item, **kwargs):
-        kwargs['url'] = item.get_absolute_url()
-        kwargs['method'] = 'DELETE'
-        return self.get_delete_link(item, **kwargs)
-    
-    def show_delete_link(self, item):
-        return not self.state.has_view_class('delete_confirmation')
-    
-    def handle_create_submission(self, link, submit_kwargs):
-        form = link.get_form(**submit_kwargs)
-        if form.is_valid():
-            instance = form.save()
-            resource_item = self.get_resource_item(instance)
-            return self.on_create_success(resource_item)
-        return link.clone(form=form)
-    
-    def on_create_success(self, item):
-        return self.get_item_link(item)
-    
-    def handle_update_submission(self, link, submit_kwargs):
-        form = link.get_form(**submit_kwargs)
-        if form.is_valid():
-            instance = form.save()
-            resource_item = self.get_resource_item(instance)
-            return self.on_update_success(resource_item)
-        return link.clone(form=form)
-    
-    def on_update_success(self, item):
-        return self.get_update_link(item)
-    
-    def handle_delete_submission(self, link, submit_kwargs):
-        instance = self.state.item.instance
-        instance.delete()
-        return self.on_delete_success(self.state.item)
-    
-    def on_delete_success(self, item):
-        return self.get_resource_link()
-    '''
-    def has_add_permission(self, user):
+    def has_add_permission(self):
         return True
     
-    def has_change_permission(self, user, obj=None):
+    def has_change_permission(self, item=None):
         return True
     
-    def has_delete_permission(self, user, obj=None):
+    def has_delete_permission(self, item=None):
         return True
     
     def get_indexes(self):
@@ -189,39 +71,7 @@ class CRUDResource(BaseResource):
         if 'changelist' in self.state:
             links += self.get_changelist_links()
         return links
-    '''
-    def get_outbound_links(self):
-        links = super(CRUDResource, self).get_outbound_links()
-        if self.show_create_link():
-            links.append(self.get_create_link(link_factor='LO'))
-        return links
     
-    def get_item_outbound_links(self, item):
-        links = super(CRUDResource, self).get_item_outbound_links(item)
-        if self.show_delete_link(item):
-            links.append(self.get_delete_link(item=item, link_factor='LO'))
-        return links
-    
-    def get_idempotent_links(self):
-        links = super(CRUDResource, self).get_idempotent_links()
-        if self.show_create_link():
-            links.append(self.get_create_link())
-        return links
-    
-    def get_item_ln_links(self, item):
-        links = super(CRUDResource, self).get_item_ln_links(item)
-        if self.show_update_link():
-            links.append(self.get_update_link(item=item))
-        return links
-    
-    def get_item_idempotent_links(self, item):
-        links = super(CRUDResource, self).get_item_idempotent_links(item)
-        if self.show_delete_link(item):
-            links.append(self.get_delete_link(item=item))
-        else:
-            links.append(self.get_restful_delete_link(item=item))
-        return links
-    '''
     def get_item_breadcrumb(self, item):
         return self.get_item_link(item, rel='breadcrumb')
     
