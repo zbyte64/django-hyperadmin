@@ -133,13 +133,14 @@ class CRUDListView(CRUDView):
             data['display_fields'].append({'prompt':field.label})
         return data
     
-    def fork_state(self):
-        super(CRUDListView, self).fork_state()
-        self.state['changelist'] = self.resource.get_changelist()
-        if 'paginator' in self.state:
-            paginator = self.state['paginator']
-            self.state.meta['object_count'] = paginator.count
-            self.state.meta['number_of_pages'] = paginator.num_pages
+    def create_state(self):
+        state = super(CRUDListView, self).create_state()
+        state['changelist'] = self.resource.get_changelist(state=state)
+        if 'paginator' in state:
+            paginator = state['paginator']
+            state.meta['object_count'] = paginator.count
+            state.meta['number_of_pages'] = paginator.num_pages
+        return state
     
     def get_resource_item(self, instance):
         return self.resource.get_list_resource_item(instance)

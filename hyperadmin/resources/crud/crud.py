@@ -68,7 +68,7 @@ class CRUDResource(BaseResource):
     
     def get_index_queries(self):
         links = super(CRUDResource, self).get_index_queries()
-        if 'changelist' in self.state:
+        if self.state.get('changelist', None):
             links += self.get_changelist_links()
         return links
     
@@ -106,16 +106,18 @@ class CRUDResource(BaseResource):
         """
         return self.ordering or ()  # otherwise we might try to *None, which is bad ;)
     
-    def get_changelist_kwargs(self):
-        return {'resource': self,
-                'state':self.state,}
+    def get_changelist_kwargs(self, **kwargs):
+        params = {'resource': self,
+                  'state':self.state,}
+        params.update(kwargs)
+        return params
     
     def get_changelist_class(self):
         return self.changelist_class
     
-    def get_changelist(self):
+    def get_changelist(self, **kwargs):
         changelist_class = self.get_changelist_class()
-        kwargs = self.get_changelist_kwargs()
+        kwargs = self.get_changelist_kwargs(**kwargs)
         changelist = changelist_class(**kwargs)
         changelist.detect_sections()
         changelist.populate_state()

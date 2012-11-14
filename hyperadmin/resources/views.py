@@ -143,11 +143,7 @@ class ResourceViewMixin(GetPatchMetaMixin, ConditionalAccessMixin):
         self.request = request
         self.args = args
         self.kwargs = kwargs
-        #self.resource = self.resource.fork_state(endpoint_state=self.state, **self.state)
-        #self.state['resource_state'] = self.resource.state
-        #TODO endpoint_state has special meaning: 
-        #self.site.fork_for_endpoint(self)?
-        #state_params['endpoint_state'] = self.state
+        
         session_params = self.get_session_data()
         if self.global_state:
             session_params.update(self.global_state)
@@ -155,6 +151,7 @@ class ResourceViewMixin(GetPatchMetaMixin, ConditionalAccessMixin):
             self.state = self.create_state()
             with self.resource.state.patch_state(endpoint_state=self.state, **self.state):
                 #TODO anything we return must preserve the state @-@
+                self.pre_dispatch()
                 permission_response = self.resource.api_permission_check(self.request)
                 if permission_response is not None:
                     return permission_response
@@ -168,4 +165,11 @@ class ResourceViewMixin(GetPatchMetaMixin, ConditionalAccessMixin):
     def create_state(self):
         state = self.get_state_class()(**self.get_state_kwargs())
         return state
+    
+    def pre_dispatch(self):
+        """
+        Put actions that need to be done after the state is prepped but before the api call is made.
+        Typically extra state manipulation can go here
+        """
+        pass
 

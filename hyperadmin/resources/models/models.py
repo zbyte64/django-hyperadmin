@@ -212,7 +212,7 @@ class ModelResource(BaseModelResource):
         
         for inline in self.inline_instances:
             name = 'inline-%s' % inline.rel_name
-            inline = inline.fork_state(parent=item.instance, auth=self.state['auth'], namespace=name)
+            inline = inline.fork_state(parent=item.instance, namespace=name)
             assert inline.state.resource == inline
             assert inline.endpoints.values()[0].resource == inline
             link = inline.get_resource_link()
@@ -249,6 +249,9 @@ class InlineModelResource(BaseModelResource):
     def get_primary_query(self, **kwargs):
         return self.get_queryset(parent=self.state['parent'])
     
+    def get_changelist(self, **kwargs):
+        return None
+    
     def get_base_url_name(self):
         return '%s_%s_%s_' % (self.parent.app_name, self.parent.resource_name, self.rel_name)
     
@@ -261,18 +264,9 @@ class InlineModelResource(BaseModelResource):
             InlineDeleteEndpoint(self),
         ])
         return endpoints
-    '''
-    def get_add_url(self):
-        pk = self.state['parent'].pk
-        return self.reverse('%sadd' % self.get_base_url_name(), pk=pk)
     
-    def get_delete_url(self, item):
-        instance = item.instance
-        pk = getattr(instance, self.fk.name).pk
-        return self.reverse('%sdelete' % self.get_base_url_name(), pk=pk, inline_pk=instance.pk)
-    '''
     def get_item_url(self, item):
-        return self.links['update'].get_url(item)
+        return self.links['update'].get_url(item=item)
     
     def get_absolute_url(self):
         return self.links['list'].get_url()
