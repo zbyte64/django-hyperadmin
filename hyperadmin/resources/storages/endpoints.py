@@ -1,8 +1,8 @@
-from hyperadmin.resources.endpoints import EndpointLink, Endpoint
+from hyperadmin.resources.endpoints import LinkPrototype, Endpoint
 from hyperadmin.resources.crud.endpoints import ListEndpoint as BaseListEndpoint, CreateEndpoint, DetailEndpoint as BaseDetailEndpoint, DeleteEndpoint as BaseDeleteEndpoint
 
 
-class CreateUploadEndpointLink(EndpointLink):
+class CreateUploadLinkPrototype(LinkPrototype):
     def show_link(self, **kwargs):
         return self.resource.has_add_permission()
     
@@ -21,7 +21,7 @@ class CreateUploadEndpointLink(EndpointLink):
                        'prompt':'create upload link',
                        'rel':'upload-link',}
         link_kwargs.update(kwargs)
-        return super(CreateUploadEndpointLink, self).get_link_kwargs(**link_kwargs)
+        return super(CreateUploadLinkPrototype, self).get_link_kwargs(**link_kwargs)
     
     def on_success(self, link):
         return link
@@ -40,7 +40,7 @@ class CreateUploadEndpoint(Endpoint):
         return self.resource.upload_link_view
     
     def get_links(self):
-        return {'upload':CreateUploadEndpointLink(endpoint=self)}
+        return {'upload':CreateUploadLinkPrototype(endpoint=self)}
 
 class DetailEndpoint(BaseDetailEndpoint):
     url_suffix = r'^(?P<path>.+)/$'

@@ -1,16 +1,16 @@
-from hyperadmin.resources.endpoints import EndpointLink, Endpoint
+from hyperadmin.resources.endpoints import LinkPrototype, Endpoint
 
 
-class ListEndpointLink(EndpointLink):
+class ListLinkPrototype(LinkPrototype):
     def get_link_kwargs(self, **kwargs):
         link_kwargs = {'url':self.get_url(),
                        'resource':self,
                        'prompt':'list',
                        'rel':'list',}
         link_kwargs.update(kwargs)
-        return super(ListEndpointLink, self).get_link_kwargs(**link_kwargs)
+        return super(ListLinkPrototype, self).get_link_kwargs(**link_kwargs)
 
-class CreateEndpointLink(EndpointLink):
+class CreateLinkPrototype(LinkPrototype):
     def show_link(self, **kwargs):
         return self.resource.has_add_permission()
     
@@ -29,10 +29,10 @@ class CreateEndpointLink(EndpointLink):
                        'prompt':'create',
                        'rel':'create',}
         link_kwargs.update(kwargs)
-        return super(CreateEndpointLink, self).get_link_kwargs(**link_kwargs)
+        return super(CreateLinkPrototype, self).get_link_kwargs(**link_kwargs)
 
 #TODO consider: Update vs Detail link
-class UpdateEndpointLink(EndpointLink):
+class UpdateLinkPrototype(LinkPrototype):
     def show_link(self, **kwargs):
         return self.resource.has_change_permission(item=kwargs.get('item', None))
     
@@ -52,9 +52,9 @@ class UpdateEndpointLink(EndpointLink):
                        'prompt':'update',
                        'rel':'update',}
         link_kwargs.update(kwargs)
-        return super(UpdateEndpointLink, self).get_link_kwargs(**link_kwargs)
+        return super(UpdateLinkPrototype, self).get_link_kwargs(**link_kwargs)
 
-class DeleteEndpointLink(EndpointLink):
+class DeleteLinkPrototype(LinkPrototype):
     def show_link(self, **kwargs):
         return self.resource.has_delete_permission(item=kwargs.get('item', None))
     
@@ -67,7 +67,7 @@ class DeleteEndpointLink(EndpointLink):
                        'prompt':'delete',
                        'rel':'delete',}
         link_kwargs.update(kwargs)
-        return super(DeleteEndpointLink, self).get_link_kwargs(**link_kwargs)
+        return super(DeleteLinkPrototype, self).get_link_kwargs(**link_kwargs)
     
     def handle_submission(self, link, submit_kwargs):
         instance = self.resource.state.item.instance
@@ -82,8 +82,8 @@ class ListEndpoint(Endpoint):
         return self.resource.list_view
     
     def get_links(self):
-        return {'list':ListEndpointLink(endpoint=self),
-                'rest-create':CreateEndpointLink(endpoint=self),}
+        return {'list':ListLinkPrototype(endpoint=self),
+                'rest-create':CreateLinkPrototype(endpoint=self),}
     
     def get_outbound_links(self):
         links = super(ListEndpoint, self).get_outbound_links()
@@ -98,7 +98,7 @@ class CreateEndpoint(Endpoint):
         return self.resource.add_view
     
     def get_links(self):
-        return {'create':CreateEndpointLink(endpoint=self)}
+        return {'create':CreateLinkPrototype(endpoint=self)}
 
 class DetailEndpoint(Endpoint):
     name_suffix = 'detail'
@@ -108,9 +108,9 @@ class DetailEndpoint(Endpoint):
         return self.resource.detail_view
     
     def get_links(self):
-        return {'update':UpdateEndpointLink(endpoint=self),
-                'rest-update':UpdateEndpointLink(endpoint=self, link_kwargs={'method':'PUT'}),
-                'rest-delete':DeleteEndpointLink(endpoint=self, link_kwargs={'method':'DELETE'}),}
+        return {'update':UpdateLinkPrototype(endpoint=self),
+                'rest-update':UpdateLinkPrototype(endpoint=self, link_kwargs={'method':'PUT'}),
+                'rest-delete':DeleteLinkPrototype(endpoint=self, link_kwargs={'method':'DELETE'}),}
     
     def get_item_outbound_links(self, item):
         links = super(DetailEndpoint, self).get_item_outbound_links(item)
@@ -128,7 +128,7 @@ class DeleteEndpoint(Endpoint):
         return self.resource.delete_view
     
     def get_links(self):
-        return {'delete':DeleteEndpointLink(endpoint=self)}
+        return {'delete':DeleteLinkPrototype(endpoint=self)}
     
     def get_url(self, item):
         return super(DeleteEndpoint, self).get_url(pk=item.instance.pk)

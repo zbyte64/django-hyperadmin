@@ -3,7 +3,7 @@ from django.conf.urls.defaults import url
 from hyperadmin.hyperobjects import Link
 
 
-class EndpointLink(object):
+class LinkPrototype(object):
     def __init__(self, endpoint, link_kwargs={}):
         self.endpoint = endpoint
         self.link_kwargs = link_kwargs

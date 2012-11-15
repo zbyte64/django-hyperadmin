@@ -47,7 +47,10 @@ class Index(object):
             return self.paginator_class(index, **kwargs)
         return self.resource.get_paginator(index, **kwargs)
     
-    def get_master_link(self):
+    def get_advaned_link(self):
+        """
+        Return a link with all the options in one form, ignores pagination
+        """
         pass
 
 class PrimaryIndex(Index):

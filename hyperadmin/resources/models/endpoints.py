@@ -1,4 +1,3 @@
-from hyperadmin.resources.endpoints import EndpointLink, Endpoint
 from hyperadmin.resources.crud.endpoints import ListEndpoint, CreateEndpoint, DetailEndpoint, DeleteEndpoint
 
 class InlineListEndpoint(ListEndpoint):
