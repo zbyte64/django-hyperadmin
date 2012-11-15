@@ -11,7 +11,7 @@ class ClientMixin(object):
     
     def get_api_endpoint(self):
         for endpoint in self.resource.get_view_endpoints():
-            if endpoint['name'] == self.url_name:
+            if endpoint.name_suffix == self.url_name:
                 return endpoint
     
     def get_api_kwargs(self):
@@ -35,7 +35,7 @@ class ClientMixin(object):
             
             api_args = self.get_api_args()
             api_kwargs = self.get_api_kwargs()
-            self._api_response = endpoint['view'](self.request, *api_args, **api_kwargs)
+            self._api_response = endpoint.get_view()(self.request, *api_args, **api_kwargs)
         return self._api_response
     
     def get_state(self):
