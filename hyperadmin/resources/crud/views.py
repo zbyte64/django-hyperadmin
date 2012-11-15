@@ -149,9 +149,10 @@ class CRUDDetailMixin(object):
     def get_object(self):
         raise NotImplementedError
     
-    def fork_state(self):
-        super(CRUDDetailMixin, self).fork_state()
-        self.state.item = self.get_item()
+    def create_state(self):
+        state = super(CRUDDetailMixin, self).create_state()
+        state.item = self.get_item()
+        return state
     
     def get_item(self):
         if not getattr(self, 'object', None):

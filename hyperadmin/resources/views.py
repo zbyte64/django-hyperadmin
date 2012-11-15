@@ -135,7 +135,7 @@ class ResourceViewMixin(GetPatchMetaMixin, ConditionalAccessMixin):
         return {
             'resource_state': self.resource.state,
             'data':self.get_state_data(),
-            'meta':self.get_meta(),
+            'meta':{},
         }
     
     @method_decorator(csrf_exempt)
@@ -149,18 +149,25 @@ class ResourceViewMixin(GetPatchMetaMixin, ConditionalAccessMixin):
             session_params.update(self.global_state)
         with push_session(session_params):
             self.state = self.create_state()
-            with self.resource.state.patch_state(endpoint_state=self.state, **self.state):
+            self.state.meta = self.get_meta()
+            
+            resource_params = dict(self.state)
+            resource_params['endpoint_state'] = self.state
+            with self.resource.state.patch_state(**resource_params):
                 #TODO anything we return must preserve the state @-@
                 self.pre_dispatch()
                 permission_response = self.resource.api_permission_check(self.request)
                 if permission_response is not None:
                     return permission_response
-                response = super(ResourceViewMixin, self).dispatch(request, *args, **kwargs)
+                response = self.dispatch_api(request, *args, **kwargs)
                 if not self.cacheable:
                     add_never_cache_headers(response)
                 if hasattr(response, 'render'):
                     response.render()
                 return response
+    
+    def dispatch_api(self, request, *args, **kwargs):
+        return super(ResourceViewMixin, self).dispatch(request, *args, **kwargs)
     
     def create_state(self):
         state = self.get_state_class()(**self.get_state_kwargs())
