@@ -194,9 +194,9 @@ class LinkCollection(list):
         Adds the specified link from the resource.
         This will only add the link if it exists and the person is allowed to view it.
         """
-        if link_name not in self.resource.links:
+        if link_name not in self.resource.link_prototypes:
             return False
-        endpoint_link = self.resource.links[link_name]
+        endpoint_link = self.resource.link_prototypes[link_name]
         if not endpoint_link.show_link(**kwargs):
             return False
         link = endpoint_link.get_link(**kwargs)

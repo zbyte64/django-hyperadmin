@@ -1,4 +1,3 @@
-from hyperadmin.hyperobjects import Link, ResourceItem
 from hyperadmin.resources import BaseResource
 from hyperadmin.resources.auth import views
 from hyperadmin.resources.auth.forms import AuthenticationResourceForm
@@ -40,7 +39,7 @@ class AuthResource(BaseResource):
         return None #resource is accessible to all
     
     def get_absolute_url(self):
-        return self.links['login'].get_url()
+        return self.link_prototypes['login'].get_url()
     '''
     def get_idempotent_links(self):
         links = super(AuthResource, self).get_idempotent_links()

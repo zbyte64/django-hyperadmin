@@ -94,7 +94,7 @@ class StorageResource(CRUDResource):
         return kwargs
     
     def get_item_url(self, item):
-        return self.links['update'].get_url(item=item)
+        return self.link_prototypes['update'].get_url(item=item)
     
     #def get_outbound_links(self):
     #    links = super(StorageResource, self).get_outbound_links()

@@ -48,7 +48,7 @@ class ApplicationResource(BaseResource):
             return item.instance.get_absolute_url()
     
     def get_absolute_url(self):
-        return self.links['list'].get_url()
+        return self.link_prototypes['list'].get_url()
     
     def get_resource_items(self):
         return [self.get_resource_item(item) for item in self.get_items()]

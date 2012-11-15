@@ -31,7 +31,7 @@ class StorageMixin(object):
         form_kwargs['request'] = self.request
         link_kwargs = self.get_link_kwargs()
         link_kwargs.update({'form_kwargs': form_kwargs,})
-        return self.resource.links['upload'].get_link(**link_kwargs)
+        return self.resource.link_prototypes['upload'].get_link(**link_kwargs)
 
 class StorageUploadLinkView(StorageMixin, CRUDView):
     view_class = 'change_form'

@@ -82,12 +82,12 @@ class BaseResource(object):
         return self._endpoints
     
     @property
-    def links(self):
-        if not hasattr(self, '_links'):
-            self._links = dict()
+    def link_prototypes(self):
+        if not hasattr(self, '_link_prototypes'):
+            self._link_prototypes = dict()
             for endpoint in self.endpoints.itervalues():
-                self._links.update(endpoint.get_links())
-        return self._links
+                self._link_prototypes.update(endpoint.get_links())
+        return self._link_prototypes
     
     def get_urls(self):
         urlpatterns = self.get_extra_urls()

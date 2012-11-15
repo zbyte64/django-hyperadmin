@@ -33,9 +33,8 @@ class LoginLinkPrototype(LinkPrototype):
         return self.resource.site.site_resource.get_resource_link()
 
 class LogoutLinkPrototype(LinkPrototype):
-    def show_link(self):
-        return True
-        return self.resource.has_add_permission()
+    def show_link(self, **kwargs):
+        return self.state.session.get('authenticated', False) or self.state.session['auth'].is_anonymous()
     
     def get_link_kwargs(self, **kwargs):
         
@@ -54,7 +53,7 @@ class LogoutLinkPrototype(LinkPrototype):
         return self.on_success()
     
     def on_success(self):
-        return self.resource.links['login'].get_link()
+        return self.resource.link_prototypes['login'].get_link()
 
 
 class LoginEndpoint(Endpoint):
@@ -70,8 +69,7 @@ class LoginEndpoint(Endpoint):
     
     def get_outbound_links(self):
         links = super(LoginEndpoint, self).get_outbound_links()
-        if 'logout' in self.resource.links and self.resource.links['logout'].show_link():
-            links.append(self.resource.links['logout'].get_link(link_factor='LO'))
+        links.add_link('logout', link_factor='LO')
         return links
 
 class LogoutEndpoint(Endpoint):

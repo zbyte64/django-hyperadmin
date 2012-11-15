@@ -266,10 +266,10 @@ class InlineModelResource(BaseModelResource):
         return endpoints
     
     def get_item_url(self, item):
-        return self.links['update'].get_url(item=item)
+        return self.link_prototypes['update'].get_url(item=item)
     
     def get_absolute_url(self):
-        return self.links['list'].get_url()
+        return self.link_prototypes['list'].get_url()
     
     def get_breadcrumbs(self):
         breadcrumbs = self.parent.get_breadcrumbs()

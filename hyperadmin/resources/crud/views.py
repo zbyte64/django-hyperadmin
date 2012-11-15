@@ -35,7 +35,7 @@ class CRUDResourceViewMixin(ResourceViewMixin):
         link_kwargs.update({'form_class': self.get_form_class(),
                             'form_kwargs': form_kwargs,})
         link_kwargs = self.get_link_kwargs(**link_kwargs)
-        return self.resource.links['create'].get_link(**link_kwargs)
+        return self.resource.link_prototypes['create'].get_link(**link_kwargs)
     
     def get_restful_create_link(self, form_kwargs=None, **link_kwargs):
         if form_kwargs is None: form_kwargs = dict()
@@ -43,7 +43,7 @@ class CRUDResourceViewMixin(ResourceViewMixin):
         link_kwargs.update({'form_class': self.get_form_class(),
                             'form_kwargs': form_kwargs,})
         link_kwargs = self.get_link_kwargs(**link_kwargs)
-        return self.resource.links['rest-create'].get_link(**link_kwargs)
+        return self.resource.link_prototypes['rest-create'].get_link(**link_kwargs)
     
     def get_update_link(self, form_kwargs=None, **link_kwargs):
         item = self.get_item()
@@ -53,7 +53,7 @@ class CRUDResourceViewMixin(ResourceViewMixin):
                             'form_kwargs': form_kwargs,
                             'item':item})
         link_kwargs = self.get_link_kwargs(**link_kwargs)
-        return self.resource.links['update'].get_link(**link_kwargs)
+        return self.resource.link_prototypes['update'].get_link(**link_kwargs)
     
     def get_restful_update_link(self, item, form_kwargs=None, **link_kwargs):
         if form_kwargs is None: form_kwargs = dict()
@@ -62,19 +62,19 @@ class CRUDResourceViewMixin(ResourceViewMixin):
                             'form_kwargs': form_kwargs,
                             'item':item})
         link_kwargs = self.get_link_kwargs(**link_kwargs)
-        return self.resource.links['rest-update'].get_link(**link_kwargs)
+        return self.resource.link_prototypes['rest-update'].get_link(**link_kwargs)
     
     def get_delete_link(self, form_kwargs=None, **link_kwargs):
         link_kwargs.update({'form_kwargs':form_kwargs,
                             'item':self.get_item(),})
         link_kwargs = self.get_link_kwargs(**link_kwargs)
-        return self.resource.links['delete'].get_link(**link_kwargs)
+        return self.resource.link_prototypes['delete'].get_link(**link_kwargs)
     
     def get_restful_delete_link(self, form_kwargs=None, **link_kwargs):
         link_kwargs.update({'form_kwargs':form_kwargs,
                             'item':self.get_item(),})
         link_kwargs = self.get_link_kwargs(**link_kwargs)
-        return self.resource.links['rest-delete'].get_link(**link_kwargs)
+        return self.resource.link_prototypes['rest-delete'].get_link(**link_kwargs)
     
     def get_list_link(self, form_kwargs=None, **link_kwargs):
         link_kwargs['form_kwargs'] = form_kwargs

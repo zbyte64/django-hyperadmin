@@ -68,7 +68,7 @@ class SiteResource(BaseResource):
         return links
     
     def get_absolute_url(self):
-        return self.links['list'].get_url()
+        return self.link_prototypes['list'].get_url()
     
     @property
     def applications(self):

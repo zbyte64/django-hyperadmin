@@ -15,15 +15,15 @@ class AuthViewMixin(ResourceViewMixin):
     
     def get_login_link(self, **form_kwargs):
         form_kwargs.update(self.get_form_kwargs())
-        return self.resource.links['login'].get_link(form_kwargs=form_kwargs)
+        return self.resource.link_prototypes['login'].get_link(form_kwargs=form_kwargs)
     
     def get_logout_link(self, **form_kwargs):
         form_kwargs.update(self.get_form_kwargs())
-        return self.resource.links['logout'].get_link(form_kwargs=form_kwargs)
+        return self.resource.link_prototypes['logout'].get_link(form_kwargs=form_kwargs)
     
     def get_restful_logout_link(self, **form_kwargs):
         form_kwargs.update(self.get_form_kwargs())
-        return self.resource.links['rest-logout'].get_link(form_kwargs=form_kwargs)
+        return self.resource.link_prototypes['rest-logout'].get_link(form_kwargs=form_kwargs)
     
     def get_active_link(self, **form_kwargs):
         if self.request.user.is_authenticated():
