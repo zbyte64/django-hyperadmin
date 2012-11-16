@@ -19,6 +19,7 @@ class LinkCollectionProvider(object):
         self.parent = parent
     
     def __getitem__(self, key):
+        #TODO what about item links?
         if self.parent:
             links = self.parent.links[key]
         else:
@@ -28,6 +29,13 @@ class LinkCollectionProvider(object):
             more_links = getattr(self.container, func_name)()
             links += more_links
         return links
+
+#TODO more like:
+#resource.links.get_<name>()
+#resource.links.get_item_<name>(item)
+#resource.links.add_<name>(link) #goes to that items internal state
+#resource.links.get_internal_<name>() #those belonging to this container
+#resource.links.get_internal_item_<name>(item)
 
 class BaseResource(object):
     resource_class = '' #hint to the client how this resource is used
