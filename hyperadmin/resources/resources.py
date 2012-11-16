@@ -13,6 +13,22 @@ class EmptyForm(forms.Form):
         self.instance = kwargs.pop('instance', None)
         super(EmptyForm, self).__init__(**kwargs)
 
+class LinkCollectionProvider(object):
+    def __init__(self, container, parent=None):
+        self.container = container
+        self.parent = parent
+    
+    def __getitem__(self, key):
+        if self.parent:
+            links = self.parent.links[key]
+        else:
+            links = LinkCollection() 
+        func_name = 'get_%s_links'
+        if hasattr(self.container, func_name):
+            more_links = getattr(self.container, func_name)()
+            links += more_links
+        return links
+
 class BaseResource(object):
     resource_class = '' #hint to the client how this resource is used
     resource_item_class = ResourceItem
@@ -24,6 +40,7 @@ class BaseResource(object):
         self.site_state = site_state
         self.parent = parent_resource
         self.state = self.create_state()
+        self.links = LinkCollectionProvider(self)
     
     @property
     def site(self):
