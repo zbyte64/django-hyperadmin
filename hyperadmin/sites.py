@@ -105,13 +105,16 @@ class ResourceSite(object):
     def get_view_kwargs(self):
         return {'resource_site':self,}
     
+    def get_login_url(self):
+        return self.site_resource.auth_resource.get_absolute_url()
+    
     def api_permission_check(self, request):
         if not request.user.is_authenticated():
-            redirect_to = self.reverse('authentication')
+            redirect_to = self.get_login_url()
             response = HttpResponseRedirect(redirect_to)
             return response
         if not request.user.is_staff:
-            redirect_to = self.reverse('authentication')
+            redirect_to = self.get_login_url()
             response = HttpResponse('Unauthorized', status=401)
             response['Location'] = iri_to_uri(redirect_to)
             return response
@@ -120,7 +123,6 @@ class ResourceSite(object):
         #TODO make more dynamic
         from django.forms import FileField
         from django.forms.models import ModelChoiceField
-        form = field.form
         if hasattr(field, 'field'): #CONSIDER internally we use boundfield
             field = field.field
         if isinstance(field, ModelChoiceField):
