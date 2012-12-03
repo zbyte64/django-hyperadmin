@@ -11,6 +11,7 @@ class Html5MediaType(MediaType):
     response_class = TemplateResponse
     recognized_media_types = [
         'text/html',
+        'text/plain',
         'application/xhtml+xml',
         'application/text-html',
         'application/x-www-form-urlencoded',

@@ -4,6 +4,9 @@ from hyperadmin.resources.endpoints import LinkPrototype, Endpoint
 
 
 class LoginLinkPrototype(LinkPrototype):
+    def show_link(self, **kwargs):
+        return not self.state.session.get('authenticated', True) or self.state.session['auth'].is_anonymous()
+    
     def get_link_kwargs(self, **kwargs):
         form_kwargs = kwargs.pop('form_kwargs', None)
         if form_kwargs is None:
@@ -34,7 +37,7 @@ class LoginLinkPrototype(LinkPrototype):
 
 class LogoutLinkPrototype(LinkPrototype):
     def show_link(self, **kwargs):
-        return self.state.session.get('authenticated', False) or self.state.session['auth'].is_anonymous()
+        return self.state.session.get('authenticated', False) or self.state.session['auth'].is_authenticated()
     
     def get_link_kwargs(self, **kwargs):
         

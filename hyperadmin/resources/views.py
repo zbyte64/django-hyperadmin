@@ -62,20 +62,22 @@ class ResourceViewMixin(GetPatchMetaMixin, ConditionalAccessMixin):
             src = self.patched_meta
         else:
             src = self.request.META
+        val = src.get('HTTP_ACCEPT', '')
         return mimeparse.best_match(
             self.resource_site.media_types.keys(), 
-            src.get('HTTP_ACCEPT', '')
-        )
+            val
+        ) or val
     
     def get_request_type(self, patch_meta=True):
         if patch_meta:
             src = self.patched_meta
         else:
             src = self.request.META
+        val = src.get('CONTENT_TYPE', src.get('HTTP_ACCEPT', ''))
         return mimeparse.best_match(
             self.resource_site.media_types.keys(), 
-            src.get('CONTENT_TYPE', src.get('HTTP_ACCEPT', ''))
-        )
+            val
+        ) or val
     
     def get_request_media_type(self):
         content_type = self.get_request_type()

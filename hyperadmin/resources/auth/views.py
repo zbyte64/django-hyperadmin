@@ -49,9 +49,12 @@ class AuthenticationResourceView(AuthViewMixin, View):
         return self.generate_response(response_link)
 
 class AuthenticationLogoutView(AuthViewMixin, View):
-    view_class = 'logout'
+    view_class = 'login'
     
     def get(self, request, *args, **kwargs):
+        return self.generate_response(self.get_logout_link())
+    
+    def post(self, request, *args, **kwargs):
         form_kwargs = self.get_request_form_kwargs()
         form_link = self.get_logout_link(**form_kwargs)
         response_link = form_link.submit()
