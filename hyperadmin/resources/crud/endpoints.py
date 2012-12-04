@@ -15,16 +15,12 @@ class CreateLinkPrototype(LinkPrototype):
         return self.resource.has_add_permission()
     
     def get_link_kwargs(self, **kwargs):
-        form_kwargs = kwargs.pop('form_kwargs', None)
-        if form_kwargs is None:
-            form_kwargs = {}
-        form_kwargs = self.resource.get_form_kwargs(**form_kwargs)
+        kwargs = super(CreateLinkPrototype, self).get_link_kwargs(**kwargs)
         
         link_kwargs = {'url':self.get_url(),
                        'resource':self,
                        'on_submit':self.handle_submission,
                        'method':'POST',
-                       'form_kwargs':form_kwargs,
                        'form_class': self.resource.get_form_class(),
                        'prompt':'create',
                        'rel':'create',}
@@ -37,17 +33,14 @@ class UpdateLinkPrototype(LinkPrototype):
         return self.resource.has_change_permission(item=kwargs.get('item', None))
     
     def get_link_kwargs(self, **kwargs):
-        item = kwargs.pop('item')
-        form_kwargs = kwargs.pop('form_kwargs', None)
-        if form_kwargs is None:
-            form_kwargs = {}
-        form_kwargs = self.resource.get_form_kwargs(item, **form_kwargs)
+        item = kwargs.get('item')
+        
+        kwargs = super(UpdateLinkPrototype, self).get_link_kwargs(**kwargs)
         
         link_kwargs = {'url':self.get_url(item=item),
                        'resource':self,
                        'on_submit':self.handle_submission,
                        'method':'POST',
-                       'form_kwargs':form_kwargs,
                        'form_class': item.get_form_class(),
                        'prompt':'update',
                        'rel':'update',}
@@ -59,7 +52,10 @@ class DeleteLinkPrototype(LinkPrototype):
         return self.resource.has_delete_permission(item=kwargs.get('item', None))
     
     def get_link_kwargs(self, **kwargs):
-        item = kwargs.pop('item')
+        item = kwargs.get('item')
+        
+        kwargs = super(DeleteLinkPrototype, self).get_link_kwargs(**kwargs)
+        
         link_kwargs = {'url':self.get_url(item=item),
                        'resource':self,
                        'on_submit':self.handle_submission,

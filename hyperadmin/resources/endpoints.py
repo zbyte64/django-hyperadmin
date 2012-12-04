@@ -19,8 +19,14 @@ class LinkPrototype(object):
     def show_link(self, **kwargs):
         return True
     
+    def get_form_kwargs(self, **kwargs):
+        form_kwargs = kwargs.get('form_kwargs', None) or {}
+        form_kwargs['item'] = kwargs.get('item', None)
+        return self.resource.get_form_kwargs(**form_kwargs)
+    
     def get_link_kwargs(self, **kwargs):
         kwargs.update(self.link_kwargs)
+        kwargs['form_kwargs'] = self.get_form_kwargs(**kwargs)
         return kwargs
     
     def get_link(self, **link_kwargs):

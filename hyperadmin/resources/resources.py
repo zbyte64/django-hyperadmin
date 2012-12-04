@@ -62,6 +62,7 @@ class BaseResource(object):
         new_resource.state = self.state.copy()
         new_resource.state['resource'] = new_resource
         new_resource.state.update(kwargs)
+        new_resource.links = LinkCollectionProvider(new_resource)
         return new_resource
     
     def get_app_name(self):
