@@ -5,6 +5,9 @@ from django.utils.http import urlencode
 from django.utils.datastructures import MergeDict
 from django.http import QueryDict
 
+from hyperadmin.hyperobjects import LinkCollectionProvider
+
+
 def assert_ids(merge_dict, ids=None):
     if ids is None:
         ids = set([id(merge_dict)])
@@ -213,42 +216,6 @@ class ResourceBoundMixin(object):
     
     meta = property(_get_meta, _set_meta)
     
-    def get_embedded_links(self):
-        return self.container.get_embedded_links() + self.get('embedded_links', [])
-    
-    def get_outbound_links(self):
-        return self.container.get_outbound_links() + self.get('outbound_links', [])
-    
-    def get_index_queries(self):
-        return self.container.get_index_queries() + self.get('index_queries', [])
-    
-    def get_templated_queries(self):
-        return self.container.get_templated_queries() + self.get('templated_queries', [])
-    
-    def get_ln_links(self):
-        return self.container.get_ln_links() + self.get('ln_links', [])
-    
-    def get_idempotent_links(self):
-        return self.container.get_idempotent_links() + self.get('idempotent_links', [])
-    
-    def get_item_embedded_links(self, item):
-        return self.container.get_item_embedded_links(item)
-    
-    def get_item_outbound_links(self, item):
-        return self.container.get_item_outbound_links(item)
-    
-    def get_item_templated_queries(self, item):
-        return self.container.get_item_templated_queries(item)
-    
-    def get_item_ln_links(self, item):
-        return self.container.get_item_ln_links(item)
-    
-    def get_item_idempotent_links(self, item):
-        return self.container.get_item_idempotent_links(item)
-    
-    def get_item_link(self, item):
-        return self.container.get_item_link(item)
-    
     def get_link_url(self, link):
         url = link.get_base_url()
         params = self.get('extra_get_params', None) or QueryDict('', mutable=True)
@@ -344,6 +311,21 @@ class ResourceState(ResourceBoundMixin, State):
     @property
     def namespace(self):
         return self.get('namespace', None)
+    
+    @property
+    def links(self):
+        return self.resource.links
+
+class EndpointStateLinkCollectionProvider(LinkCollectionProvider):
+    def _get_link_functions(self, attr):
+        functions = super(EndpointStateLinkCollectionProvider, self)._get_link_functions(attr)
+        key_name = attr[len('get_'):]
+        functions.append(lambda *args, **kwargs: self.container['links'].get(key_name, []))
+        return functions
+    
+    def add_link(self, key, link):
+        self.container['links'].setdefault(key, list())
+        self.container['links'][key].append(link)
 
 class EndpointState(ResourceBoundMixin, State):
     """
@@ -353,15 +335,16 @@ class EndpointState(ResourceBoundMixin, State):
         self.resource_state = resource_state
         super(EndpointState, self).__init__(substates=substates, data=data)
         self.meta = meta
+        self.links = EndpointStateLinkCollectionProvider(self, self.endpoint.links)
         
         #nuke previous state links
-        self.update({'embedded_links': [],
-                     'outbound_links': [],
-                     'templated_queries': [],
-                     'index_queries':[],
-                     'ln_links': [],
-                     'idempotent_links': [],
+        self.update({'links': {},
                      'extra_get_params':{},})
+    
+    def __setitem__(self, key, value):
+        if key == 'links':
+            assert isinstance(value, dict)
+        return super(EndpointState, self).__setitem__(key, value)
     
     @property
     def resource(self):
@@ -377,24 +360,6 @@ class EndpointState(ResourceBoundMixin, State):
     
     def get_dictionaries(self):
         return [self.session, self.global_state, self.active_dictionary, self.resource_state] + self.substates
-    
-    def add_embedded_link(self, link):
-        self['embedded_links'].append(link)
-    
-    def add_outbound_link(self, link):
-        self['outbound_links'].append(link)
-    
-    def add_index_query(self, link):
-        self['index_queries'].append(link)
-    
-    def add_templated_query(self, link):
-        self['templated_queries'].append(link)
-    
-    def add_ln_link(self, link):
-        self['ln_links'].append(link)
-    
-    def add_idempotent_link(self, link):
-        self['idemptotent_links'].append(link)
     
     def __copy__(self):
         substates = self.global_state.dicts + [self.active_dictionary] + list(self.substates)

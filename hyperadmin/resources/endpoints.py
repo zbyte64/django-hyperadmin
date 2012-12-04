@@ -1,6 +1,6 @@
 from django.conf.urls.defaults import url
 
-from hyperadmin.hyperobjects import Link
+from hyperadmin.hyperobjects import Link, LinkCollectionProvider
 
 
 class LinkPrototype(object):
@@ -54,6 +54,8 @@ class Endpoint(object):
     
     def __init__(self, resource):
         self.resource_state = resource.state
+        #TODO this does not allow for resource overide
+        self.links = LinkCollectionProvider(self, resource.links)
     
     @property
     def state(self):
@@ -97,47 +99,7 @@ class Endpoint(object):
         """
         return {}
     
+    def create_link_collection(self):
+        return self.resource.create_link_collection()
+    
     #TODO??? endpoints define related links to show; on update show delete link, on list show add link, etc
-    
-    def get_item_link(self, item):
-        return self.resource.get_item_link(item)
-    
-    def get_embedded_links(self):
-        return self.resource.get_embedded_links()
-    
-    def get_item_embedded_links(self, item):
-        return self.resource.get_item_embedded_links(item)
-    
-    def get_outbound_links(self):
-        return self.resource.get_outbound_links()
-    
-    def get_item_outbound_links(self, item):
-        return self.resource.get_item_embedded_links(item)
-    
-    def get_index_queries(self):
-        return self.resource.get_index_queries()
-    
-    def get_templated_queries(self):
-        return self.resource.get_templated_queries()
-    
-    def get_item_templated_queries(self, item):
-        return self.resource.get_item_templated_queries()
-    
-    #TODO find a better name
-    def get_ln_links(self):
-        return self.resource.get_ln_links()
-    
-    #TODO find a better name
-    def get_item_ln_links(self, item):
-        return self.resource.get_item_ln_links(item)
-    
-    #TODO find a better name
-    def get_idempotent_links(self):
-        return self.resource.get_idempotent_links()
-    
-    #TODO find a better name
-    def get_item_idempotent_links(self, item):
-        return self.resource.get_item_idemptotent_links(item)
-
-
-

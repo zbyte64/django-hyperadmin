@@ -19,8 +19,8 @@ class CollectionJSON(MediaType):
     def links_for_item(self, item):
         result = dict()
         links = list()
-        links.extend(item.get_embedded_links())
-        links.extend(item.get_outbound_links())
+        links.extend(item.links.get_item_embedded_links())
+        links.extend(item.links.get_item_outbound_links())
         result["links"] = [self.convert_link(link) for link in links]
         result["href"] = item.get_absolute_url()
         return result
@@ -64,9 +64,9 @@ class CollectionJSON(MediaType):
         
         #the following maps hfactor to this media type
         links = list()
-        links.extend(state.get_embedded_links())
-        links.extend(state.get_outbound_links())
-        queries = state.get_templated_queries() + state.get_index_queries()
+        links.extend(state.links.get_embedded_links())
+        links.extend(state.links.get_outbound_links())
+        queries = state.links.get_templated_queries() + state.links.get_index_queries()
         
         data = {
             "links": [self.convert_link(link) for link in links],
@@ -185,9 +185,9 @@ class CollectionHyperAdminJSON(CollectionNextJSON):
         resource_item = state.item
         
         if resource_item:
-            update_links = resource_item.get_ln_links() + resource_item.get_idempotent_links()
+            update_links = resource_item.links.get_item_ln_links() + resource_item.links.get_item_idempotent_links()
         else:
-            update_links = state.get_ln_links() + state.get_idempotent_links()
+            update_links = state.links.get_ln_links() + state.links.get_idempotent_links()
         #get_non_idempotent_updates
         #get_idempotent_updates
         if len(update_links):

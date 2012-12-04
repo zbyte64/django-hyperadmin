@@ -3,7 +3,7 @@
 {% block content %}
 <div class="hypermediaresource">
 {% block embedded_links %}
-{% with state.get_embedded_links as embedded_links %}
+{% with state.links.get_embedded_links as embedded_links %}
 {% if embedded_links %}
 <h2>Embedded Links</h2>
 <div id="embedded_links">
@@ -14,7 +14,7 @@
 {% endblock %}
 
 {% block outbound_links %}
-{% with state.get_outbound_links as outbound_links %}
+{% with state.links.get_outbound_links as outbound_links %}
 {% if outbound_links %}
 <h2>Outbound Links</h2>
 <div id="outbound_links">
@@ -25,7 +25,7 @@
 {% endblock %}
 
 {% block index_queries %}
-{% with state.get_index_queries as index_queries %}
+{% with state.links.get_index_queries as index_queries %}
 {% if index_queries %}
 <h2>Index Queries</h2>
 <div id=index_queries">
@@ -36,7 +36,7 @@
 {% endblock %}
 
 {% block templated_queries %}
-{% with state.get_templated_queries as templated_queries %}
+{% with state.links.get_templated_queries as templated_queries %}
 {% if templated_queries %}
 <h2>Templated Queries</h2>
 <div id=templated_queries">
@@ -47,7 +47,7 @@
 {% endblock %}
 
 {% block non_idempotent_updates %}
-{% with state.get_ln_links as non_idempotent_updates %}
+{% with state.links.get_ln_links as non_idempotent_updates %}
 {% if non_idempotent_updates %}
 <h2>Non-Idempotent Updates</h2>
 <div id="non_idempotent_updates">
@@ -58,7 +58,7 @@
 {% endblock %}
 
 {% block idempotent_updates %}
-{% with state.get_idempotent_links as idempotent_updates %}
+{% with state.links.get_idempotent_links as idempotent_updates %}
 {% if idempotent_updates %}
 <h2>Idempotent Updates</h2>
 <div id="idempotent_updates">

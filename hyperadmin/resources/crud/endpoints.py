@@ -86,7 +86,7 @@ class ListEndpoint(Endpoint):
                 'rest-create':CreateLinkPrototype(endpoint=self),}
     
     def get_outbound_links(self):
-        links = super(ListEndpoint, self).get_outbound_links()
+        links = self.create_link_collection()
         links.add_link('create', link_factor='LO')
         return links
 
@@ -113,7 +113,7 @@ class DetailEndpoint(Endpoint):
                 'rest-delete':DeleteLinkPrototype(endpoint=self, link_kwargs={'method':'DELETE'}),}
     
     def get_item_outbound_links(self, item):
-        links = super(DetailEndpoint, self).get_item_outbound_links(item)
+        links = self.create_link_collection()
         links.add_link('delete', item=item, link_factor='LO')
         return links
     

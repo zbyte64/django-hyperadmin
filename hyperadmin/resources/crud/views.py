@@ -86,7 +86,7 @@ class CRUDResourceViewMixin(ResourceViewMixin):
     
     def generate_response(self, link):
         for breadcrumb in self.get_breadcrumbs():
-            self.state.add_outbound_link(breadcrumb)
+            self.state.links.add_link('outbound_links', breadcrumb)
         return super(CRUDResourceViewMixin, self).generate_response(link)
 
 class CRUDView(CRUDResourceViewMixin, View):

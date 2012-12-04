@@ -44,5 +44,5 @@ class StorageChangeList(ChangeList):
         paginator = StoragePaginator(index, storage=self.resource.storage, state=self.state)
         self.state['paginator'] = paginator
         self.state['page'] = paginator
-        self.state['links'] = paginator.links
+        self.state['filter_links'] = paginator.links
 

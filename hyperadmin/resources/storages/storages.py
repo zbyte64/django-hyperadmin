@@ -79,8 +79,8 @@ class StorageResource(CRUDResource):
     
     def get_index_queries(self):
         links = super(StorageResource, self).get_index_queries()
-        if 'links' in self.state:
-            links += self.state['links']
+        if 'filter_links' in self.state:
+            links += self.state['filter_links']
         return links
     
     def get_form_kwargs(self, item=None, **kwargs):
@@ -96,11 +96,6 @@ class StorageResource(CRUDResource):
     def get_item_url(self, item):
         return self.link_prototypes['update'].get_url(item=item)
     
-    #def get_outbound_links(self):
-    #    links = super(StorageResource, self).get_outbound_links()
-    #    links.append(self.get_upload_link(link_factor='LO'))
-    #    return links
-    
     def get_item_storage_link(self, item, **kwargs):
         link_kwargs = {'url':item.instance.url,
                        'resource':self,
@@ -111,7 +106,7 @@ class StorageResource(CRUDResource):
         return storage_link
     
     def get_item_outbound_links(self, item):
-        links = super(StorageResource, self).get_item_outbound_links(item)
+        links = self.create_link_collection()
         links.append(self.get_item_storage_link(item, link_factor='LO'))
         return links
     

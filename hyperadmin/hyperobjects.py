@@ -203,6 +203,47 @@ class LinkCollection(list):
         self.append(link)
         return link
 
+class ChainedLinkCollectionProvider(object):
+    def __init__(self, call_chain, default_kwargs={}):
+        self.call_chain = call_chain
+        self.default_kwargs = default_kwargs
+        
+    def __call__(self, *args, **kwargs):
+        links = None
+        kwargs.update(self.default_kwargs)
+        for subcall in self.call_chain:
+            if links is None:
+                links = subcall(*args, **kwargs)
+            else:
+                links.extend(subcall(*args, **kwargs))
+        return links
+
+class LinkCollectionProvider(object):
+    def __init__(self, container, parent=None):
+        self.container = container #resource, endpoint, state
+        self.parent = parent #parent container links
+    
+    def _get_link_functions(self, attr):
+        functions = list()
+        if self.parent:
+            functions.append( getattr(self.parent, attr) )
+        else:
+            functions.append( lambda *args, **kwargs: self.container.create_link_collection() )
+        if hasattr(self.container, attr):
+            functions.append( getattr(self.container, attr) )
+        return functions
+    
+    def _get_link_kwargs(self):
+        return {}
+    
+    def __getattribute__(self, attr):
+        if not attr.startswith('get_'):
+            return object.__getattribute__(self, attr)
+        
+        functions = self._get_link_functions(attr)
+        default_kwargs = self._get_link_kwargs()
+        return ChainedLinkCollectionProvider(functions, default_kwargs)
+
 class Namespace(object):
     """
     Represents data that is associated to our current state. Typically is an association with another resource.
@@ -218,6 +259,19 @@ class Namespace(object):
     def get_prompt(self):
         return self.state.resource.get_prompt()
 
+class ResourceItemLinkCollectionProvider(LinkCollectionProvider):
+    def __init__(self, container, parent=None):
+        self.container = container
+    
+    @property
+    def parent(self):
+        if 'endpoint_state' in self.container.resource_state:
+            return self.container.resource_state['endpoint_state'].links
+        return self.container.resource.links
+    
+    def _get_link_kwargs(self):
+        return {'item':self.container}
+
 class ResourceItem(object):
     '''
     Represents an instance that is bound to a resource
@@ -227,6 +281,7 @@ class ResourceItem(object):
     def __init__(self, resource, instance):
         self.resource_state = resource.state
         self.instance = instance
+        self.links = ResourceItemLinkCollectionProvider(self)
     
     @property
     def resource(self):
@@ -236,23 +291,9 @@ class ResourceItem(object):
     def state(self):
         return self.resource_state.get('endpoint_state', self.resource_state)
     
-    def get_embedded_links(self):
-        return self.state.get_item_embedded_links(self)
-    
-    def get_outbound_links(self):
-        return self.state.get_item_outbound_links(self)
-    
-    def get_templated_queries(self):
-        return self.state.get_item_templated_queries(self)
-    
-    def get_ln_links(self):
-        return self.state.get_item_ln_links(self)
-    
-    def get_idempotent_links(self):
-        return self.state.get_item_idempotent_links(self)
-    
-    def get_item_link(self):
-        return self.state.get_item_link(self)
+    @property
+    def endpoint(self):
+        return self.state.get('endpoint', None)
     
     def get_absolute_url(self):
         return self.resource.get_item_url(self)
@@ -296,4 +337,6 @@ class ResourceItem(object):
         Returns namespaces associated with this item
         """
         return self.resource.get_item_namespaces(self)
-
+    
+    def get_item_link(self):
+        return self.resource.get_item_link(item=self)

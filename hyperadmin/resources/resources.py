@@ -4,7 +4,7 @@ from django import forms
 from django.conf.urls.defaults import patterns
 from django.utils.datastructures import SortedDict
 
-from hyperadmin.hyperobjects import Link, LinkCollection, ResourceItem
+from hyperadmin.hyperobjects import Link, LinkCollection, LinkCollectionProvider, ResourceItem
 from hyperadmin.states import ResourceState
 
 
@@ -13,22 +13,6 @@ class EmptyForm(forms.Form):
         self.instance = kwargs.pop('instance', None)
         super(EmptyForm, self).__init__(**kwargs)
 
-class LinkCollectionProvider(object):
-    def __init__(self, container, parent=None):
-        self.container = container
-        self.parent = parent
-    
-    def __getitem__(self, key):
-        #TODO what about item links?
-        if self.parent:
-            links = self.parent.links[key]
-        else:
-            links = LinkCollection() 
-        func_name = 'get_%s_links'
-        if hasattr(self.container, func_name):
-            more_links = getattr(self.container, func_name)()
-            links += more_links
-        return links
 
 #TODO more like:
 #resource.links.get_<name>()
@@ -72,7 +56,7 @@ class BaseResource(object):
     def fork_state(self, **kwargs):
         new_resource = copy(self)
         #TODO this is not ideal...
-        for uncache in ('_endpoints', '_links'):
+        for uncache in ('_endpoints', '_link_prototypes'):
             if hasattr(new_resource, uncache):
                 delattr(new_resource, uncache)
         new_resource.state = self.state.copy()
@@ -138,50 +122,14 @@ class BaseResource(object):
                 'resource_site':self.site,
                 'global_state':dict(self.site.state.global_state),} #store a snapshot of the current global state
     
-    def get_embedded_links(self):
-        return LinkCollection(self)
-    
-    def get_item_embedded_links(self, item):
-        return LinkCollection(self)
-    
     def get_outbound_links(self):
-        links = LinkCollection(self)
-        links.extend(self.get_breadcrumbs())
-        return links
-    
-    def get_item_outbound_links(self, item):
-        return LinkCollection(self)
+        return self.get_breadcrumbs()
     
     def get_indexes(self):
         return {}
     
     def get_index_query(self, name):
         raise NotImplementedError
-    
-    def get_index_queries(self):
-        return LinkCollection(self)
-    
-    def get_templated_queries(self):
-        return LinkCollection(self)
-    
-    def get_item_templated_queries(self, item):
-        return LinkCollection(self)
-    
-    #TODO find a better name
-    def get_ln_links(self):
-        return LinkCollection(self)
-    
-    #TODO find a better name
-    def get_item_ln_links(self, item):
-        return LinkCollection(self)
-    
-    #TODO find a better name
-    def get_idempotent_links(self):
-        return LinkCollection(self)
-    
-    #TODO find a better name
-    def get_item_idempotent_links(self, item):
-        return LinkCollection(self)
     
     def get_item_url(self, item):
         return None
@@ -236,7 +184,7 @@ class BaseResource(object):
         return self.get_resource_link(rel='breadcrumb')
     
     def get_breadcrumbs(self):
-        breadcrumbs = LinkCollection(self)
+        breadcrumbs = self.create_link_collection()
         if self.parent:
             breadcrumbs = self.parent.get_breadcrumbs()
         breadcrumbs.append(self.get_breadcrumb())
@@ -265,4 +213,7 @@ class BaseResource(object):
     
     def get_link_url(self, link):
         return self.state.get_link_url(link)
+    
+    def create_link_collection(self):
+        return LinkCollection(self)
 

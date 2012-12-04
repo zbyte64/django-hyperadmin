@@ -313,7 +313,7 @@ class AuthenticationResourceTestCase(ResourceTestCase):
         
         with state.push_session(self.popped_states):
             self.assertTrue(state['authenticated'])
-            self.assertTrue(state.get_outbound_links()) #TODO logout link?
+            self.assertTrue(state.links.get_outbound_links()) #TODO logout link?
     
     def test_restful_logout(self):
         view = self.resource.endpoints['login'].get_view()

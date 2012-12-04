@@ -40,20 +40,3 @@ class AuthResource(BaseResource):
     
     def get_absolute_url(self):
         return self.link_prototypes['login'].get_url()
-    '''
-    def get_idempotent_links(self):
-        links = super(AuthResource, self).get_idempotent_links()
-        if self.state.get('authenticated', False):
-            links.append(self.get_restful_logout_link())
-        else:
-            links.append(self.get_login_link())
-        return links
-    
-    def get_embedded_links(self):
-        links = super(AuthResource, self).get_embedded_links()
-        if self.state.get('authenticated', False):
-            links.append(self.get_logout_link())
-        return links
-    '''
-
-

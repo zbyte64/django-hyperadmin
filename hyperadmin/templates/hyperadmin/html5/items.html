@@ -20,7 +20,7 @@
 {% endblock %}
 
 {% block item_outbound_links %}
-{% with item.get_outbound_links as outbound_links %}
+{% with item.links.get_item_outbound_links as outbound_links %}
 {% if outbound_links %}
 <h4>Outbound Links</h4>
 <div class="outbound_links">
@@ -31,7 +31,7 @@
 {% endblock %}
 
 {% block item_embedded_links %}
-{% with item.get_embedded_links as embedded_links %}
+{% with item.links.get_item_embedded_links as embedded_links %}
 {% if embedded_links %}
 <h4>Embedded Links</h4>
 <div class="embedded_links">
@@ -42,7 +42,7 @@
 {% endblock %}
 
 {% block item_templated_queries %}
-{% with item.get_templated_queries as templated_queries %}
+{% with item.links.get_item_templated_queries as templated_queries %}
 {% if templated_queries %}
 <h4>Templated Queries</h4>
 <div id=templated_queries">
@@ -53,7 +53,7 @@
 {% endblock %}
 
 {% block item_non_idempotent_updates %}
-{% with item.get_ln_links as non_idempotent_updates %}
+{% with item.links.get_item_ln_links as non_idempotent_updates %}
 {% if non_idempotent_updates %}
 <h4>Non-Idempotent Updates</h4>
 <div id="non_idempotent_updates">
@@ -64,7 +64,7 @@
 {% endblock %}
 
 {% block item_idempotent_updates %}
-{% with item.get_idempotent_links as idempotent_updates %}
+{% with item.links.get_item_idempotent_links as idempotent_updates %}
 {% if idempotent_updates %}
 <h4>Idempotent Updates</h4>
 <div id="idempotent_updates">

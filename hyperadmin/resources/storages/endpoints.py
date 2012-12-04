@@ -28,7 +28,7 @@ class CreateUploadLinkPrototype(LinkPrototype):
 
 class ListEndpoint(BaseListEndpoint):
     def get_outbound_links(self):
-        links = super(ListEndpoint, self).get_outbound_links()
+        links = self.create_link_collection()
         links.add_link('upload', link_factor='LO')
         return links
 

@@ -301,16 +301,16 @@ class InlineModelResource(BaseModelResource):
         return AdminForm
     
     def get_ln_links(self):
-        links = super(InlineModelResource, self).get_ln_links()
+        links = self.create_link_collection()
         if self.state.namespace:
             for item in self.get_resource_items():
-                links.append(self.get_update_link(item))
+                links.append(self.link_prototypes['update'].get_link(item=item))
         return links
     
     def get_idempotent_links(self):
-        links = super(InlineModelResource, self).get_idempotent_links()
+        links = self.create_link_collection()
         if self.state.namespace:
             for item in self.get_resource_items():
-                links.append(self.get_delete_link(item))
+                links.append(self.link_prototypes['delete'].get_link(item=item))
         return links
 

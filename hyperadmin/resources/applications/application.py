@@ -54,9 +54,7 @@ class ApplicationResource(BaseResource):
         return [self.get_resource_item(item) for item in self.get_items()]
     
     def get_item_outbound_links(self, item):
-        links = super(ApplicationResource, self).get_item_outbound_links(item)
-        links.extend(item.instance.get_outbound_links())
-        return links
+        return item.instance.get_outbound_links()
     
     def get_prompt(self):
         return self.app_name.replace('-',' ').replace('_', ' ')

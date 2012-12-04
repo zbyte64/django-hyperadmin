@@ -71,7 +71,7 @@ class LoginEndpoint(Endpoint):
                 'rest-logout':LogoutLinkPrototype(endpoint=self, link_kwargs={'method':'DELETE'}),}
     
     def get_outbound_links(self):
-        links = super(LoginEndpoint, self).get_outbound_links()
+        links = self.create_link_collection()
         links.add_link('logout', link_factor='LO')
         return links
 

@@ -67,7 +67,7 @@ class CRUDResource(BaseResource):
         return self.get_primary_query()
     
     def get_index_queries(self):
-        links = super(CRUDResource, self).get_index_queries()
+        links = self.create_link_collection()
         if self.state.get('changelist', None):
             links += self.get_changelist_links()
         return links

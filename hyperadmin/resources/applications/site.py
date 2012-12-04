@@ -63,9 +63,7 @@ class SiteResource(BaseResource):
             return item.instance.get_absolute_url()
     
     def get_item_outbound_links(self, item):
-        links = super(SiteResource, self).get_item_outbound_links(item)
-        links.extend(item.instance.get_outbound_links())
-        return links
+        return item.instance.get_outbound_links()
     
     def get_absolute_url(self):
         return self.link_prototypes['list'].get_url()
