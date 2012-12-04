@@ -63,10 +63,10 @@ class ResourceViewMixin(GetPatchMetaMixin, ConditionalAccessMixin):
         else:
             src = self.request.META
         val = src.get('HTTP_ACCEPT', '')
-        return mimeparse.best_match(
-            self.resource_site.media_types.keys(), 
-            val
-        ) or val
+        media_types = self.resource_site.media_types.keys()
+        if not media_types:
+            return val
+        return mimeparse.best_match(media_types, val) or val
     
     def get_request_type(self, patch_meta=True):
         if patch_meta:
@@ -74,23 +74,23 @@ class ResourceViewMixin(GetPatchMetaMixin, ConditionalAccessMixin):
         else:
             src = self.request.META
         val = src.get('CONTENT_TYPE', src.get('HTTP_ACCEPT', ''))
-        return mimeparse.best_match(
-            self.resource_site.media_types.keys(), 
-            val
-        ) or val
+        media_types = self.resource_site.media_types.keys()
+        if not media_types:
+            return val
+        return mimeparse.best_match(media_types, val) or val
     
     def get_request_media_type(self):
         content_type = self.get_request_type()
         media_type_cls = self.resource_site.media_types.get(content_type, None)
         if media_type_cls is None:
-            raise ValueError('Unrecognized request content type: %s' % content_type)
+            raise ValueError('Unrecognized request content type "%s". Choices are: %s' % (content_type, self.resource_site.media_types.keys()))
         return media_type_cls(self)
     
     def get_response_media_type(self):
         content_type = self.get_response_type()
         media_type_cls = self.resource_site.media_types.get(content_type, None)
         if media_type_cls is None:
-            raise ValueError('Unrecognized response content type: %s' % content_type)
+            raise ValueError('Unrecognized request content type "%s". Choices are: %s' % (content_type, self.resource_site.media_types.keys()))
         return media_type_cls(self)
     
     def generate_response(self, link):
