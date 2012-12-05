@@ -4,7 +4,7 @@ from django import forms
 from hyperadmin.hyperobjects import Namespace
 from hyperadmin.resources.crud.crud import CRUDResource
 from hyperadmin.resources.models import views
-from hyperadmin.resources.models.changelist import ModelChangeList
+from hyperadmin.resources.models.indexes import ModelIndex
 from hyperadmin.resources.models.endpoints import InlineListEndpoint, InlineCreateEndpoint, InlineDetailEndpoint, InlineDeleteEndpoint
 
 
@@ -24,7 +24,7 @@ class BaseModelResource(CRUDResource):
     
     #save_as = False
     #save_on_top = False
-    changelist_class = ModelChangeList
+    #changelist_class = ModelChangeList
     inlines = []
     
     #list display options
@@ -66,7 +66,7 @@ class BaseModelResource(CRUDResource):
         return self.get_queryset()
     
     def get_indexes(self):
-        from hyperadmin.resources.indexes import Index
+        #from hyperadmin.resources.indexes import Index
         from hyperadmin.resources.models.filters import FieldFilter, SearchFilter
 
         from django.db import models
@@ -78,7 +78,7 @@ class BaseModelResource(CRUDResource):
         
         indexes = super(BaseModelResource, self).get_indexes()
         
-        index = Index('filter', self, self.get_index_query('filter'))
+        index = ModelIndex('filter', self, self.get_index_query('filter'))
         indexes['filter'] = index
         
         if self.list_filter:
@@ -198,6 +198,17 @@ class ModelResource(BaseModelResource):
     def register_inline(self, inline_cls):
         self.inline_instances.append(inline_cls(self))
     
+    def get_view_endpoints(self):
+        from hyperadmin.resources.crud.endpoints import ListEndpoint, CreateEndpoint, DetailEndpoint, DeleteEndpoint
+        endpoints = super(CRUDResource, self).get_view_endpoints()
+        endpoints.extend([
+            ListEndpoint(resource=self, index_name='filter'),
+            CreateEndpoint(resource=self),
+            DetailEndpoint(resource=self),
+            DeleteEndpoint(resource=self),
+        ])
+        return endpoints
+    
     def get_urls(self):
         urlpatterns = super(ModelResource, self).get_urls()
         for inline in self.inline_instances:
@@ -258,10 +269,10 @@ class InlineModelResource(BaseModelResource):
     def get_view_endpoints(self):
         endpoints = super(CRUDResource, self).get_view_endpoints()
         endpoints.extend([
-            InlineListEndpoint(self),
-            InlineCreateEndpoint(self),
-            InlineDetailEndpoint(self),
-            InlineDeleteEndpoint(self),
+            InlineListEndpoint(resource=self),
+            InlineCreateEndpoint(resource=self),
+            InlineDetailEndpoint(resource=self),
+            InlineDeleteEndpoint(resource=self),
         ])
         return endpoints
     

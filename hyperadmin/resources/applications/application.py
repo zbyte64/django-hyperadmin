@@ -36,7 +36,7 @@ class ApplicationResource(BaseResource):
         key = resource.get_resource_name()
         self.resource_adaptor[key] = resource
     
-    def get_items(self):
+    def get_instances(self):
         #TODO sort by name
         return self.resource_adaptor.values()
     
@@ -49,9 +49,6 @@ class ApplicationResource(BaseResource):
     
     def get_absolute_url(self):
         return self.link_prototypes['list'].get_url()
-    
-    def get_resource_items(self):
-        return [self.get_resource_item(item) for item in self.get_items()]
     
     def get_item_outbound_links(self, item):
         return item.instance.get_outbound_links()

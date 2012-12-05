@@ -6,7 +6,8 @@ class ApplicationResourceView(ResourceViewMixin, generic.ListView):
     view_class = 'app_index'
     
     def get(self, request, *args, **kwargs):
-        link = self.resource.get_resource_link()
+        #link = self.resource.get_resource_link()
+        link = self.endpoint.link_prototypes['list'].get_link()
         return self.generate_response(link)
 
 class SiteResourceView(ApplicationResourceView):

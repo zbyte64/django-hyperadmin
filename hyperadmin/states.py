@@ -193,7 +193,11 @@ class ResourceBoundMixin(object):
     
     @property
     def site(self):
-        return self['site']
+        return self.resource.site
+    
+    #@property
+    #def endpoint(self):
+    #    return self.get('endpoint')
     
     def reverse(self, name, *args, **kwargs):
         if 'reverse' in self:
@@ -261,6 +265,8 @@ class ResourceBoundMixin(object):
         """
         if self.item is not None:
             return self.item.get_resource_items()
+        if self.endpoint:
+            return self.endpoint.get_resource_items()
         return self.resource.get_resource_items()
     
     def get_query_string(self, new_params=None, remove=None):
@@ -284,6 +290,7 @@ class ResourceBoundMixin(object):
     def get_namespaces(self):
         return self.resource.get_namespaces()
 
+#TODO deprecate ResourceState
 class ResourceState(ResourceBoundMixin, State):
     """
     Used by resources to determine what links and items are available in the response.
@@ -331,8 +338,9 @@ class EndpointState(ResourceBoundMixin, State):
     """
     Used by resources to determine what links and items are available in the response.
     """
-    def __init__(self, resource_state, meta, substates=[], data={}):
-        self.resource_state = resource_state
+    def __init__(self, resource, endpoint, meta, substates=[], data={}):
+        self.resource = resource
+        self.endpoint = endpoint
         super(EndpointState, self).__init__(substates=substates, data=data)
         self.meta = meta
         self.links = EndpointStateLinkCollectionProvider(self, self.endpoint.links)
@@ -346,23 +354,19 @@ class EndpointState(ResourceBoundMixin, State):
             assert isinstance(value, dict)
         return super(EndpointState, self).__setitem__(key, value)
     
-    @property
-    def resource(self):
-        return self.resource_state['resource']
-    
-    @property
-    def endpoint(self):
-        return self['endpoint']
+    #@property
+    #def resource(self):
+    #    return self.resource_state['resource']
     
     @property
     def container(self):
         return self.endpoint
     
     def get_dictionaries(self):
-        return [self.session, self.global_state, self.active_dictionary, self.resource_state] + self.substates
+        return [self.session, self.global_state, self.active_dictionary] + self.substates
     
     def __copy__(self):
         substates = self.global_state.dicts + [self.active_dictionary] + list(self.substates)
-        ret = self.__class__(self.resource_state, copy(self.meta), substates=substates)
+        ret = self.__class__(self.resource, self.endpoint, copy(self.meta), substates=substates)
         return ret
 

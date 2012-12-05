@@ -20,4 +20,3 @@ class ListEndpoint(Endpoint):
     
     def get_links(self):
         return {'list':ListLinkPrototype(endpoint=self),}
-

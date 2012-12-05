@@ -1,5 +1,6 @@
 class Index(object):
     paginator_class = None
+    page_var = 'p'
     
     def __init__(self, name, resource, query):
         self.name = name
@@ -47,12 +48,36 @@ class Index(object):
             return self.paginator_class(index, **kwargs)
         return self.resource.get_paginator(index, **kwargs)
     
+    def get_pagination_links(self):
+        links = list()
+        if 'paginator' in self.state:
+            paginator = self.state['paginator']
+            classes = ["pagination"]
+            for page in range(paginator.num_pages):
+                if page == '.':
+                    continue
+                url = self.state.get_query_string({self.page_var: page+1})
+                links.append(self.make_link(url=url, prompt=u"%s" % page, classes=classes, rel="pagination"))
+        return links
+    
     def get_advaned_link(self):
         """
         Return a link with all the options in one form, ignores pagination
         """
         pass
+    
+    def get_links(self, **kwargs):
+        links = self.get_filter_links(**kwargs)
+        #active_section = self.get_active_section()
+        #if active_section:
+        #    links += active_section.get_pagination_links()
+        return links
+    
+    def get_page(self):
+        paginator = self.get_paginator()
+        return paginator.page(self.state.params.get(self.page_var, 1))
 
 class PrimaryIndex(Index):
-    pass
+    def get_paginator_kwargs(self):
+        return {'per_page':getattr(self.resource, 'list_per_page', 50),}
 

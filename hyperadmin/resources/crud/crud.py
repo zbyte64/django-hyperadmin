@@ -38,10 +38,10 @@ class CRUDResource(BaseResource):
     def get_view_endpoints(self):
         endpoints = super(CRUDResource, self).get_view_endpoints()
         endpoints.extend([
-            ListEndpoint(self),
-            CreateEndpoint(self),
-            DetailEndpoint(self),
-            DeleteEndpoint(self),
+            ListEndpoint(resource=self),
+            CreateEndpoint(resource=self),
+            DetailEndpoint(resource=self),
+            DeleteEndpoint(resource=self),
         ])
         return endpoints
     
@@ -65,13 +65,13 @@ class CRUDResource(BaseResource):
     
     def get_index_query(self, name):
         return self.get_primary_query()
-    
+    '''
     def get_index_queries(self):
         links = self.create_link_collection()
         if self.state.get('changelist', None):
             links += self.get_changelist_links()
         return links
-    
+    '''
     def get_item_breadcrumb(self, item):
         return self.get_item_link(item, rel='breadcrumb')
     
@@ -105,7 +105,7 @@ class CRUDResource(BaseResource):
         Hook for specifying field ordering.
         """
         return self.ordering or ()  # otherwise we might try to *None, which is bad ;)
-    
+    '''
     def get_changelist_kwargs(self, **kwargs):
         params = {'resource': self,
                   'state':self.state,}
@@ -125,7 +125,7 @@ class CRUDResource(BaseResource):
     
     def get_changelist_links(self):
         return self.state['changelist'].get_links()
-    
+    '''
     def get_paginator_class(self):
         return self.paginator_class
     

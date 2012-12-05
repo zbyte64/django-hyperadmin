@@ -20,9 +20,10 @@ class ResourceSite(object):
         self.name = name
         self.applications = dict()
         self.registry = dict()
-        self.state = self.create_state()
+        #self.state = self.create_state()
+        self.media_types = dict()
         self.site_resource = self.site_resource_class(**self.get_resource_kwargs())
-    
+    '''
     def create_state(self):
         state = self.get_state_class()(**self.get_state_kwargs())
         return state
@@ -37,7 +38,7 @@ class ResourceSite(object):
     @property
     def media_types(self):
         return self.state['media_types']
-    
+    '''
     def register(self, model_or_iterable, admin_class, **options):
         if isinstance(model_or_iterable, collections.Iterable):
             resources = list()
@@ -54,7 +55,7 @@ class ResourceSite(object):
         return resource
     
     def get_resource_kwargs(self, **kwargs):
-        params = {'site_state': self.state}
+        params = {'site': self}
         params.update(kwargs)
         return params
     

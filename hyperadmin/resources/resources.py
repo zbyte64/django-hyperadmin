@@ -27,17 +27,12 @@ class BaseResource(object):
     state_class = ResourceState
     form_class = EmptyForm
     
-    def __init__(self, resource_adaptor, site_state, parent_resource=None):
+    def __init__(self, resource_adaptor, site, parent_resource=None):
         self.resource_adaptor = resource_adaptor
-        self.site_state = site_state
+        self.site = site
         self.parent = parent_resource
-        self.state = self.create_state()
         self.links = LinkCollectionProvider(self)
-    
-    @property
-    def site(self):
-        return self.state.site
-    
+    '''
     def create_state(self):
         state = self.get_state_class()(**self.get_state_kwargs())
         return state
@@ -64,7 +59,7 @@ class BaseResource(object):
         new_resource.state.update(kwargs)
         new_resource.links = LinkCollectionProvider(new_resource)
         return new_resource
-    
+    '''
     def get_app_name(self):
         raise NotImplementedError
     app_name = property(get_app_name)
@@ -91,6 +86,7 @@ class BaseResource(object):
                 self._endpoints[endpoint.name_suffix] = endpoint
         return self._endpoints
     
+    #TODO replace with get_url(url_name)
     @property
     def link_prototypes(self):
         if not hasattr(self, '_link_prototypes'):
@@ -113,21 +109,24 @@ class BaseResource(object):
     urls = property(urls)
     
     def reverse(self, name, *args, **kwargs):
-        return self.state.reverse(name, *args, **kwargs)
+        return self.site.reverse(name, *args, **kwargs)
     
     def api_permission_check(self, request):
         return self.site.api_permission_check(request)
     
     def get_view_kwargs(self):
         return {'resource':self,
-                'resource_site':self.site,
-                'global_state':dict(self.site.state.global_state),} #store a snapshot of the current global state
+                'resource_site':self.site,}
+                #'global_state':dict(self.site.state.global_state),} #store a snapshot of the current global state
     
     def get_outbound_links(self):
         return self.get_breadcrumbs()
     
     def get_indexes(self):
         return {}
+    
+    def get_index(self, name):
+        return self.get_indexes()[name]
     
     def get_index_query(self, name):
         raise NotImplementedError
@@ -164,15 +163,22 @@ class BaseResource(object):
         return self.resource_item_class
     
     def get_resource_item(self, instance, **kwargs):
-        return self.get_resource_item_class()(resource=self, instance=instance, **kwargs)
+        assert 'endpoint' in kwargs
+        return self.get_resource_item_class()(instance=instance, **kwargs)
     
-    def get_resource_items(self):
+    def get_instances(self):
         return []
+    
+    #def get_resource_items(self):
+    #    return [self.get_resource_item(instance) for instance in self.get_instances()]
     
     def get_resource_link_item(self):
         return None
     
     def get_resource_link(self, **kwargs):
+        #TODO we want the endpoint state
+        assert False
+        return self.link_prototypes['list'].get_link(**kwargs)
         link_kwargs = {'url':self.get_absolute_url(),
                        'resource':self,
                        'rel':'self',

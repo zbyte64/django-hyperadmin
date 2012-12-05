@@ -1,18 +1,19 @@
-from hyperadmin.resources.crud.changelist import ChangeList
+from hyperadmin.resources.indexes import Index
 
-class ModelChangeList(ChangeList):
+
+class ModelIndex(Index):
     @property
     def model(self):
         return self.resource.model
     
-    def get_active_section(self):
-        return self.sections['filter']
+    #def get_active_section(self):
+    #    return self.sections['filter']
     
     def get_paginator_kwargs(self):
         return {'per_page':self.resource.list_per_page,}
     
     def get_links(self):
-        links = super(ModelChangeList, self).get_links()
+        links = super(ModelIndex, self).get_links()
         #links += self.getchangelist_sort_links()
         return links
     

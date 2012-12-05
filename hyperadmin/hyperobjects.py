@@ -10,11 +10,13 @@ class Link(object):
     """
     Represents an available action or state transition.
     """
-    def __init__(self, url, resource, method='GET', form=None, form_class=None, form_kwargs=None, link_factor=None, include_form_params_in_url=False,
+    def __init__(self, url, endpoint, method='GET', form=None, form_class=None, form_kwargs=None, link_factor=None, include_form_params_in_url=False,
                  descriptors=None, prompt=None, cu_headers=None, cr_headers=None, on_submit=None, **cl_headers):
         self._url = url
         self._method = str(method).upper() #CM
-        self.state = resource.state.get('endpoint_state', resource.state) #TODO endpoint state would be better
+        #TODO pass in endpoint state
+        self.endpoint = endpoint
+        #self.state = resource.state.get('endpoint_state', resource.state) #TODO endpoint state would be better
         self._form = form
         self.form_class = form_class
         self.form_kwargs = form_kwargs
@@ -29,7 +31,11 @@ class Link(object):
     
     @property
     def resource(self):
-        return self.state.resource
+        return self.endpoint.resource
+    
+    @property
+    def state(self):
+        return self.endpoint.state
     
     @property
     def rel(self):
@@ -278,22 +284,22 @@ class ResourceItem(object):
     '''
     form_class = None
     
-    def __init__(self, resource, instance):
-        self.resource_state = resource.state
+    def __init__(self, endpoint, instance):
+        self.endpoint = endpoint
         self.instance = instance
         self.links = ResourceItemLinkCollectionProvider(self)
     
     @property
     def resource(self):
-        return self.state.resource
+        return self.endpoint.resource
     
     @property
     def state(self):
-        return self.resource_state.get('endpoint_state', self.resource_state)
+        return self.endpint.state
     
-    @property
-    def endpoint(self):
-        return self.state.get('endpoint', None)
+    #@property
+    #def endpoint(self):
+    #    return self.state.get('endpoint', None)
     
     def get_absolute_url(self):
         return self.resource.get_item_url(self)

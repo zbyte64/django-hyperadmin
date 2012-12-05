@@ -1,4 +1,5 @@
 from django.conf.urls.defaults import url
+from django.views.generic import View
 
 from hyperadmin.hyperobjects import Link, LinkCollectionProvider
 
@@ -27,6 +28,8 @@ class LinkPrototype(object):
     def get_link_kwargs(self, **kwargs):
         kwargs.update(self.link_kwargs)
         kwargs['form_kwargs'] = self.get_form_kwargs(**kwargs)
+        kwargs.setdefault('endpoint', self.endpoint)
+        assert self.endpoint.state, 'link creation must come from a dispatched endpoint'
         return kwargs
     
     def get_link(self, **link_kwargs):
@@ -50,26 +53,42 @@ class LinkPrototype(object):
     def get_url(self, **kwargs):
         return self.endpoint.get_url(**kwargs)
 
-class Endpoint(object):
+class Endpoint(View):
     """
     Represents an API endpoint
+    
+    Behaves like a class based view
+    Initialized originally without a state; should endpoint be a class based view that pumps to another?
     """
     name_suffix = None
     view_class = None
     url_suffix = None
+    resource = None
+    state = None
     
-    def __init__(self, resource):
-        self.resource_state = resource.state
-        #TODO this does not allow for resource overide
-        self.links = LinkCollectionProvider(self, resource.links)
-    
-    @property
-    def state(self):
-        return self.resource_state.get('endpoint_state', self.resource_state)
+    def __init__(self, **kwargs):
+        self._init_kwargs = kwargs
+        super(Endpoint, self).__init__(**kwargs)
+        self.links = LinkCollectionProvider(self, self.resource.links)
     
     @property
-    def resource(self):
-        return self.state.resource
+    def link_prototypes(self):
+        if not hasattr(self, '_link_prototypes'):
+            self._link_prototypes = dict()
+            for endpoint in self.resource.endpoints.itervalues():
+                self._link_prototypes.update(endpoint.get_links())
+            for link_prototype in self._link_prototypes.itervalues():
+                link_prototype.endpoint = self
+        return self._link_prototypes
+    
+    def dispatch(self, request, *args, **kwargs):
+        """
+        Endpoint simply dispatches to a defined class based view
+        """
+        #CONSIDER does it make sense to proxy? perhaps we should just merge
+        #can we get the view state?
+        handler = self.get_view()
+        return handler(request, *args, **kwargs)
     
     def get_view_kwargs(self):
         kwargs = self.resource.get_view_kwargs()
@@ -93,7 +112,8 @@ class Endpoint(object):
         return self.url_suffix
     
     def get_url_object(self):
-        return url(self.get_url_suffix(), self.get_view(), name=self.get_url_name(),)
+        view = type(self).as_view(**self._init_kwargs)
+        return url(self.get_url_suffix(), view, name=self.get_url_name(),)
     
     def get_url(self, **kwargs):
         return self.resource.reverse(self.get_url_name(), **kwargs)
@@ -108,4 +128,12 @@ class Endpoint(object):
     def create_link_collection(self):
         return self.resource.create_link_collection()
     
-    #TODO??? endpoints define related links to show; on update show delete link, on list show add link, etc
+    def get_resource_item(self, instance):
+        return self.resource.get_resource_item(instance, endpoint=self)
+    
+    def get_instances(self):
+        return self.resource.get_instances()
+    
+    def get_resource_items(self):
+        instances = self.get_instances()
+        return [self.get_resource_item(instance) for instance in instances]

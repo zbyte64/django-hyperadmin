@@ -45,18 +45,15 @@ class SiteResource(BaseResource):
     def get_item_prompt(self, item):
         return item.instance.get_prompt()
     
-    def get_items(self):
+    def get_instances(self):
         applications = self.applications.items()
         apps = [entry[1] for entry in sorted(applications, key=lambda x: x[0])]
         all_apps = list()
         for app in apps:
             all_apps.append(app)
-            all_apps.extend(app.get_items())
+            all_apps.extend(app.get_instances())
         all_apps.append(self.auth_resource)
         return all_apps
-    
-    def get_resource_items(self):
-        return [self.get_resource_item(item) for item in self.get_items()]
     
     def get_item_url(self, item):
         if hasattr(item.instance, 'get_absolute_url'):

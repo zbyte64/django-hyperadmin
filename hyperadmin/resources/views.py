@@ -127,15 +127,15 @@ class ResourceViewMixin(GetPatchMetaMixin, ConditionalAccessMixin):
         data.update(self.kwargs)
         data.update({'view_class':self.view_class,
                      'view_classes':self.get_view_classes(),
-                     'item':self.get_item(),
+                     'item':self.get_item(), #TODO consult the endpoint somehow
                      'params':self.request.GET.copy(),
-                     'args':self.args,
-                     'endpoint':self.endpoint,})
+                     'args':self.args,})
         return data
     
     def get_state_kwargs(self):
         return {
-            'resource_state': self.resource.state,
+            'resource': self.resource,
+            'endpoint': self.endpoint,
             'data':self.get_state_data(),
             'meta':{},
         }
@@ -153,9 +153,13 @@ class ResourceViewMixin(GetPatchMetaMixin, ConditionalAccessMixin):
             self.state = self.create_state()
             self.state.meta = self.get_meta()
             
+            #set the endpoint state to match the view
+            self.endpoint.state = self.state
+            
             resource_params = dict(self.state)
             resource_params['endpoint_state'] = self.state
-            with self.resource.state.patch_state(**resource_params):
+            #with self.resource.state.patch_state(**resource_params):
+            if True:
                 #TODO anything we return must preserve the state @-@
                 self.pre_dispatch()
                 permission_response = self.resource.api_permission_check(self.request)

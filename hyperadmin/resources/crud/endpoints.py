@@ -74,6 +74,13 @@ class ListEndpoint(Endpoint):
     name_suffix = 'list'
     url_suffix = r'^$'
     
+    def __init__(self, resource, index_name='primary'):
+        super(ListEndpoint, self).__init__(resource=resource)
+        self.index_name = index_name
+    
+    def get_index(self):
+        return self.resource.get_index(self.index_name)
+    
     def get_view_class(self):
         return self.resource.list_view
     
@@ -85,6 +92,23 @@ class ListEndpoint(Endpoint):
         links = self.create_link_collection()
         links.add_link('create', link_factor='LO')
         return links
+    
+    def get_index_queries(self):
+        links = self.create_link_collection()
+        index = self.get_index()
+        links.extend(index.get_filter_links(rel='filter'))
+        #links.extend(index.get_pagination_links())
+        return links
+    
+    def get_instances(self):
+        #CONSIDER view currently determines this
+        index = self.get_index()
+        page = index.get_page()
+        return page.object_list
+    
+    def get_resource_item(self, instance):
+        return self.resource.get_list_resource_item(instance)
+        
 
 class CreateEndpoint(Endpoint):
     name_suffix = 'add'

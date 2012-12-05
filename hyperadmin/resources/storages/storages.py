@@ -44,11 +44,11 @@ class StorageResource(CRUDResource):
     def get_view_endpoints(self):
         endpoints = super(CRUDResource, self).get_view_endpoints()
         endpoints.extend([
-            ListEndpoint(self),
-            CreateEndpoint(self),
-            CreateUploadEndpoint(self),
-            DetailEndpoint(self),
-            DeleteEndpoint(self),
+            ListEndpoint(resource=self),
+            CreateEndpoint(resource=self),
+            CreateUploadEndpoint(resource=self),
+            DetailEndpoint(resource=self),
+            DeleteEndpoint(resource=self),
         ])
         return endpoints
     
