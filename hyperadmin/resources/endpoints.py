@@ -20,10 +20,13 @@ class LinkPrototype(object):
     def show_link(self, **kwargs):
         return True
     
+    def get_form_class(self):
+        return self.resource.get_form_class(self.state)
+    
     def get_form_kwargs(self, **kwargs):
         form_kwargs = kwargs.get('form_kwargs', None) or {}
         form_kwargs['item'] = kwargs.get('item', None)
-        return self.resource.get_form_kwargs(**form_kwargs)
+        return self.resource.get_form_kwargs(self.state, **form_kwargs)
     
     def get_link_kwargs(self, **kwargs):
         kwargs.update(self.link_kwargs)
@@ -132,7 +135,7 @@ class Endpoint(View):
         return self.resource.get_resource_item(instance, endpoint=self)
     
     def get_instances(self):
-        return self.resource.get_instances()
+        return self.resource.get_instances(self.state)
     
     def get_resource_items(self):
         instances = self.get_instances()

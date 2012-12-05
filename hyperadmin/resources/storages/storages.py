@@ -61,19 +61,19 @@ class StorageResource(CRUDResource):
         except NotImplementedError:
             return [], [] #dirs, files
     
-    def get_primary_query(self):
-        path = self.state.params.get('path', '')
+    def get_primary_query(self, state):
+        path = state.params.get('path', '')
         return self.get_listing(path)
     
-    def get_instances(self):
+    def get_instances(self, state):
         '''
         Returns a set of native objects for a given state
         '''
-        if 'page' in self.state:
-            return self.state['page'].object_list
-        if self.state.has_view_class('change_form'):
+        if 'page' in state:
+            return state['page'].object_list
+        if state.has_view_class('change_form'):
             return []
-        dirs, files = self.get_primary_query()
+        dirs, files = self.get_primary_query(state)
         instances = [views.BoundFile(self.storage, file_name) for file_name in files]
         return instances
     
@@ -83,13 +83,13 @@ class StorageResource(CRUDResource):
             links += self.state['filter_links']
         return links
     
-    def get_form_kwargs(self, item=None, **kwargs):
-        kwargs = super(StorageResource, self).get_form_kwargs(item, **kwargs)
+    def get_form_kwargs(self, state, item=None, **kwargs):
+        kwargs = super(StorageResource, self).get_form_kwargs(state, item, **kwargs)
         kwargs['storage'] = self.storage
         return kwargs
     
-    def get_upload_link_form_kwargs(self, **kwargs):
-        kwargs = self.get_form_kwargs(**kwargs)
+    def get_upload_link_form_kwargs(self, state, **kwargs):
+        kwargs = self.get_form_kwargs(state, **kwargs)
         kwargs['resource'] = self
         return kwargs
     

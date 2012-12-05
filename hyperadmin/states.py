@@ -288,7 +288,7 @@ class ResourceBoundMixin(object):
         return '?%s' % urlencode(p)
     
     def get_namespaces(self):
-        return self.resource.get_namespaces()
+        return self.resource.get_namespaces(state=self)
 
 #TODO deprecate ResourceState
 class ResourceState(ResourceBoundMixin, State):

@@ -2,10 +2,11 @@ class Index(object):
     paginator_class = None
     page_var = 'p'
     
-    def __init__(self, name, resource, query):
+    def __init__(self, name, resource, state, query):
         self.name = name
         self.resource = resource
-        self.state = self.resource.state
+        self.state = state
+        #self.state = self.resource.state
         self.filters = list()
         self.query = query
     

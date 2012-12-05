@@ -12,7 +12,8 @@ class ListForm(forms.Form):
     
     def __init__(self, **kwargs):
         self.instance = kwargs.pop('instance', None)
-        self.resource = kwargs.pop('resource')
+        self.endpoint = kwargs.pop('endpoint')
+        self.resource = self.endpoint.resource
         super(ListForm, self).__init__(**kwargs)
         if self.resource.list_display:
             for display in self.resource.list_display:
@@ -49,7 +50,7 @@ class ListResourceItem(ResourceItem):
     def get_form_kwargs(self, **kwargs):
         kwargs = super(ListResourceItem, self).get_form_kwargs(**kwargs)
         form_kwargs = {'instance':kwargs.get('instance', None),
-                       'resource':self.resource}
+                       'endpoint':self.endpoint}
         return form_kwargs
     
     def get_ln_links(self):

@@ -21,7 +21,7 @@ class CreateLinkPrototype(LinkPrototype):
                        'resource':self,
                        'on_submit':self.handle_submission,
                        'method':'POST',
-                       'form_class': self.resource.get_form_class(),
+                       'form_class': self.get_form_class(),
                        'prompt':'create',
                        'rel':'create',}
         link_kwargs.update(kwargs)
@@ -79,7 +79,8 @@ class ListEndpoint(Endpoint):
         self.index_name = index_name
     
     def get_index(self):
-        return self.resource.get_index(self.index_name)
+        assert self.state, 'index lookup must come from a dispatched endpoint'
+        return self.resource.get_index(self.state, self.index_name)
     
     def get_view_class(self):
         return self.resource.list_view

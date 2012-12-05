@@ -150,14 +150,10 @@ class ResourceViewMixin(GetPatchMetaMixin, ConditionalAccessMixin):
         if self.global_state:
             session_params.update(self.global_state)
         with push_session(session_params):
-            self.state = self.create_state()
-            self.state.meta = self.get_meta()
+            self.initialize_state()
             
-            #set the endpoint state to match the view
-            self.endpoint.state = self.state
-            
-            resource_params = dict(self.state)
-            resource_params['endpoint_state'] = self.state
+            #resource_params = dict(self.state)
+            #resource_params['endpoint_state'] = self.state
             #with self.resource.state.patch_state(**resource_params):
             if True:
                 #TODO anything we return must preserve the state @-@
@@ -175,9 +171,11 @@ class ResourceViewMixin(GetPatchMetaMixin, ConditionalAccessMixin):
     def dispatch_api(self, request, *args, **kwargs):
         return super(ResourceViewMixin, self).dispatch(request, *args, **kwargs)
     
-    def create_state(self):
-        state = self.get_state_class()(**self.get_state_kwargs())
-        return state
+    def initialize_state(self):
+        self.state = self.get_state_class()(**self.get_state_kwargs())
+        self.endpoint.state = self.state
+        self.state.meta = self.get_meta()
+        return self.state
     
     def pre_dispatch(self):
         """

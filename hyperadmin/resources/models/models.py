@@ -62,10 +62,10 @@ class BaseModelResource(CRUDResource):
         kwargs['model'] = self.model
         return kwargs
     
-    def get_primary_query(self, **kwargs):
-        return self.get_queryset()
+    def get_primary_query(self, state, **kwargs):
+        return self.get_queryset(state)
     
-    def get_indexes(self):
+    def get_indexes(self, state):
         #from hyperadmin.resources.indexes import Index
         from hyperadmin.resources.models.filters import FieldFilter, SearchFilter
 
@@ -76,9 +76,9 @@ class BaseModelResource(CRUDResource):
         except ImportError:
             from hyperadmin.resources.models.util import lookup_needs_distinct
         
-        indexes = super(BaseModelResource, self).get_indexes()
+        indexes = super(BaseModelResource, self).get_indexes(state)
         
-        index = ModelIndex('filter', self, self.get_index_query('filter'))
+        index = ModelIndex('filter', self, state, self.get_index_query(state, 'filter'))
         indexes['filter'] = index
         
         if self.list_filter:
@@ -120,25 +120,25 @@ class BaseModelResource(CRUDResource):
     def lookup_allowed(self, lookup, value):
         return True #TODO
     
-    def get_queryset(self):
+    def get_queryset(self, state):
         queryset = self.resource_adaptor.objects.all()
-        if not self.has_change_permission():
+        if not self.has_change_permission(state):
             queryset = queryset.none()
         return queryset
     
-    def has_add_permission(self):
-        user = self.state['auth']
+    def has_add_permission(self, state):
+        user = state['auth']
         if self.opts.auto_created:
             # We're checking the rights to an auto-created intermediate model,
             # which doesn't have its own individual permissions. The user needs
             # to have the change permission for the related model in order to
             # be able to do anything with the intermediate model.
-            return self.has_change_permission(user)
+            return self.has_change_permission(state)
         return user.has_perm(
             self.opts.app_label + '.' + self.opts.get_add_permission())
 
-    def has_change_permission(self, item=None):
-        user = self.state['auth']
+    def has_change_permission(self, state, item=None):
+        user = state['auth']
         
         if item:
             obj = item.instance
@@ -155,28 +155,28 @@ class BaseModelResource(CRUDResource):
         return user.has_perm(
             opts.app_label + '.' + opts.get_change_permission(), obj)
 
-    def has_delete_permission(self, item=None):
-        user = self.state['auth']
+    def has_delete_permission(self, state, item=None):
+        user = state['auth']
         #obj = item.instance
         if self.opts.auto_created:
             # We're checking the rights to an auto-created intermediate model,
             # which doesn't have its own individual permissions. The user needs
             # to have the change permission for the related model in order to
             # be able to do anything with the intermediate model.
-            return self.has_change_permission(item)
+            return self.has_change_permission(state, item)
         return user.has_perm(
             self.opts.app_label + '.' + self.opts.get_delete_permission())
         
-    def get_exclude(self):
+    def get_exclude(self, state):
         return self.exclude or []
     
-    def get_form_class(self):
+    def get_form_class(self, state):
         if self.form_class:
             return self.form_class
         class AdminForm(forms.ModelForm):
             class Meta:
                 model = self.model
-                exclude = self.get_exclude()
+                exclude = self.get_exclude(state)
                 #TODO formfield overides
                 #TODO fields
         return AdminForm
@@ -218,8 +218,8 @@ class ModelResource(BaseModelResource):
             )
         return urlpatterns
     
-    def get_item_namespaces(self, item):
-        namespaces = super(ModelResource, self).get_item_namespaces(item)
+    def get_item_namespaces(self, state, item):
+        namespaces = super(ModelResource, self).get_item_namespaces(state, item)
         
         for inline in self.inline_instances:
             name = 'inline-%s' % inline.rel_name
@@ -250,15 +250,15 @@ class InlineModelResource(BaseModelResource):
         if self.rel_name is None:
             self.rel_name = RelatedObject(self.fk.rel.to, self.model, self.fk).get_accessor_name()
     
-    def get_queryset(self, parent):
+    def get_queryset(self, state, parent):
         queryset = self.resource_adaptor.objects.all()
         queryset = queryset.filter(**{self.fk.name:parent})
-        if not self.has_change_permission():
+        if not self.has_change_permission(state):
             queryset = queryset.none()
         return queryset
     
-    def get_primary_query(self, **kwargs):
-        return self.get_queryset(parent=self.state['parent'])
+    def get_primary_query(self, state, **kwargs):
+        return self.get_queryset(parent=state['parent'])
     
     def get_changelist(self, **kwargs):
         return None
@@ -291,7 +291,7 @@ class InlineModelResource(BaseModelResource):
             breadcrumbs.append(self.get_item_breadcrumb(self.state.item))
         return breadcrumbs
     
-    def get_form_class(self):
+    def get_form_class(self, state):
         if self.form_class:
             return self.form_class
         class AdminForm(forms.ModelForm):

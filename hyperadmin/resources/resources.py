@@ -119,16 +119,16 @@ class BaseResource(object):
                 'resource_site':self.site,}
                 #'global_state':dict(self.site.state.global_state),} #store a snapshot of the current global state
     
-    def get_outbound_links(self):
-        return self.get_breadcrumbs()
+    #def get_outbound_links(self):
+    #    return self.get_breadcrumbs()
     
-    def get_indexes(self):
+    def get_indexes(self, state):
         return {}
     
-    def get_index(self, name):
-        return self.get_indexes()[name]
+    def get_index(self, state, name):
+        return self.get_indexes(state)[name]
     
-    def get_index_query(self, name):
+    def get_index_query(self, state, name):
         raise NotImplementedError
     
     def get_item_url(self, item):
@@ -137,17 +137,15 @@ class BaseResource(object):
     def get_state_class(self):
         return self.state_class
     
-    def get_form_class(self):
+    def get_form_class(self, state):
         return self.form_class
     
-    def get_form_kwargs(self, item=None, **kwargs):
+    def get_form_kwargs(self, state, item=None, **kwargs):
         if item is not None:
             kwargs.setdefault('instance', item.instance)
         return kwargs
     
-    def generate_response(self, media_type, content_type, link, state=None):
-        if state is None:
-            state = self.state.get('endpoint_state', self.state)
+    def generate_response(self, media_type, content_type, link, state):
         return media_type.serialize(content_type=content_type, link=link, state=state)
     
     def get_related_resource_from_field(self, field):
@@ -166,7 +164,7 @@ class BaseResource(object):
         assert 'endpoint' in kwargs
         return self.get_resource_item_class()(instance=instance, **kwargs)
     
-    def get_instances(self):
+    def get_instances(self, state):
         return []
     
     #def get_resource_items(self):
@@ -187,14 +185,15 @@ class BaseResource(object):
         resource_link = Link(**link_kwargs)
         return resource_link
     
-    def get_breadcrumb(self):
+    def get_breadcrumb(self, state):
         return self.get_resource_link(rel='breadcrumb')
     
-    def get_breadcrumbs(self):
-        breadcrumbs = self.create_link_collection()
+    def get_breadcrumbs(self, state):
         if self.parent:
-            breadcrumbs = self.parent.get_breadcrumbs()
-        breadcrumbs.append(self.get_breadcrumb())
+            breadcrumbs = self.parent.get_breadcrumbs(state)
+        else:
+            breadcrumbs = self.create_link_collection()
+        breadcrumbs.append(self.get_breadcrumb(state))
         return breadcrumbs
     
     def get_prompt(self):
@@ -203,6 +202,7 @@ class BaseResource(object):
     def get_item_prompt(self, item):
         return unicode(item.instance)
     
+    #TODO deprecate
     def get_item_link(self, item, **kwargs):
         link_kwargs = {'url':item.get_absolute_url(),
                        'resource':self,
@@ -212,14 +212,14 @@ class BaseResource(object):
         item_link = Link(**link_kwargs)
         return item_link
     
-    def get_namespaces(self):
+    def get_namespaces(self, state):
         return dict()
     
-    def get_item_namespaces(self, item):
+    def get_item_namespaces(self, state, item):
         return dict()
     
-    def get_link_url(self, link):
-        return self.state.get_link_url(link)
+    #def get_link_url(self, link):
+    #    return self.state.get_link_url(link)
     
     def create_link_collection(self):
         return LinkCollection(self)

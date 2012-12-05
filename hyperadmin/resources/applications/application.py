@@ -36,7 +36,7 @@ class ApplicationResource(BaseResource):
         key = resource.get_resource_name()
         self.resource_adaptor[key] = resource
     
-    def get_instances(self):
+    def get_instances(self, state):
         #TODO sort by name
         return self.resource_adaptor.values()
     

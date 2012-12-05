@@ -125,7 +125,7 @@ class CRUDListView(CRUDView):
         return self.generate_response(response_link)
     
     def get_meta(self):
-        resource_item = self.resource.get_list_resource_item(None)
+        resource_item = self.resource.get_list_resource_item(instance=None, endpoint=self)
         form = resource_item.get_form()
         data = dict()
         data['display_fields'] = list()
@@ -136,8 +136,8 @@ class CRUDListView(CRUDView):
     def get_index(self):
         return self.endpoint.get_index()
     
-    def create_state(self):
-        state = super(CRUDListView, self).create_state()
+    def initialize_state(self):
+        state = super(CRUDListView, self).initialize_state()
         
         index = self.get_index()
         paginator = index.get_paginator()

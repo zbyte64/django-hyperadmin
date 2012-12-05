@@ -45,13 +45,13 @@ class SiteResource(BaseResource):
     def get_item_prompt(self, item):
         return item.instance.get_prompt()
     
-    def get_instances(self):
+    def get_instances(self, state):
         applications = self.applications.items()
         apps = [entry[1] for entry in sorted(applications, key=lambda x: x[0])]
         all_apps = list()
         for app in apps:
             all_apps.append(app)
-            all_apps.extend(app.get_instances())
+            all_apps.extend(app.get_instances(state))
         all_apps.append(self.auth_resource)
         return all_apps
     
