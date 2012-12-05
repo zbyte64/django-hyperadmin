@@ -183,4 +183,7 @@ class ResourceViewMixin(GetPatchMetaMixin, ConditionalAccessMixin):
         Typically extra state manipulation can go here
         """
         pass
-
+    
+    @property
+    def link_prototypes(self):
+        return self.endpoint.link_prototypes

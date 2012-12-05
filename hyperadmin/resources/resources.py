@@ -4,7 +4,7 @@ from django import forms
 from django.conf.urls.defaults import patterns
 from django.utils.datastructures import SortedDict
 
-from hyperadmin.hyperobjects import Link, LinkCollection, LinkCollectionProvider, ResourceItem
+from hyperadmin.hyperobjects import Link, LinkCollectionProvider, ResourceItem
 from hyperadmin.states import ResourceState
 
 
@@ -220,7 +220,3 @@ class BaseResource(object):
     
     #def get_link_url(self, link):
     #    return self.state.get_link_url(link)
-    
-    def create_link_collection(self):
-        return LinkCollection(self)
-

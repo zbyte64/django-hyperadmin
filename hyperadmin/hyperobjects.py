@@ -188,21 +188,21 @@ class Link(object):
         return a_clone
 
 class LinkCollection(list):
-    def __init__(self, resource):
-        self.resource_state = resource.state
+    def __init__(self, endpoint):
+        self.endpoint = endpoint
     
     @property
-    def resource(self):
-        return self.resource_state['resource']
+    def link_prototypes(self):
+        return self.endpoint.link_prototypes
     
     def add_link(self, link_name, **kwargs):
         """
         Adds the specified link from the resource.
         This will only add the link if it exists and the person is allowed to view it.
         """
-        if link_name not in self.resource.link_prototypes:
+        if link_name not in self.link_prototypes:
             return False
-        endpoint_link = self.resource.link_prototypes[link_name]
+        endpoint_link = self.link_prototypes[link_name]
         if not endpoint_link.show_link(**kwargs):
             return False
         link = endpoint_link.get_link(**kwargs)

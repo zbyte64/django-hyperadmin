@@ -1,7 +1,7 @@
 from django.conf.urls.defaults import url
 from django.views.generic import View
 
-from hyperadmin.hyperobjects import Link, LinkCollectionProvider
+from hyperadmin.hyperobjects import Link, LinkCollection, LinkCollectionProvider
 
 
 class LinkPrototype(object):
@@ -129,7 +129,7 @@ class Endpoint(View):
         return {}
     
     def create_link_collection(self):
-        return self.resource.create_link_collection()
+        return LinkCollection(endpoint=self)
     
     def get_resource_item(self, instance):
         return self.resource.get_resource_item(instance, endpoint=self)
