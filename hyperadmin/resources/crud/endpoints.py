@@ -12,7 +12,7 @@ class ListLinkPrototype(LinkPrototype):
 
 class CreateLinkPrototype(LinkPrototype):
     def show_link(self, **kwargs):
-        return self.resource.has_add_permission()
+        return self.resource.has_add_permission(self.state)
     
     def get_link_kwargs(self, **kwargs):
         kwargs = super(CreateLinkPrototype, self).get_link_kwargs(**kwargs)
@@ -30,7 +30,7 @@ class CreateLinkPrototype(LinkPrototype):
 #TODO consider: Update vs Detail link
 class UpdateLinkPrototype(LinkPrototype):
     def show_link(self, **kwargs):
-        return self.resource.has_change_permission(item=kwargs.get('item', None))
+        return self.resource.has_change_permission(self.state, item=kwargs.get('item', None))
     
     def get_link_kwargs(self, **kwargs):
         item = kwargs.get('item')
@@ -49,7 +49,7 @@ class UpdateLinkPrototype(LinkPrototype):
 
 class DeleteLinkPrototype(LinkPrototype):
     def show_link(self, **kwargs):
-        return self.resource.has_delete_permission(item=kwargs.get('item', None))
+        return self.resource.has_delete_permission(self.state, item=kwargs.get('item', None))
     
     def get_link_kwargs(self, **kwargs):
         item = kwargs.get('item')
@@ -108,7 +108,7 @@ class ListEndpoint(Endpoint):
         return page.object_list
     
     def get_resource_item(self, instance):
-        return self.resource.get_list_resource_item(instance)
+        return self.resource.get_list_resource_item(instance, endpoint=self)
         
 
 class CreateEndpoint(Endpoint):

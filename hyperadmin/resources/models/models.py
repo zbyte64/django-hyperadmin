@@ -242,7 +242,7 @@ class InlineModelResource(BaseModelResource):
     rel_name = None
     
     def __init__(self, parent):
-        super(InlineModelResource, self).__init__(resource_adaptor=self.model, site_state=parent.site_state, parent_resource=parent)
+        super(InlineModelResource, self).__init__(resource_adaptor=self.model, site=parent.site, parent_resource=parent)
         
         from django.db.models.fields.related import RelatedObject
         from django.forms.models import _get_foreign_key

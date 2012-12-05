@@ -40,7 +40,7 @@ class Index(object):
         return links
     
     def get_paginator_kwargs(self):
-        return {}
+        return self.resource.get_paginator_kwargs(state=self.state)
     
     def get_paginator(self, **kwargs):
         index = self.get_filtered_index()
@@ -80,5 +80,4 @@ class Index(object):
 
 class PrimaryIndex(Index):
     def get_paginator_kwargs(self):
-        return {'per_page':getattr(self.resource, 'list_per_page', 50),}
-
+        return self.resource.get_paginator_kwargs(self.state)

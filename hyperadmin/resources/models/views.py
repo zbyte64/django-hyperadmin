@@ -7,7 +7,7 @@ class ModelMixin(object):
     queryset = None
     
     def get_queryset(self):
-        return self.resource.get_queryset()
+        return self.resource.get_queryset(state=self.state)
 
 class ModelCreateView(ModelMixin, CRUDCreateView):
     pass
@@ -28,17 +28,17 @@ class ModelDetailView(ModelDetailMixin, CRUDDetailView):
     pass
 
 class InlineModelMixin(object):
-    def get_state_data(self):
-        data = super(InlineModelMixin, self).get_state_data()
-        data['parent'] = self.get_parent()
-        return data
+    def initialize_state(self):
+        state = super(InlineModelMixin, self).initialize_state()
+        state['parent'] = self.get_parent()
+        return state
     
     def get_changelist_links(self):
         return []
     
     def get_parent(self):
         if not hasattr(self, '_parent'):
-            queryset = self.resource.parent.get_queryset()
+            queryset = self.resource.parent.get_queryset(state=self.state)
             self._parent = queryset.get(pk=self.kwargs['pk'])
         return self._parent
     

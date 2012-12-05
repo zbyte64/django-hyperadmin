@@ -112,4 +112,7 @@ class StorageResource(CRUDResource):
     
     def get_item_prompt(self, item):
         return item.instance.name
-
+    
+    def get_paginator_kwargs(self, state):
+        return {'storage':self.storage,
+                'state':state,}

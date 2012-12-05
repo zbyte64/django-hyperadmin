@@ -127,7 +127,7 @@ class ResourceViewMixin(GetPatchMetaMixin, ConditionalAccessMixin):
         data.update(self.kwargs)
         data.update({'view_class':self.view_class,
                      'view_classes':self.get_view_classes(),
-                     'item':self.get_item(), #TODO consult the endpoint somehow
+                     #'item':self.get_item(), #do this in initialize_state
                      'params':self.request.GET.copy(),
                      'args':self.args,})
         return data
@@ -187,3 +187,6 @@ class ResourceViewMixin(GetPatchMetaMixin, ConditionalAccessMixin):
     @property
     def link_prototypes(self):
         return self.endpoint.link_prototypes
+    
+    def get_resource_item(self, instance):
+        return self.endpoint.get_resource_item(instance)

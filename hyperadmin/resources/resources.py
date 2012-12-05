@@ -220,3 +220,6 @@ class BaseResource(object):
     
     #def get_link_url(self, link):
     #    return self.state.get_link_url(link)
+    
+    def get_paginator_kwargs(self, state):
+        return {}

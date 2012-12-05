@@ -51,13 +51,13 @@ class CRUDResource(BaseResource):
     def get_item_url(self, item):
         return self.link_prototypes['update'].get_url(item=item)
     
-    def has_add_permission(self):
+    def has_add_permission(self, state):
         return True
     
-    def has_change_permission(self, item=None):
+    def has_change_permission(self, state, item=None):
         return True
     
-    def has_delete_permission(self, item=None):
+    def has_delete_permission(self, state, item=None):
         return True
     
     def get_indexes(self, state):
@@ -128,6 +128,9 @@ class CRUDResource(BaseResource):
     '''
     def get_paginator_class(self):
         return self.paginator_class
+    
+    def get_paginator_kwargs(self, state):
+        return {'per_page':getattr(self, 'list_per_page', 50),}
     
     def get_paginator(self, index, **kwargs):
         return self.get_paginator_class()(index, **kwargs)

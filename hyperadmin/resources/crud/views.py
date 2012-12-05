@@ -10,7 +10,7 @@ class CRUDResourceViewMixin(ResourceViewMixin):
     def get_form_class(self):
         if self.form_class:
             return self.form_class
-        return self.resource.get_form_class()
+        return self.resource.get_form_class(state=self.state)
     
     def get_form_kwargs(self, **kwargs):
         return kwargs
@@ -21,13 +21,13 @@ class CRUDResourceViewMixin(ResourceViewMixin):
         return kwargs
     
     def can_add(self):
-        return self.resource.has_add_permission()
+        return self.endpoint.link_prototypes['create'].show_link()
     
     def can_change(self, item=None):
-        return self.resource.has_change_permission(item)
+        return self.endpoint.link_prototypes['update'].show_link(item=item)
     
     def can_delete(self, item=None):
-        return self.resource.has_delete_permission(item)
+        return self.endpoint.link_prototypes['delete'].show_link(item=item)
     
     def get_create_link(self, form_kwargs=None, **link_kwargs):
         if form_kwargs is None: form_kwargs = dict()
@@ -146,23 +146,20 @@ class CRUDListView(CRUDView):
         state.meta['object_count'] = paginator.count
         state.meta['number_of_pages'] = paginator.num_pages
         return state
-    
-    def get_resource_item(self, instance):
-        return self.resource.get_list_resource_item(instance)
 
 class CRUDDetailMixin(object):
     def get_object(self):
         raise NotImplementedError
     
-    def create_state(self):
-        state = super(CRUDDetailMixin, self).create_state()
+    def initialize_state(self):
+        state = super(CRUDDetailMixin, self).initialize_state()
         state.item = self.get_item()
         return state
     
     def get_item(self):
         if not getattr(self, 'object', None):
             self.object = self.get_object()
-        return self.resource.get_resource_item(self.object)
+        return self.get_resource_item(self.object)
     
     def get(self, request, *args, **kwargs):
         return self.generate_response(self.get_update_link(use_request_url=True))

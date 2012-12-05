@@ -8,17 +8,13 @@ class LoginLinkPrototype(LinkPrototype):
         return not self.state.session.get('authenticated', True) or self.state.session['auth'].is_anonymous()
     
     def get_link_kwargs(self, **kwargs):
-        form_kwargs = kwargs.pop('form_kwargs', None)
-        if form_kwargs is None:
-            form_kwargs = {}
-        form_kwargs = self.resource.get_form_kwargs(**form_kwargs)
+        kwargs = super(LoginLinkPrototype, self).get_link_kwargs(**kwargs)
         
         link_kwargs = {'url':self.get_url(),
                        'resource':self.resource,
                        'on_submit':self.handle_submission,
                        'method':'POST',
-                       'form_kwargs':form_kwargs,
-                       'form_class': self.resource.get_form_class(),
+                       'form_class': self.get_form_class(),
                        'prompt':'Login',
                        'rel':'login',}
         link_kwargs.update(kwargs)
@@ -40,6 +36,7 @@ class LogoutLinkPrototype(LinkPrototype):
         return self.state.session.get('authenticated', False) or self.state.session['auth'].is_authenticated()
     
     def get_link_kwargs(self, **kwargs):
+        kwargs = super(LogoutLinkPrototype, self).get_link_kwargs(**kwargs)
         
         link_kwargs = {'url':self.get_url(),
                        'resource':self,
