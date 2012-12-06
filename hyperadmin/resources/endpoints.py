@@ -72,7 +72,7 @@ class Endpoint(View):
     def __init__(self, **kwargs):
         self._init_kwargs = kwargs
         super(Endpoint, self).__init__(**kwargs)
-        self.links = LinkCollectionProvider(self, self.resource.links)
+        self.links = LinkCollectionProvider(self, self)#, self.resource.links)
     
     @property
     def link_prototypes(self):

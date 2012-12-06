@@ -343,7 +343,7 @@ class EndpointState(ResourceBoundMixin, State):
         self.endpoint = endpoint
         super(EndpointState, self).__init__(substates=substates, data=data)
         self.meta = meta
-        self.links = EndpointStateLinkCollectionProvider(self, self.endpoint.links)
+        self.links = EndpointStateLinkCollectionProvider(self.endpoint, self, self.endpoint.links)
         
         #nuke previous state links
         self.update({'links': {},

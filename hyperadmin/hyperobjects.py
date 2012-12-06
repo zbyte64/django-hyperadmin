@@ -225,7 +225,8 @@ class ChainedLinkCollectionProvider(object):
         return links
 
 class LinkCollectionProvider(object):
-    def __init__(self, container, parent=None):
+    def __init__(self, endpoint, container, parent=None):
+        self.endpoint = endpoint
         self.container = container #resource, endpoint, state
         self.parent = parent #parent container links
     
@@ -234,7 +235,7 @@ class LinkCollectionProvider(object):
         if self.parent:
             functions.append( getattr(self.parent, attr) )
         else:
-            functions.append( lambda *args, **kwargs: self.container.create_link_collection() )
+            functions.append( lambda *args, **kwargs: self.endpoint.create_link_collection() )
         if hasattr(self.container, attr):
             functions.append( getattr(self.container, attr) )
         return functions

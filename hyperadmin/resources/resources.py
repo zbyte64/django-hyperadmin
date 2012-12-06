@@ -31,7 +31,7 @@ class BaseResource(object):
         self.resource_adaptor = resource_adaptor
         self.site = site
         self.parent = parent_resource
-        self.links = LinkCollectionProvider(self)
+        #self.links = LinkCollectionProvider(self)
     '''
     def create_state(self):
         state = self.get_state_class()(**self.get_state_kwargs())
@@ -175,18 +175,19 @@ class BaseResource(object):
     
     def get_resource_link(self, **kwargs):
         #TODO we want the endpoint state
-        assert False
-        return self.link_prototypes['list'].get_link(**kwargs)
-        link_kwargs = {'url':self.get_absolute_url(),
-                       'resource':self,
+        #assert False
+        #return self.link_prototypes['list'].get_link(**kwargs)
+        link_kwargs = {#'url':self.get_absolute_url(),
+                       #'resource':self, #endpoint=endpoint
                        'rel':'self',
                        'prompt':self.get_prompt(),}
         link_kwargs.update(kwargs)
+        return self.link_prototypes['list'].get_link(**kwargs)
         resource_link = Link(**link_kwargs)
         return resource_link
     
     def get_breadcrumb(self, state):
-        return self.get_resource_link(rel='breadcrumb')
+        return self.get_resource_link(rel='breadcrumb', endpoint=state.endpoint)
     
     def get_breadcrumbs(self, state):
         if self.parent:
