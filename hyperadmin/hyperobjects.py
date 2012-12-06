@@ -272,9 +272,7 @@ class ResourceItemLinkCollectionProvider(LinkCollectionProvider):
     
     @property
     def parent(self):
-        if 'endpoint_state' in self.container.resource_state:
-            return self.container.resource_state['endpoint_state'].links
-        return self.container.resource.links
+        return self.container.endpoint.links
     
     def _get_link_kwargs(self):
         return {'item':self.container}

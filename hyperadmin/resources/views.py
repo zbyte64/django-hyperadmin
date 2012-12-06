@@ -5,7 +5,7 @@ from django.utils.cache import add_never_cache_headers
 
 import mimeparse
 
-from hyperadmin.states import EndpointState, push_session
+from hyperadmin.states import push_session
 
 
 class ConditionalAccessMixin(object):
@@ -51,8 +51,8 @@ class ResourceViewMixin(GetPatchMetaMixin, ConditionalAccessMixin):
     resource = None
     resource_site = None
     endpoint = None
+    state = None
     global_state = None
-    state_class = EndpointState
     view_class = None
     view_classes = []
     cacheable = False
@@ -107,9 +107,6 @@ class ResourceViewMixin(GetPatchMetaMixin, ConditionalAccessMixin):
     def get_meta(self):
         return {}
     
-    def get_state_class(self):
-        return self.state_class
-    
     def get_view_classes(self):
         view_classes = list(self.view_classes)
         view_classes.append(self.view_class)
@@ -127,18 +124,9 @@ class ResourceViewMixin(GetPatchMetaMixin, ConditionalAccessMixin):
         data.update(self.kwargs)
         data.update({'view_class':self.view_class,
                      'view_classes':self.get_view_classes(),
-                     #'item':self.get_item(), #do this in initialize_state
                      'params':self.request.GET.copy(),
                      'args':self.args,})
         return data
-    
-    def get_state_kwargs(self):
-        return {
-            'resource': self.resource,
-            'endpoint': self.endpoint,
-            'data':self.get_state_data(),
-            'meta':{},
-        }
     
     @method_decorator(csrf_exempt)
     def dispatch(self, request, *args, **kwargs):
@@ -152,29 +140,23 @@ class ResourceViewMixin(GetPatchMetaMixin, ConditionalAccessMixin):
         with push_session(session_params):
             self.initialize_state()
             
-            #resource_params = dict(self.state)
-            #resource_params['endpoint_state'] = self.state
-            #with self.resource.state.patch_state(**resource_params):
-            if True:
-                #TODO anything we return must preserve the state @-@
-                self.pre_dispatch()
-                permission_response = self.resource.api_permission_check(self.request)
-                if permission_response is not None:
-                    return permission_response
-                response = self.dispatch_api(request, *args, **kwargs)
-                if not self.cacheable:
-                    add_never_cache_headers(response)
-                if hasattr(response, 'render'):
-                    response.render()
-                return response
+            self.pre_dispatch()
+            permission_response = self.resource.api_permission_check(self.request)
+            if permission_response is not None:
+                return permission_response
+            response = self.dispatch_api(request, *args, **kwargs)
+            if not self.cacheable:
+                add_never_cache_headers(response)
+            if hasattr(response, 'render'):
+                response.render()
+            return response
     
     def dispatch_api(self, request, *args, **kwargs):
         return super(ResourceViewMixin, self).dispatch(request, *args, **kwargs)
     
     def initialize_state(self):
-        self.state = self.get_state_class()(**self.get_state_kwargs())
-        self.endpoint.state = self.state
-        self.state.meta = self.get_meta()
+        self.state.update(self.get_state_data())
+        self.state.meta.update(self.get_meta())
         return self.state
     
     def pre_dispatch(self):

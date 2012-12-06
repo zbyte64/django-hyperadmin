@@ -19,11 +19,10 @@ class CollectionJsonTestCase(MediaTypeTestCase):
         return CollectionJSON(MockView())
     
     def test_queryset_serialize(self):
-        link = self.resource.endpoints['list'].link_prototypes['list'].get_link()
-        #link = self.resource.get_resource_link()
-        #state = self.resource.state
-        state = {}
-        state['auth'] = self.user
+        endpoint = self.resource.endpoints['list']
+        endpoint.initialize_state(auth=self.user)
+        link = endpoint.link_prototypes['list'].get_link()
+        state = endpoint.state
         
         response = self.adaptor.serialize(content_type=self.content_type, link=link, state=state)
         data = json.loads(response.content)
@@ -32,10 +31,11 @@ class CollectionJsonTestCase(MediaTypeTestCase):
     
     def test_model_instance_serialize(self):
         instance = ContentType.objects.all()[0]
-        item = self.resource.get_resource_item(instance, endpoint=None)
-        link = self.resource.get_item_link(item)
-        state = self.resource.state
-        state.item = item
+        endpoint = self.resource.endpoints['detail']
+        endpoint.initialize_state(auth=self.user)
+        endpoint.state.item = item = endpoint.get_resource_item(instance)
+        link = item.get_item_link()
+        state = endpoint.state
         
         response = self.adaptor.serialize(content_type=self.content_type, link=link, state=state)
         data = json.loads(response.content)
@@ -44,9 +44,11 @@ class CollectionJsonTestCase(MediaTypeTestCase):
     
     def test_site_resource_serialize(self):
         site_resource = SiteResource(site=site)
-        link = self.resource.endpoints['list'].link_prototypes['list'].get_link()
-        state = {}
-        state['auth'] = self.user
+        
+        endpoint = site_resource.endpoints['list']
+        endpoint.initialize_state(auth=self.user)
+        link = endpoint.link_prototypes['list'].get_link()
+        state = endpoint.state
         
         response = self.adaptor.serialize(content_type=self.content_type, link=link, state=state)
         data = json.loads(response.content)

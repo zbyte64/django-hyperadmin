@@ -1,11 +1,8 @@
-from copy import copy
-
 from django import forms
 from django.conf.urls.defaults import patterns
 from django.utils.datastructures import SortedDict
 
-from hyperadmin.hyperobjects import Link, LinkCollectionProvider, ResourceItem
-from hyperadmin.states import ResourceState
+from hyperadmin.hyperobjects import Link, ResourceItem
 
 
 class EmptyForm(forms.Form):
@@ -13,53 +10,16 @@ class EmptyForm(forms.Form):
         self.instance = kwargs.pop('instance', None)
         super(EmptyForm, self).__init__(**kwargs)
 
-
-#TODO more like:
-#resource.links.get_<name>()
-#resource.links.get_item_<name>(item)
-#resource.links.add_<name>(link) #goes to that items internal state
-#resource.links.get_internal_<name>() #those belonging to this container
-#resource.links.get_internal_item_<name>(item)
-
 class BaseResource(object):
     resource_class = '' #hint to the client how this resource is used
     resource_item_class = ResourceItem
-    state_class = ResourceState
     form_class = EmptyForm
     
     def __init__(self, resource_adaptor, site, parent_resource=None):
         self.resource_adaptor = resource_adaptor
         self.site = site
         self.parent = parent_resource
-        #self.links = LinkCollectionProvider(self)
-    '''
-    def create_state(self):
-        state = self.get_state_class()(**self.get_state_kwargs())
-        return state
     
-    def get_state_kwargs(self):
-        return {
-            'site_state': self.site_state,
-            'data':self.get_state_data(),
-        }
-    
-    def get_state_data(self):
-        return {
-            'resource': self
-        }
-    
-    def fork_state(self, **kwargs):
-        new_resource = copy(self)
-        #TODO this is not ideal...
-        for uncache in ('_endpoints', '_link_prototypes'):
-            if hasattr(new_resource, uncache):
-                delattr(new_resource, uncache)
-        new_resource.state = self.state.copy()
-        new_resource.state['resource'] = new_resource
-        new_resource.state.update(kwargs)
-        new_resource.links = LinkCollectionProvider(new_resource)
-        return new_resource
-    '''
     def get_app_name(self):
         raise NotImplementedError
     app_name = property(get_app_name)
@@ -117,10 +77,6 @@ class BaseResource(object):
     def get_view_kwargs(self):
         return {'resource':self,
                 'resource_site':self.site,}
-                #'global_state':dict(self.site.state.global_state),} #store a snapshot of the current global state
-    
-    #def get_outbound_links(self):
-    #    return self.get_breadcrumbs()
     
     def get_indexes(self, state):
         return {}
@@ -167,8 +123,8 @@ class BaseResource(object):
     def get_instances(self, state):
         return []
     
-    #def get_resource_items(self):
-    #    return [self.get_resource_item(instance) for instance in self.get_instances()]
+    def get_resource_items(self, state):
+        return [self.get_resource_item(instance) for instance in self.get_instances(state)]
     
     def get_resource_link_item(self):
         return None
@@ -183,8 +139,6 @@ class BaseResource(object):
                        'prompt':self.get_prompt(),}
         link_kwargs.update(kwargs)
         return self.link_prototypes['list'].get_link(**kwargs)
-        resource_link = Link(**link_kwargs)
-        return resource_link
     
     def get_breadcrumb(self, state):
         return self.get_resource_link(rel='breadcrumb', endpoint=state.endpoint)

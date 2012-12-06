@@ -6,7 +6,6 @@ from django.utils.encoding import iri_to_uri
 
 from hyperadmin.resources.applications.site import SiteResource
 from hyperadmin.resources.applications.application import ApplicationResource
-from hyperadmin.states import SiteState
 
 import collections
 
@@ -14,31 +13,14 @@ import collections
 class ResourceSite(object):
     site_resource_class = SiteResource
     application_resource_class = ApplicationResource
-    state_class = SiteState
     
     def __init__(self, name='hyperadmin'):
         self.name = name
         self.applications = dict()
         self.registry = dict()
-        #self.state = self.create_state()
         self.media_types = dict()
         self.site_resource = self.site_resource_class(**self.get_resource_kwargs())
-    '''
-    def create_state(self):
-        state = self.get_state_class()(**self.get_state_kwargs())
-        return state
     
-    def get_state_kwargs(self):
-        return {'data':{'site':self,
-                        'media_types': dict(),}}
-    
-    def get_state_class(self):
-        return self.state_class
-    
-    @property
-    def media_types(self):
-        return self.state['media_types']
-    '''
     def register(self, model_or_iterable, admin_class, **options):
         if isinstance(model_or_iterable, collections.Iterable):
             resources = list()

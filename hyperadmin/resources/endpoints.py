@@ -2,6 +2,7 @@ from django.conf.urls.defaults import url
 from django.views.generic import View
 
 from hyperadmin.hyperobjects import Link, LinkCollection, LinkCollectionProvider
+from hyperadmin.states import EndpointState
 
 
 class LinkPrototype(object):
@@ -69,6 +70,8 @@ class Endpoint(View):
     resource = None
     state = None
     
+    state_class = EndpointState
+    
     def __init__(self, **kwargs):
         self._init_kwargs = kwargs
         super(Endpoint, self).__init__(**kwargs)
@@ -90,22 +93,28 @@ class Endpoint(View):
         """
         #CONSIDER does it make sense to proxy? perhaps we should just merge
         #can we get the view state?
-        handler = self.get_view()
+        self.initialize_state()
+        handler = self.get_internal_view()
         return handler(request, *args, **kwargs)
     
     def get_view_kwargs(self):
         kwargs = self.resource.get_view_kwargs()
-        kwargs['endpoint'] = self
+        kwargs.update({'endpoint': self,
+                       'state': self.state})
         return kwargs
     
     def get_view_class(self):
         return self.view_class
     
-    def get_view(self):
+    def get_internal_view(self):
         init = self.get_view_kwargs()
         klass = self.get_view_class()
         assert klass
         return klass.as_view(**init)
+    
+    def get_view(self, **kwargs):
+        kwargs.update(self._init_kwargs)
+        return type(self).as_view(**kwargs)
     
     def get_url_name(self):
         base_name = self.resource.get_base_url_name()
@@ -115,7 +124,7 @@ class Endpoint(View):
         return self.url_suffix
     
     def get_url_object(self):
-        view = type(self).as_view(**self._init_kwargs)
+        view = self.get_view()
         return url(self.get_url_suffix(), view, name=self.get_url_name(),)
     
     def get_url(self, **kwargs):
@@ -140,3 +149,27 @@ class Endpoint(View):
     def get_resource_items(self):
         instances = self.get_instances()
         return [self.get_resource_item(instance) for instance in instances]
+    
+    def get_state_data(self):
+        return {}
+    
+    def get_meta(self):
+        return {}
+    
+    def get_state_kwargs(self):
+        return {
+            'resource': self.resource,
+            'endpoint': self,
+            'data':self.get_state_data(),
+            'meta':{},
+        }
+    
+    def get_state_class(self):
+        return self.state_class
+    
+    def initialize_state(self, **data):
+        kwargs = self.get_state_kwargs()
+        kwargs['data'].update(data)
+        self.state = self.get_state_class()(**kwargs)
+        self.state.meta = self.get_meta()
+        return self.state

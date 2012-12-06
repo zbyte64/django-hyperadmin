@@ -185,19 +185,40 @@ class State(MergeDict):
     def push_session(self, state):
         return self.session.push_state(state)
 
-class SiteState(State):
-    pass
+class EndpointStateLinkCollectionProvider(LinkCollectionProvider):
+    def _get_link_functions(self, attr):
+        functions = super(EndpointStateLinkCollectionProvider, self)._get_link_functions(attr)
+        key_name = attr[len('get_'):]
+        functions.append(lambda *args, **kwargs: self.container['links'].get(key_name, []))
+        return functions
+    
+    def add_link(self, key, link):
+        self.container['links'].setdefault(key, list())
+        self.container['links'][key].append(link)
 
-class ResourceBoundMixin(object):
-    #contianer = resource or endpoint
+class EndpointState(State):
+    """
+    Used by resources to determine what links and items are available in the response.
+    """
+    def __init__(self, resource, endpoint, meta, substates=[], data={}):
+        self.resource = resource
+        self.endpoint = endpoint
+        super(EndpointState, self).__init__(substates=substates, data=data)
+        self.meta = meta
+        self.links = EndpointStateLinkCollectionProvider(self.endpoint, self, self.endpoint.links)
+        
+        #nuke previous state links
+        self.update({'links': {},
+                     'extra_get_params':{},})
+    
+    def __setitem__(self, key, value):
+        if key == 'links':
+            assert isinstance(value, dict)
+        return super(EndpointState, self).__setitem__(key, value)
     
     @property
     def site(self):
         return self.resource.site
-    
-    #@property
-    #def endpoint(self):
-    #    return self.get('endpoint')
     
     def reverse(self, name, *args, **kwargs):
         if 'reverse' in self:
@@ -289,74 +310,6 @@ class ResourceBoundMixin(object):
     
     def get_namespaces(self):
         return self.resource.get_namespaces(state=self)
-
-#TODO deprecate ResourceState
-class ResourceState(ResourceBoundMixin, State):
-    """
-    Used by resources to determine what links and items are available in the response.
-    """
-    def __init__(self, site_state, substates=[], data={}):
-        self.site_state = site_state
-        super(ResourceState, self).__init__(substates=substates, data=data)
-    
-    def get_dictionaries(self):
-        return [self.session, self.global_state, self.active_dictionary, self.site_state] + self.substates
-    
-    def __copy__(self):
-        substates = self.global_state.dicts + [self.active_dictionary] + list(self.substates)
-        ret = self.__class__(self.site_state, substates=substates)
-        return ret
-    
-    @property
-    def resource(self):
-        return self['resource']
-    
-    @property
-    def container(self):
-        return self.resource
-    
-    @property
-    def namespace(self):
-        return self.get('namespace', None)
-    
-    @property
-    def links(self):
-        return self.resource.links
-
-class EndpointStateLinkCollectionProvider(LinkCollectionProvider):
-    def _get_link_functions(self, attr):
-        functions = super(EndpointStateLinkCollectionProvider, self)._get_link_functions(attr)
-        key_name = attr[len('get_'):]
-        functions.append(lambda *args, **kwargs: self.container['links'].get(key_name, []))
-        return functions
-    
-    def add_link(self, key, link):
-        self.container['links'].setdefault(key, list())
-        self.container['links'][key].append(link)
-
-class EndpointState(ResourceBoundMixin, State):
-    """
-    Used by resources to determine what links and items are available in the response.
-    """
-    def __init__(self, resource, endpoint, meta, substates=[], data={}):
-        self.resource = resource
-        self.endpoint = endpoint
-        super(EndpointState, self).__init__(substates=substates, data=data)
-        self.meta = meta
-        self.links = EndpointStateLinkCollectionProvider(self.endpoint, self, self.endpoint.links)
-        
-        #nuke previous state links
-        self.update({'links': {},
-                     'extra_get_params':{},})
-    
-    def __setitem__(self, key, value):
-        if key == 'links':
-            assert isinstance(value, dict)
-        return super(EndpointState, self).__setitem__(key, value)
-    
-    #@property
-    #def resource(self):
-    #    return self.resource_state['resource']
     
     @property
     def container(self):

@@ -258,7 +258,7 @@ class InlineModelResource(BaseModelResource):
         return queryset
     
     def get_primary_query(self, state, **kwargs):
-        return self.get_queryset(parent=state['parent'])
+        return self.get_queryset(state, parent=state['parent'])
     
     def get_changelist(self, **kwargs):
         return None
