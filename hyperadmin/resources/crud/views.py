@@ -80,14 +80,6 @@ class CRUDResourceViewMixin(ResourceViewMixin):
         link_kwargs['form_kwargs'] = form_kwargs
         link_kwargs = self.get_link_kwargs(**link_kwargs)
         return self.link_prototypes['list'].get_link(**link_kwargs)
-    
-    def get_breadcrumbs(self):
-        return []
-    
-    def generate_response(self, link):
-        for breadcrumb in self.get_breadcrumbs():
-            self.state.links.add_link('outbound_links', breadcrumb)
-        return super(CRUDResourceViewMixin, self).generate_response(link)
 
 class CRUDView(CRUDResourceViewMixin, View):
     pass
@@ -106,9 +98,6 @@ class CRUDCreateView(CRUDView):
         form_link = self.get_create_link(form_kwargs=form_kwargs, use_request_url=True)
         response_link = form_link.submit()
         return self.generate_response(response_link)
-    
-    def get_breadcrumbs(self):
-        return [self.get_create_link(rel='breadcrumb', use_request_url=True, link_factor='LO')]
 
 class CRUDListView(CRUDView):
     view_class = 'change_list'
@@ -178,10 +167,6 @@ class CRUDDeleteView(CRUDDetailMixin, CRUDView):
         response_link = form_link.submit()
         
         return self.generate_response(response_link)
-    
-    def get_breadcrumbs(self):
-        return [self.resource.get_item_breadcrumb(self.get_item()), 
-                self.get_delete_link(rel='breadcrumb', use_request_url=True, link_factor='LO', classes=[])]
 
 class CRUDDetailView(CRUDDetailMixin, CRUDView):
     view_class = 'change_form'
@@ -207,7 +192,3 @@ class CRUDDetailView(CRUDDetailMixin, CRUDView):
         form_link = self.get_restul_delete_link()
         response_link = form_link.submit()
         return self.generate_response(response_link)
-    
-    def get_breadcrumbs(self):
-        return [self.resource.get_item_breadcrumb(self.get_item())]
-

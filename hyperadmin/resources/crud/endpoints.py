@@ -120,6 +120,9 @@ class CreateEndpoint(Endpoint):
     
     def get_links(self):
         return {'create':CreateLinkPrototype(endpoint=self)}
+    
+    def get_breadcrumbs(self):
+        return [self.link_prototypes['create'].get_link(rel='breadcrumb', use_request_url=True, link_factor='LO')]
 
 class DetailEndpoint(Endpoint):
     name_suffix = 'detail'
@@ -140,6 +143,9 @@ class DetailEndpoint(Endpoint):
     
     def get_url(self, item):
         return super(DetailEndpoint, self).get_url(pk=item.instance.pk)
+    
+    def get_breadcrumbs(self):
+        return [self.link_prototypes['update'].get_link(item=self.state.item, rel='breadcrumb', use_request_url=True, link_factor='LO')]
 
 class DeleteEndpoint(Endpoint):
     name_suffix = 'delete'
@@ -153,4 +159,8 @@ class DeleteEndpoint(Endpoint):
     
     def get_url(self, item):
         return super(DeleteEndpoint, self).get_url(pk=item.instance.pk)
+    
+    def get_breadcrumbs(self):
+        return [self.link_prototypes['update'].get_link(item=self.state.item, rel='breadcrumb', use_request_url=True, link_factor='LO'), 
+                self.link_prototypes['delete'].get_link(item=self.state.item, rel='breadcrumb', use_request_url=True, link_factor='LO')]
 

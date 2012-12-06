@@ -13,8 +13,8 @@ class JsonTestCase(MediaTypeTestCase):
         return JSON(MockView())
     
     def test_queryset_serialize(self):
-        link = self.resource.get_resource_link()
-        state = self.resource.state
+        link = self.resource.endpoints['list'].link_prototypes['list'].get_link()
+        state = {}
         state['auth'] = self.user
         
         response = self.adaptor.serialize(content_type='application/json', link=link, state=state)
@@ -23,7 +23,7 @@ class JsonTestCase(MediaTypeTestCase):
     
     def test_model_instance_serialize(self):
         instance = ContentType.objects.all()[0]
-        item = self.resource.get_resource_item(instance)
+        item = self.resource.get_resource_item(instance, endpoint=None)
         link = self.resource.get_item_link(item)
         state = self.resource.state
         state.item = item
@@ -41,8 +41,8 @@ class JsonpTestCase(MediaTypeTestCase):
         return JSONP(MockView())
     
     def test_queryset_serialize(self):
-        link = self.resource.get_resource_link()
-        state = self.resource.state
+        link = self.resource.endpoints['list'].link_prototypes['list'].get_link()
+        state = {}
         state['auth'] = self.user
         
         response = self.adaptor.serialize(content_type='text/javascript', link=link, state=state)
@@ -52,9 +52,9 @@ class JsonpTestCase(MediaTypeTestCase):
     
     def test_model_instance_serialize(self):
         instance = ContentType.objects.all()[0]
-        item = self.resource.get_resource_item(instance)
+        item = self.resource.get_resource_item(instance, endpoint=None)
         link = self.resource.get_item_link(item)
-        state = self.resource.state
+        state = {}
         state.item = item
         
         response = self.adaptor.serialize(content_type='text/javascript', link=link, state=state)

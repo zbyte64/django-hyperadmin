@@ -19,8 +19,10 @@ class CollectionJsonTestCase(MediaTypeTestCase):
         return CollectionJSON(MockView())
     
     def test_queryset_serialize(self):
-        link = self.resource.get_resource_link()
-        state = self.resource.state
+        link = self.resource.endpoints['list'].link_prototypes['list'].get_link()
+        #link = self.resource.get_resource_link()
+        #state = self.resource.state
+        state = {}
         state['auth'] = self.user
         
         response = self.adaptor.serialize(content_type=self.content_type, link=link, state=state)
@@ -30,7 +32,7 @@ class CollectionJsonTestCase(MediaTypeTestCase):
     
     def test_model_instance_serialize(self):
         instance = ContentType.objects.all()[0]
-        item = self.resource.get_resource_item(instance)
+        item = self.resource.get_resource_item(instance, endpoint=None)
         link = self.resource.get_item_link(item)
         state = self.resource.state
         state.item = item
@@ -42,8 +44,8 @@ class CollectionJsonTestCase(MediaTypeTestCase):
     
     def test_site_resource_serialize(self):
         site_resource = SiteResource(site=site)
-        link = site_resource.get_resource_link()
-        state = self.resource.state
+        link = self.resource.endpoints['list'].link_prototypes['list'].get_link()
+        state = {}
         state['auth'] = self.user
         
         response = self.adaptor.serialize(content_type=self.content_type, link=link, state=state)

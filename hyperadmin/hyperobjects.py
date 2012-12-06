@@ -345,4 +345,4 @@ class ResourceItem(object):
         return self.resource.get_item_namespaces(state=self.state, item=self)
     
     def get_item_link(self):
-        return self.resource.get_item_link(item=self)
+        return self.resource.get_item_link(item=self, endpoint=self.endpoint)

@@ -53,7 +53,7 @@ class LogoutLinkPrototype(LinkPrototype):
         return self.on_success()
     
     def on_success(self):
-        return self.resource.link_prototypes['login'].get_link()
+        return self.endpoint.link_prototypes['login'].get_link()
 
 
 class LoginEndpoint(Endpoint):

@@ -44,7 +44,7 @@ class LinkPrototype(object):
         form = link.get_form(**submit_kwargs)
         if form.is_valid():
             instance = form.save()
-            resource_item = self.resource.get_resource_item(instance)
+            resource_item = self.endpoint.get_resource_item(instance)
             return self.on_success(resource_item)
         return link.clone(form=form)
     
