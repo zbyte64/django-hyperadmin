@@ -296,22 +296,17 @@ class ResourceItem(object):
     def state(self):
         return self.endpoint.state
     
-    #@property
-    #def endpoint(self):
-    #    return self.state.get('endpoint', None)
-    
     def get_absolute_url(self):
-        return self.resource.get_item_url(self)
+        return self.endpoint.get_item_url(self)
     
     def get_form_class(self):
         if self.form_class is not None:
             return self.form_class
-        return self.resource.get_form_class(self.state)
+        return self.endpoint.get_form_class()
     
     def get_form_kwargs(self, **kwargs):
-        kwargs = self.resource.get_form_kwargs(self.state, **kwargs)
-        kwargs['instance'] = self.instance
-        return kwargs
+        kwargs['item'] = self
+        return self.endpoint.get_form_kwargs(**kwargs)
     
     def get_form(self, **form_kwargs):
         form_cls = self.get_form_class()
@@ -341,7 +336,7 @@ class ResourceItem(object):
         """
         Returns namespaces associated with this item
         """
-        return self.resource.get_item_namespaces(state=self.state, item=self)
+        return self.endpoint.get_item_namespaces(item=self)
     
-    def get_item_link(self):
-        return self.resource.get_item_link(item=self, endpoint=self.endpoint)
+    def get_link(self):
+        return self.endpoint.get_item_link(item=self)

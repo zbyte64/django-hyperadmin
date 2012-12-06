@@ -129,13 +129,9 @@ class BaseResource(object):
     def get_resource_link_item(self):
         return None
     
-    def get_resource_link(self, **kwargs):
-        #TODO we want the endpoint state
-        #assert False
-        #return self.link_prototypes['list'].get_link(**kwargs)
-        link_kwargs = {#'url':self.get_absolute_url(),
-                       #'resource':self, #endpoint=endpoint
-                       'rel':'self',
+    def get_link(self, **kwargs):
+        #must include endpoint in kwargs
+        link_kwargs = {'rel':'self',
                        'prompt':self.get_prompt(),}
         link_kwargs.update(kwargs)
         return self.link_prototypes['list'].get_link(**kwargs)

@@ -34,7 +34,7 @@ class CollectionJsonTestCase(MediaTypeTestCase):
         endpoint = self.resource.endpoints['detail']
         endpoint.initialize_state(auth=self.user)
         endpoint.state.item = item = endpoint.get_resource_item(instance)
-        link = item.get_item_link()
+        link = item.get_link()
         state = endpoint.state
         
         response = self.adaptor.serialize(content_type=self.content_type, link=link, state=state)

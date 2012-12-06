@@ -22,12 +22,10 @@ class LinkPrototype(object):
         return True
     
     def get_form_class(self):
-        return self.resource.get_form_class(self.state)
+        return self.endpoint.get_form_class()
     
     def get_form_kwargs(self, **kwargs):
-        form_kwargs = kwargs.get('form_kwargs', None) or {}
-        form_kwargs['item'] = kwargs.get('item', None)
-        return self.resource.get_form_kwargs(self.state, **form_kwargs)
+        return self.endpoint.get_form_kwargs(**kwargs)
     
     def get_link_kwargs(self, **kwargs):
         kwargs.update(self.link_kwargs)
@@ -51,8 +49,8 @@ class LinkPrototype(object):
     
     def on_success(self, item=None):
         if item is not None:
-            return item.get_item_link()
-        return self.resource.get_resource_link()
+            return item.get_link()
+        return self.endpoint.get_resource_link()
     
     def get_url(self, **kwargs):
         return self.endpoint.get_url(**kwargs)
@@ -68,7 +66,7 @@ class Endpoint(View):
     view_class = None
     url_suffix = None
     resource = None
-    state = None
+    state = None #CONSIDER: does this default to a global state?
     
     state_class = EndpointState
     
@@ -112,9 +110,14 @@ class Endpoint(View):
         assert klass
         return klass.as_view(**init)
     
+    
     def get_view(self, **kwargs):
         kwargs.update(self._init_kwargs)
-        return type(self).as_view(**kwargs)
+        view = type(self).as_view(**kwargs)
+        #allow for retreiving the endpoint from url patterns
+        view.endpoint = self
+        #thus allowing us to do: myview.endpoint.get_view(**some_new_kwargs)
+        return view
     
     def get_url_name(self):
         base_name = self.resource.get_base_url_name()
@@ -128,6 +131,8 @@ class Endpoint(View):
         return url(self.get_url_suffix(), view, name=self.get_url_name(),)
     
     def get_url(self, **kwargs):
+        if self.state:
+            return self.state.reverse(self.get_url_name(), **kwargs)
         return self.resource.reverse(self.get_url_name(), **kwargs)
     
     #TODO better name => get_internal_links?
@@ -173,3 +178,29 @@ class Endpoint(View):
         self.state = self.get_state_class()(**kwargs)
         self.state.meta = self.get_meta()
         return self.state
+    
+    def get_resource_link(self, **kwargs):
+        link_kwargs = {'rel':'self',
+                       'prompt':self.resource.get_prompt(),}
+        link_kwargs.update(kwargs)
+        return self.link_prototypes['list'].get_link(**kwargs)
+    
+    def get_item_url(self, item):
+        return self.resource.get_item_url(item)
+    
+    def get_form_class(self):
+        return self.resource.get_form_class(self.state)
+    
+    def get_form_kwargs(self, **kwargs):
+        form_kwargs = kwargs.get('form_kwargs', None) or {}
+        form_kwargs['item'] = kwargs.get('item', None)
+        return self.resource.get_form_kwargs(self.state, **form_kwargs)
+    
+    def get_namespaces(self):
+        return self.resource.get_namespaces(state=self.state)
+    
+    def get_item_namespaces(self, item):
+        return self.resource.get_item_namespaces(state=self.state, item=item)
+    
+    def get_item_link(self, item):
+        return self.resource.get_item_link(item=item, endpoint=self)

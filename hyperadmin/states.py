@@ -225,6 +225,11 @@ class EndpointState(State):
             return self['reverse'](name, *args, **kwargs)
         return self.site.reverse(name, *args, **kwargs)
     
+    def generate_response(self, media_type, response_type, link):
+        if 'generate_response' in self:
+            self['generate_response'](media_type, response_type, link, state=self)
+        return self.resource.generate_response(media_type, response_type, link, state=self)
+    
     def _set_item(self, val):
         self['item'] = val
     
@@ -286,9 +291,7 @@ class EndpointState(State):
         """
         if self.item is not None:
             return self.item.get_resource_items()
-        if self.endpoint:
-            return self.endpoint.get_resource_items()
-        return self.resource.get_resource_items()
+        return self.endpoint.get_resource_items()
     
     def get_query_string(self, new_params=None, remove=None):
         if new_params is None: new_params = {}
@@ -309,7 +312,7 @@ class EndpointState(State):
         return '?%s' % urlencode(p)
     
     def get_namespaces(self):
-        return self.resource.get_namespaces(state=self)
+        return self.endpoint.get_namespaces()
     
     @property
     def container(self):

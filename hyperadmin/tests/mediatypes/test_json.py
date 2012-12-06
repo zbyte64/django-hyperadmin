@@ -28,7 +28,7 @@ class JsonTestCase(MediaTypeTestCase):
         endpoint = self.resource.endpoints['detail']
         endpoint.initialize_state(auth=self.user)
         endpoint.state.item = item = endpoint.get_resource_item(instance)
-        link = item.get_item_link()
+        link = item.get_link()
         state = endpoint.state
         
         response = self.adaptor.serialize(content_type='application/json', link=link, state=state)
@@ -60,7 +60,7 @@ class JsonpTestCase(MediaTypeTestCase):
         endpoint = self.resource.endpoints['detail']
         endpoint.initialize_state(auth=self.user)
         endpoint.state.item = item = endpoint.get_resource_item(instance)
-        link = item.get_item_link()
+        link = item.get_link()
         state = endpoint.state
         
         response = self.adaptor.serialize(content_type='text/javascript', link=link, state=state)
