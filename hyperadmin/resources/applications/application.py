@@ -36,7 +36,7 @@ class ApplicationResource(BaseResource):
         key = resource.get_resource_name()
         self.resource_adaptor[key] = resource
     
-    def get_instances(self, state):
+    def get_instances(self):
         #TODO sort by name
         return self.resource_adaptor.values()
     
@@ -51,7 +51,7 @@ class ApplicationResource(BaseResource):
         return self.link_prototypes['list'].get_url()
     
     def get_item_outbound_links(self, item):
-        return item.instance.get_outbound_links()
+        return item.instance.links.get_outbound_links()
     
     def get_prompt(self):
         return self.app_name.replace('-',' ').replace('_', ' ')

@@ -51,20 +51,20 @@ class CRUDResource(BaseResource):
     def get_item_url(self, item):
         return self.link_prototypes['update'].get_url(item=item)
     
-    def has_add_permission(self, state):
+    def has_add_permission(self):
         return True
     
-    def has_change_permission(self, state, item=None):
+    def has_change_permission(self, item=None):
         return True
     
-    def has_delete_permission(self, state, item=None):
+    def has_delete_permission(self, item=None):
         return True
     
-    def get_indexes(self, state):
-        return {'primary':PrimaryIndex('primary', self, state, self.get_index_query(state, 'primary'))}
+    def get_indexes(self):
+        return {'primary':PrimaryIndex('primary', self, self.get_index_query('primary'))}
     
-    def get_index_query(self, state, name):
-        return self.get_primary_query(state)
+    def get_index_query(self, name):
+        return self.get_primary_query()
     
     def get_item_breadcrumb(self, item):
         return self.get_item_link(item, rel='breadcrumb')
@@ -73,25 +73,26 @@ class CRUDResource(BaseResource):
         return self.list_resource_item_class
     
     def get_list_resource_item(self, instance, **kwargs):
+        kwargs.setdefault('endpoint', self)
         return self.get_list_resource_item_class()(instance=instance, **kwargs)
     
-    def get_instances(self, state):
+    def get_instances(self):
         '''
         Returns a set of native objects for a given state
         '''
-        if 'page' in state:
-            return state['page'].object_list
-        if state.has_view_class('change_form'):
+        if 'page' in self.state:
+            return self.state['page'].object_list
+        if self.state.has_view_class('change_form'):
             return []
-        return self.get_primary_query(state)
+        return self.get_primary_query()
     
-    def get_resource_items(self, state):
-        instances = self.get_instances(state)
+    def get_resource_items(self):
+        instances = self.get_instances()
         if state.has_view_class('change_list'):
             return [self.get_list_resource_item(instance) for instance in instances]
         return [self.get_resource_item(instance) for instance in instances]
     
-    def get_primary_query(self, state, **kwargs):
+    def get_primary_query(self, **kwargs):
         return self.resource_adaptor.objects.all()
     
     def get_ordering(self):
@@ -103,7 +104,7 @@ class CRUDResource(BaseResource):
     def get_paginator_class(self):
         return self.paginator_class
     
-    def get_paginator_kwargs(self, state):
+    def get_paginator_kwargs(self):
         return {'per_page':getattr(self, 'list_per_page', 50),}
     
     def get_paginator(self, index, **kwargs):

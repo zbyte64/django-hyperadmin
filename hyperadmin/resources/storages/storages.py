@@ -61,35 +61,35 @@ class StorageResource(CRUDResource):
         except NotImplementedError:
             return [], [] #dirs, files
     
-    def get_primary_query(self, state):
-        path = state.params.get('path', '')
+    def get_primary_query(self):
+        path = self.state.params.get('path', '')
         return self.get_listing(path)
     
-    def get_instances(self, state):
+    def get_instances(self):
         '''
         Returns a set of native objects for a given state
         '''
-        if 'page' in state:
-            return state['page'].object_list
-        if state.has_view_class('change_form'):
+        if 'page' in self.state:
+            return self.state['page'].object_list
+        if self.state.has_view_class('change_form'):
             return []
-        dirs, files = self.get_primary_query(state)
+        dirs, files = self.get_primary_query()
         instances = [views.BoundFile(self.storage, file_name) for file_name in files]
         return instances
     
     def get_index_queries(self):
-        links = super(StorageResource, self).get_index_queries()
+        links = self.create_link_collection()
         if 'filter_links' in self.state:
             links += self.state['filter_links']
         return links
     
-    def get_form_kwargs(self, state, item=None, **kwargs):
-        kwargs = super(StorageResource, self).get_form_kwargs(state, item, **kwargs)
+    def get_form_kwargs(self, item=None, **kwargs):
+        kwargs = super(StorageResource, self).get_form_kwargs(item, **kwargs)
         kwargs['storage'] = self.storage
         return kwargs
     
-    def get_upload_link_form_kwargs(self, state, **kwargs):
-        kwargs = self.get_form_kwargs(state, **kwargs)
+    def get_upload_link_form_kwargs(self, **kwargs):
+        kwargs = self.get_form_kwargs(**kwargs)
         kwargs['resource'] = self
         return kwargs
     
@@ -113,6 +113,6 @@ class StorageResource(CRUDResource):
     def get_item_prompt(self, item):
         return item.instance.name
     
-    def get_paginator_kwargs(self, state):
+    def get_paginator_kwargs(self):
         return {'storage':self.storage,
-                'state':state,}
+                'state':self.state,}

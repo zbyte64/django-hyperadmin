@@ -45,13 +45,13 @@ class SiteResource(BaseResource):
     def get_item_prompt(self, item):
         return item.instance.get_prompt()
     
-    def get_instances(self, state):
+    def get_instances(self):
         applications = self.applications.items()
         apps = [entry[1] for entry in sorted(applications, key=lambda x: x[0])]
         all_apps = list()
         for app in apps:
             all_apps.append(app)
-            all_apps.extend(app.get_instances(state))
+            all_apps.extend(app.get_instances())
         all_apps.append(self.auth_resource)
         return all_apps
     
@@ -60,7 +60,7 @@ class SiteResource(BaseResource):
             return item.instance.get_absolute_url()
     
     def get_item_outbound_links(self, item):
-        return item.instance.get_outbound_links()
+        return item.instance.links.get_outbound_links()
     
     def get_absolute_url(self):
         return self.link_prototypes['list'].get_url()

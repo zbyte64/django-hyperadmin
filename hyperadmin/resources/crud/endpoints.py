@@ -4,7 +4,6 @@ from hyperadmin.resources.endpoints import LinkPrototype, Endpoint
 class ListLinkPrototype(LinkPrototype):
     def get_link_kwargs(self, **kwargs):
         link_kwargs = {'url':self.get_url(),
-                       'resource':self,
                        'prompt':'list',
                        'rel':'list',}
         link_kwargs.update(kwargs)
@@ -12,13 +11,12 @@ class ListLinkPrototype(LinkPrototype):
 
 class CreateLinkPrototype(LinkPrototype):
     def show_link(self, **kwargs):
-        return self.resource.has_add_permission(self.state)
+        return self.resource.has_add_permission()
     
     def get_link_kwargs(self, **kwargs):
         kwargs = super(CreateLinkPrototype, self).get_link_kwargs(**kwargs)
         
         link_kwargs = {'url':self.get_url(),
-                       'resource':self,
                        'on_submit':self.handle_submission,
                        'method':'POST',
                        'form_class': self.get_form_class(),
@@ -30,7 +28,7 @@ class CreateLinkPrototype(LinkPrototype):
 #TODO consider: Update vs Detail link
 class UpdateLinkPrototype(LinkPrototype):
     def show_link(self, **kwargs):
-        return self.resource.has_change_permission(self.state, item=kwargs.get('item', None))
+        return self.resource.has_change_permission(item=kwargs.get('item', None))
     
     def get_link_kwargs(self, **kwargs):
         item = kwargs.get('item')
@@ -38,7 +36,6 @@ class UpdateLinkPrototype(LinkPrototype):
         kwargs = super(UpdateLinkPrototype, self).get_link_kwargs(**kwargs)
         
         link_kwargs = {'url':self.get_url(item=item),
-                       'resource':self,
                        'on_submit':self.handle_submission,
                        'method':'POST',
                        'form_class': item.get_form_class(),
@@ -49,7 +46,7 @@ class UpdateLinkPrototype(LinkPrototype):
 
 class DeleteLinkPrototype(LinkPrototype):
     def show_link(self, **kwargs):
-        return self.resource.has_delete_permission(self.state, item=kwargs.get('item', None))
+        return self.resource.has_delete_permission(item=kwargs.get('item', None))
     
     def get_link_kwargs(self, **kwargs):
         item = kwargs.get('item')
@@ -57,7 +54,6 @@ class DeleteLinkPrototype(LinkPrototype):
         kwargs = super(DeleteLinkPrototype, self).get_link_kwargs(**kwargs)
         
         link_kwargs = {'url':self.get_url(item=item),
-                       'resource':self,
                        'on_submit':self.handle_submission,
                        'method':'POST',
                        'prompt':'delete',
@@ -79,8 +75,7 @@ class ListEndpoint(Endpoint):
         self.index_name = index_name
     
     def get_index(self):
-        assert self.state, 'index lookup must come from a dispatched endpoint'
-        return self.resource.get_index(self.state, self.index_name)
+        return self.resource.get_index(self.index_name)
     
     def get_view_class(self):
         return self.resource.list_view

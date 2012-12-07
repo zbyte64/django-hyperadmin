@@ -13,6 +13,18 @@
 {% endwith %}
 {% endblock %}
 
+{% block breadcrumbs %}
+{% with state.links.get_breadcrumbs as breadcrumbs %}
+{% if breadcrumbs %}
+<h2>Breadcrumbs</h2>
+<div id="breadcrumbs">
+{% include "hyperadmin/html5/links.html" with links=breadcrumbs %}
+</div>
+{% endif %}
+{% endwith %}
+{% endblock %}
+
+
 {% block outbound_links %}
 {% with state.links.get_outbound_links as outbound_links %}
 {% if outbound_links %}

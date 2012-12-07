@@ -3,10 +3,9 @@ from django.views.generic import View
 from hyperadmin.resources.views import ResourceViewMixin
 
 class AuthViewMixin(ResourceViewMixin):
-    def get_state_data(self):
-        state = super(AuthViewMixin, self).get_state_data()
+    def get_common_state_data(self):
+        state = super(AuthViewMixin, self).get_common_state_data()
         state['authenticated'] = self.request.user.is_authenticated()
-        state['request'] = self.request #for logging in and out
         return state
     
     def get_form_kwargs(self, **defaults):

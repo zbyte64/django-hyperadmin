@@ -2,13 +2,15 @@ class Index(object):
     paginator_class = None
     page_var = 'p'
     
-    def __init__(self, name, resource, state, query):
+    def __init__(self, name, resource, query):
         self.name = name
         self.resource = resource
-        self.state = state
-        #self.state = self.resource.state
         self.filters = list()
         self.query = query
+    
+    @property
+    def state(self):
+        return self.resource.state
     
     def register_filter(self, a_filter, **kwargs):
         kwargs['index'] = self
@@ -31,7 +33,7 @@ class Index(object):
         return active_index
     
     def make_link(self, **kwargs):
-        return self.resource.get_resource_link(**kwargs)
+        return self.resource.get_link(**kwargs)
     
     def get_filter_links(self, **link_kwargs):
         links = list()
@@ -40,7 +42,7 @@ class Index(object):
         return links
     
     def get_paginator_kwargs(self):
-        return self.resource.get_paginator_kwargs(state=self.state)
+        return self.resource.get_paginator_kwargs()
     
     def get_paginator(self, **kwargs):
         index = self.get_filtered_index()
@@ -80,4 +82,4 @@ class Index(object):
 
 class PrimaryIndex(Index):
     def get_paginator_kwargs(self):
-        return self.resource.get_paginator_kwargs(self.state)
+        return self.resource.get_paginator_kwargs()

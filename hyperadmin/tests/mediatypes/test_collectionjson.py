@@ -20,40 +20,40 @@ class CollectionJsonTestCase(MediaTypeTestCase):
     
     def test_queryset_serialize(self):
         endpoint = self.resource.endpoints['list']
-        endpoint.initialize_state(auth=self.user)
-        link = endpoint.link_prototypes['list'].get_link()
-        state = endpoint.state
-        
-        response = self.adaptor.serialize(content_type=self.content_type, link=link, state=state)
-        data = json.loads(response.content)
-        json_items = data['collection']['items']
-        self.assertEqual(len(json_items), len(ContentType.objects.all()))
+        with endpoint.session_state.patch_state(auth=self.user):
+            link = endpoint.link_prototypes['list'].get_link()
+            state = endpoint.state
+            
+            response = self.adaptor.serialize(content_type=self.content_type, link=link, state=state)
+            data = json.loads(response.content)
+            json_items = data['collection']['items']
+            self.assertEqual(len(json_items), len(ContentType.objects.all()))
     
     def test_model_instance_serialize(self):
         instance = ContentType.objects.all()[0]
         endpoint = self.resource.endpoints['detail']
-        endpoint.initialize_state(auth=self.user)
-        endpoint.state.item = item = endpoint.get_resource_item(instance)
-        link = item.get_link()
-        state = endpoint.state
-        
-        response = self.adaptor.serialize(content_type=self.content_type, link=link, state=state)
-        data = json.loads(response.content)
-        json_items = data['collection']['items']
-        self.assertEqual(len(json_items), 1)
+        with endpoint.session_state.patch_state(auth=self.user):
+            endpoint.state.item = item = endpoint.get_resource_item(instance)
+            link = item.get_link()
+            state = endpoint.state
+            
+            response = self.adaptor.serialize(content_type=self.content_type, link=link, state=state)
+            data = json.loads(response.content)
+            json_items = data['collection']['items']
+            self.assertEqual(len(json_items), 1)
     
     def test_site_resource_serialize(self):
         site_resource = SiteResource(site=site)
         
         endpoint = site_resource.endpoints['list']
-        endpoint.initialize_state(auth=self.user)
-        link = endpoint.link_prototypes['list'].get_link()
-        state = endpoint.state
-        
-        response = self.adaptor.serialize(content_type=self.content_type, link=link, state=state)
-        data = json.loads(response.content)
-        json_items = data['collection']['items']
-        #assert False, str(json_items)
+        with endpoint.session_state.patch_state(auth=self.user):
+            link = endpoint.link_prototypes['list'].get_link()
+            state = endpoint.state
+            
+            response = self.adaptor.serialize(content_type=self.content_type, link=link, state=state)
+            data = json.loads(response.content)
+            json_items = data['collection']['items']
+            #assert False, str(json_items)
     
     def test_application_resource_serialize(self):
         app_resource = ApplicationResource(site=site, app_name='testapp')
@@ -85,7 +85,7 @@ class CollectionNextJsonTestCase(MediaTypeTestCase):
         return CollectionNextJSON(MockView())
     
     def test_convert_field(self):
-        form_class = self.resource.get_form_class(state={})
+        form_class = self.resource.get_form_class()
         form = form_class()
         fields = list(form)
         field = fields[0]
@@ -93,7 +93,7 @@ class CollectionNextJsonTestCase(MediaTypeTestCase):
         self.assertEqual(field_r['required'], field.field.required)
     
     def test_convert_errors(self):
-        form_class = self.resource.get_form_class(state={})
+        form_class = self.resource.get_form_class()
         form = form_class(data={})
         assert form.errors
         error_r = self.adaptor.convert_errors(form.errors)

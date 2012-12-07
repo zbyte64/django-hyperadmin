@@ -2,7 +2,8 @@ from django import forms
 from django.conf.urls.defaults import patterns
 from django.utils.datastructures import SortedDict
 
-from hyperadmin.hyperobjects import Link, ResourceItem
+from hyperadmin.hyperobjects import Link, ResourceItem, LinkCollectionProvider
+from hyperadmin.resources.endpoints import BaseEndpoint
 
 
 class EmptyForm(forms.Form):
@@ -10,7 +11,7 @@ class EmptyForm(forms.Form):
         self.instance = kwargs.pop('instance', None)
         super(EmptyForm, self).__init__(**kwargs)
 
-class BaseResource(object):
+class BaseResource(BaseEndpoint):
     resource_class = '' #hint to the client how this resource is used
     resource_item_class = ResourceItem
     form_class = EmptyForm
@@ -19,6 +20,8 @@ class BaseResource(object):
         self.resource_adaptor = resource_adaptor
         self.site = site
         self.parent = parent_resource
+        self.links = LinkCollectionProvider(self)
+        super(BaseResource, self).__init__()
     
     def get_app_name(self):
         raise NotImplementedError
@@ -46,7 +49,6 @@ class BaseResource(object):
                 self._endpoints[endpoint.name_suffix] = endpoint
         return self._endpoints
     
-    #TODO replace with get_url(url_name)
     @property
     def link_prototypes(self):
         if not hasattr(self, '_link_prototypes'):
@@ -74,32 +76,31 @@ class BaseResource(object):
     def api_permission_check(self, request):
         return self.site.api_permission_check(request)
     
-    def get_view_kwargs(self):
-        return {'resource':self,
-                'resource_site':self.site,}
-    
-    def get_indexes(self, state):
+    def get_indexes(self):
         return {}
     
-    def get_index(self, state, name):
-        return self.get_indexes(state)[name]
+    def get_index(self, name):
+        return self.get_indexes()[name]
     
-    def get_index_query(self, state, name):
+    def get_index_query(self, name):
         raise NotImplementedError
     
     def get_item_url(self, item):
         return None
     
-    def get_state_class(self):
-        return self.state_class
-    
-    def get_form_class(self, state):
+    def get_form_class(self):
         return self.form_class
     
-    def get_form_kwargs(self, state, item=None, **kwargs):
+    def get_form_kwargs(self, item=None, **kwargs):
         if item is not None:
             kwargs.setdefault('instance', item.instance)
         return kwargs
+    
+    def get_view_kwargs(self):
+        return {
+            'resource': self,
+            'resource_site': self.site,
+        }
     
     def generate_response(self, media_type, content_type, link, state):
         return media_type.serialize(content_type=content_type, link=link, state=state)
@@ -117,14 +118,14 @@ class BaseResource(object):
         return self.resource_item_class
     
     def get_resource_item(self, instance, **kwargs):
-        assert 'endpoint' in kwargs
+        kwargs.setdefault('endpoint', self)
         return self.get_resource_item_class()(instance=instance, **kwargs)
     
-    def get_instances(self, state):
+    def get_instances(self):
         return []
     
-    def get_resource_items(self, state):
-        return [self.get_resource_item(instance) for instance in self.get_instances(state)]
+    def get_resource_items(self):
+        return [self.get_resource_item(instance) for instance in self.get_instances()]
     
     def get_resource_link_item(self):
         return None
@@ -134,17 +135,17 @@ class BaseResource(object):
         link_kwargs = {'rel':'self',
                        'prompt':self.get_prompt(),}
         link_kwargs.update(kwargs)
-        return self.link_prototypes['list'].get_link(**kwargs)
+        return self.link_prototypes['list'].get_link(**link_kwargs)
     
-    def get_breadcrumb(self, state):
-        return self.get_resource_link(rel='breadcrumb', endpoint=state.endpoint)
+    def get_breadcrumb(self):
+        return self.get_link(rel='breadcrumb')
     
-    def get_breadcrumbs(self, state):
+    def get_breadcrumbs(self):
         if self.parent:
-            breadcrumbs = self.parent.get_breadcrumbs(state)
+            breadcrumbs = self.parent.get_breadcrumbs()
         else:
             breadcrumbs = self.create_link_collection()
-        breadcrumbs.append(self.get_breadcrumb(state))
+        breadcrumbs.append(self.get_breadcrumb())
         return breadcrumbs
     
     def get_prompt(self):
@@ -156,21 +157,21 @@ class BaseResource(object):
     #TODO deprecate
     def get_item_link(self, item, **kwargs):
         link_kwargs = {'url':item.get_absolute_url(),
-                       'resource':self,
+                       'endpoint':self,
                        'rel':'item',
                        'prompt':item.get_prompt(),}
         link_kwargs.update(kwargs)
         item_link = Link(**link_kwargs)
         return item_link
     
-    def get_namespaces(self, state):
+    def get_namespaces(self):
         return dict()
     
-    def get_item_namespaces(self, state, item):
+    def get_item_namespaces(self, item):
         return dict()
     
     #def get_link_url(self, link):
     #    return self.state.get_link_url(link)
     
-    def get_paginator_kwargs(self, state):
+    def get_paginator_kwargs(self):
         return {}

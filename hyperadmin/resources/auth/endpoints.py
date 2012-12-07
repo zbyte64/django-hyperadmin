@@ -5,13 +5,12 @@ from hyperadmin.resources.endpoints import LinkPrototype, Endpoint
 
 class LoginLinkPrototype(LinkPrototype):
     def show_link(self, **kwargs):
-        return not self.state.session.get('authenticated', True) or self.state.session['auth'].is_anonymous()
+        return not self.common_state.get('authenticated', True) or self.state.session['auth'].is_anonymous()
     
     def get_link_kwargs(self, **kwargs):
         kwargs = super(LoginLinkPrototype, self).get_link_kwargs(**kwargs)
         
         link_kwargs = {'url':self.get_url(),
-                       'resource':self.resource,
                        'on_submit':self.handle_submission,
                        'method':'POST',
                        'form_class': self.get_form_class(),
@@ -33,13 +32,12 @@ class LoginLinkPrototype(LinkPrototype):
 
 class LogoutLinkPrototype(LinkPrototype):
     def show_link(self, **kwargs):
-        return self.state.session.get('authenticated', False) or self.state.session['auth'].is_authenticated()
+        return self.common_state.get('authenticated', False) or self.state.session['auth'].is_authenticated()
     
     def get_link_kwargs(self, **kwargs):
         kwargs = super(LogoutLinkPrototype, self).get_link_kwargs(**kwargs)
         
         link_kwargs = {'url':self.get_url(),
-                       'resource':self,
                        'on_submit':self.handle_submission,
                        'method':'POST',
                        'prompt':'Logout',
@@ -49,7 +47,7 @@ class LogoutLinkPrototype(LinkPrototype):
     
     def handle_submission(self, link, submit_kwargs):
         logout(self.state.session['request'])
-        self.state.session['authenticated'] = False
+        self.common_state['authenticated'] = False
         return self.on_success()
     
     def on_success(self):

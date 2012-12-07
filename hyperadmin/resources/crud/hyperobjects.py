@@ -13,7 +13,7 @@ class ListForm(forms.Form):
     def __init__(self, **kwargs):
         self.instance = kwargs.pop('instance', None)
         self.endpoint = kwargs.pop('endpoint')
-        self.resource = self.endpoint.resource
+        self.resource = getattr(self.endpoint, 'resource', self.endpoint)
         super(ListForm, self).__init__(**kwargs)
         if self.resource.list_display:
             for display in self.resource.list_display:

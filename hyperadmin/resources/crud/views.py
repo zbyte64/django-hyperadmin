@@ -10,7 +10,7 @@ class CRUDResourceViewMixin(ResourceViewMixin):
     def get_form_class(self):
         if self.form_class:
             return self.form_class
-        return self.resource.get_form_class(state=self.state)
+        return self.endpoint.get_form_class()
     
     def get_form_kwargs(self, **kwargs):
         return kwargs
@@ -114,7 +114,7 @@ class CRUDListView(CRUDView):
         return self.generate_response(response_link)
     
     def get_meta(self):
-        resource_item = self.resource.get_list_resource_item(instance=None, endpoint=self)
+        resource_item = self.resource.get_list_resource_item(instance=None)
         form = resource_item.get_form()
         data = dict()
         data['display_fields'] = list()
@@ -125,25 +125,24 @@ class CRUDListView(CRUDView):
     def get_index(self):
         return self.endpoint.get_index()
     
-    def initialize_state(self):
-        state = super(CRUDListView, self).initialize_state()
+    def get_common_state_data(self):
+        data = super(CRUDListView, self).get_common_state_data()
         
         index = self.get_index()
         paginator = index.get_paginator()
-        #index.get_links()
-        state['index'] = index
-        state.meta['object_count'] = paginator.count
-        state.meta['number_of_pages'] = paginator.num_pages
-        return state
+        data['index'] = index
+        self.state.meta['object_count'] = paginator.count
+        self.state.meta['number_of_pages'] = paginator.num_pages
+        return data
 
 class CRUDDetailMixin(object):
     def get_object(self):
         raise NotImplementedError
     
-    def initialize_state(self):
-        state = super(CRUDDetailMixin, self).initialize_state()
-        state.item = self.get_item()
-        return state
+    def get_common_state_data(self):
+        data = super(CRUDDetailMixin, self).get_common_state_data()
+        data['item'] = self.get_item()
+        return data
     
     def get_item(self):
         if not getattr(self, 'object', None):

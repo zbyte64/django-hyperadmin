@@ -189,32 +189,35 @@ class EndpointStateLinkCollectionProvider(LinkCollectionProvider):
     def _get_link_functions(self, attr):
         functions = super(EndpointStateLinkCollectionProvider, self)._get_link_functions(attr)
         key_name = attr[len('get_'):]
-        functions.append(lambda *args, **kwargs: self.container['links'].get(key_name, []))
+        functions.append(lambda *args, **kwargs: self.container['state_links'].get(key_name, []))
         return functions
     
     def add_link(self, key, link):
-        self.container['links'].setdefault(key, list())
-        self.container['links'][key].append(link)
+        self.container['state_links'].setdefault(key, list())
+        self.container['state_links'][key].append(link)
 
 class EndpointState(State):
     """
     Used by resources to determine what links and items are available in the response.
     """
-    def __init__(self, resource, endpoint, meta, substates=[], data={}):
-        self.resource = resource
+    def __init__(self, endpoint, meta, substates=[], data={}):
         self.endpoint = endpoint
         super(EndpointState, self).__init__(substates=substates, data=data)
         self.meta = meta
-        self.links = EndpointStateLinkCollectionProvider(self.endpoint, self, self.endpoint.links)
+        self.links = EndpointStateLinkCollectionProvider(self, self.endpoint.links)
         
         #nuke previous state links
-        self.update({'links': {},
+        self.update({'state_links': {},
                      'extra_get_params':{},})
     
     def __setitem__(self, key, value):
-        if key == 'links':
+        if key == 'state_links':
             assert isinstance(value, dict)
         return super(EndpointState, self).__setitem__(key, value)
+    
+    @property
+    def resource(self):
+        return self.endpoint.resource
     
     @property
     def site(self):
@@ -314,15 +317,11 @@ class EndpointState(State):
     def get_namespaces(self):
         return self.endpoint.get_namespaces()
     
-    @property
-    def container(self):
-        return self.endpoint
-    
     def get_dictionaries(self):
         return [self.session, self.global_state, self.active_dictionary] + self.substates
     
     def __copy__(self):
         substates = self.global_state.dicts + [self.active_dictionary] + list(self.substates)
-        ret = self.__class__(self.resource, self.endpoint, copy(self.meta), substates=substates)
+        ret = self.__class__(self.endpoint, copy(self.meta), substates=substates)
         return ret
 

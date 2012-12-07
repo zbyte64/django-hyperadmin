@@ -73,7 +73,15 @@ class ModelResourceTestCase(ResourceTestCase):
         with state.push_session(self.popped_states):
             assert 'auth' in state, str(self.popped_states.dicts)
             self.assertEqual(len(state.get_resource_items()), User.objects.count())
-        
+            
+            links = state.links.get_index_queries()
+            self.assertTrue(links, str(links))
+            
+            links = state.links.get_breadcrumbs()
+            self.assertTrue(links, str(links))
+            
+            links = state.links.get_outbound_links()
+            self.assertTrue(links, str(links))
     
     def test_get_detail(self):
         instance = self.user
@@ -115,11 +123,12 @@ class ModelResourceTestCase(ResourceTestCase):
         media_type, response_type, link = self.resource.generate_response.call_args[0]
         state = link.state
         
-        self.assertTrue(link.form)
-        self.assertTrue(link.form.errors)
-        
-        self.assertTrue(state.item)
-        self.assertEqual(state.item.instance, instance)
+        with state.push_session(self.popped_states):
+            self.assertTrue(link.form)
+            self.assertTrue(link.form.errors)
+            
+            self.assertTrue(state.item)
+            self.assertEqual(state.item.instance, instance)
 
 class InlineModelResourceTestCase(ResourceTestCase):
     def register_resource(self):

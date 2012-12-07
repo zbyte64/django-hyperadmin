@@ -57,6 +57,10 @@ class ResourceViewMixin(GetPatchMetaMixin, ConditionalAccessMixin):
     view_classes = []
     cacheable = False
     
+    @property
+    def common_state(self):
+        return self.endpoint.common_state
+    
     def get_response_type(self, patch_meta=True):
         if patch_meta:
             src = self.patched_meta
@@ -141,15 +145,17 @@ class ResourceViewMixin(GetPatchMetaMixin, ConditionalAccessMixin):
             self.initialize_state()
             
             self.pre_dispatch()
-            permission_response = self.resource.api_permission_check(self.request)
-            if permission_response is not None:
-                return permission_response
-            response = self.dispatch_api(request, *args, **kwargs)
-            if not self.cacheable:
-                add_never_cache_headers(response)
-            if hasattr(response, 'render'):
-                response.render()
-            return response
+            
+            with self.common_state.push_state(self.get_common_state_data()):
+                permission_response = self.resource.api_permission_check(self.request)
+                if permission_response is not None:
+                    return permission_response
+                response = self.dispatch_api(request, *args, **kwargs)
+                if not self.cacheable:
+                    add_never_cache_headers(response)
+                if hasattr(response, 'render'):
+                    response.render()
+                return response
     
     def dispatch_api(self, request, *args, **kwargs):
         return super(ResourceViewMixin, self).dispatch(request, *args, **kwargs)
@@ -158,6 +164,12 @@ class ResourceViewMixin(GetPatchMetaMixin, ConditionalAccessMixin):
         self.state.update(self.get_state_data())
         self.state.meta.update(self.get_meta())
         return self.state
+    
+    def get_common_state_data(self):
+        """
+        Return state data that should be available at the resource level for processing the api request
+        """
+        return {}
     
     def pre_dispatch(self):
         """
