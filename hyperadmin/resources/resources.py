@@ -102,9 +102,6 @@ class BaseResource(BaseEndpoint):
             'resource_site': self.site,
         }
     
-    def generate_response(self, media_type, content_type, link, state):
-        return media_type.serialize(content_type=content_type, link=link, state=state)
-    
     def get_related_resource_from_field(self, field):
         return self.site.get_related_resource_from_field(field)
     

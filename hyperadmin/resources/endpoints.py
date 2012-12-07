@@ -129,6 +129,8 @@ class Endpoint(BaseEndpoint, View):
     url_suffix = None
     resource = None
     
+    global_state = None #for overiding the global state while processing
+    
     def __init__(self, **kwargs):
         self._init_kwargs = kwargs
         self.links = LinkCollectionProvider(self, kwargs['resource'].links)
@@ -151,6 +153,7 @@ class Endpoint(BaseEndpoint, View):
     def get_view_kwargs(self):
         kwargs = self.resource.get_view_kwargs()
         kwargs.update({'endpoint': self,
+                       'global_state': self.global_state,
                        'state': self.state,})
         return kwargs
     

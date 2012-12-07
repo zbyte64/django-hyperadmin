@@ -4,16 +4,15 @@ from hyperadmin.resources.crud.endpoints import ListEndpoint as BaseListEndpoint
 
 class CreateUploadLinkPrototype(LinkPrototype):
     def show_link(self, **kwargs):
-        return self.resource.has_add_permission(self.state)
+        return self.resource.has_add_permission()
     
     def get_link_kwargs(self, **kwargs):
         form_kwargs = kwargs.pop('form_kwargs', None)
         if form_kwargs is None:
             form_kwargs = {}
-        form_kwargs = self.resource.get_upload_link_form_kwargs(self.state, **form_kwargs)
+        form_kwargs = self.resource.get_upload_link_form_kwargs(**form_kwargs)
         
         link_kwargs = {'url':self.get_url(),
-                       'resource':self,
                        'on_submit':self.handle_submission,
                        'method':'POST',
                        'form_kwargs':form_kwargs,

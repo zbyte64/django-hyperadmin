@@ -40,8 +40,7 @@ class MediaTypeClient(Client):
     def get_endpoint_kwargs(self):
         return {
             'global_state': {
-                'reverse':self.reverse,
-                'generate_response': self.generate_response,
+                'site': self,
             }
         }
     

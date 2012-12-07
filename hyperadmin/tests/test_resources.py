@@ -33,7 +33,7 @@ class ResourceTestCase(unittest.TestCase):
         
         self.user = User.objects.get_or_create(username='superuser', is_staff=True, is_active=True, is_superuser=True)[0]
         self.resource = self.register_resource()
-        self.resource.generate_response = MagicMock(return_value=HttpResponse())
+        self.site.generate_response = MagicMock(return_value=HttpResponse())
         self.factory = SuperUserRequestFactory(user=self.user, HTTP_ACCEPT='text/html')
         
         self.resolver = GenericURLResolver(r'^', self.site.get_urls())
@@ -67,7 +67,7 @@ class ModelResourceTestCase(ResourceTestCase):
         request = self.factory.get('/')
         view(request)
         
-        media_type, response_type, link = self.resource.generate_response.call_args[0]
+        media_type, response_type, link = self.site.generate_response.call_args[0]
         state = link.state
         #assert False, str(self.popped_states)
         with state.push_session(self.popped_states):
@@ -89,7 +89,7 @@ class ModelResourceTestCase(ResourceTestCase):
         request = self.factory.get('/')
         view(request, pk=instance.pk)
         
-        media_type, response_type, link = self.resource.generate_response.call_args[0]
+        media_type, response_type, link = self.site.generate_response.call_args[0]
         state = link.state
         
         with state.push_session(self.popped_states):
@@ -106,7 +106,7 @@ class ModelResourceTestCase(ResourceTestCase):
         request = self.factory.post('/', update_data)
         view(request)
         
-        media_type, response_type, link = self.resource.generate_response.call_args[0]
+        media_type, response_type, link = self.site.generate_response.call_args[0]
         
         self.assertTrue(link.form)
         self.assertTrue(link.form.errors)
@@ -120,7 +120,7 @@ class ModelResourceTestCase(ResourceTestCase):
         request = self.factory.post('/', update_data)
         view(request, pk=instance.pk)
         
-        media_type, response_type, link = self.resource.generate_response.call_args[0]
+        media_type, response_type, link = self.site.generate_response.call_args[0]
         state = link.state
         
         with state.push_session(self.popped_states):
@@ -143,7 +143,7 @@ class InlineModelResourceTestCase(ResourceTestCase):
         request = self.factory.get('/')
         view(request, pk=self.user.pk)
         
-        media_type, response_type, link = self.resource.generate_response.call_args[0]
+        media_type, response_type, link = self.site.generate_response.call_args[0]
         state = link.state
         
         with state.push_session(self.popped_states):
@@ -161,7 +161,7 @@ class InlineModelResourceTestCase(ResourceTestCase):
         request = self.factory.get('/')
         view(request, pk=instance.pk)
         
-        media_type, response_type, link = self.resource.generate_response.call_args[0]
+        media_type, response_type, link = self.site.generate_response.call_args[0]
             
     #TODO
     def test_post_list(self):
@@ -176,7 +176,7 @@ class InlineModelResourceTestCase(ResourceTestCase):
         request = self.factory.post('/', update_data)
         view(request, pk=instance.pk)
         
-        media_type, response_type, link = self.resource.generate_response.call_args[0]
+        media_type, response_type, link = self.site.generate_response.call_args[0]
     
     #TODO
     def test_post_detail(self):
@@ -190,7 +190,7 @@ class InlineModelResourceTestCase(ResourceTestCase):
         request = self.factory.post('/', update_data)
         view(request, pk=instance.pk)
         
-        media_type, response_type, link = self.resource.generate_response.call_args[0]
+        media_type, response_type, link = self.site.generate_response.call_args[0]
 
 class SiteResourceTestCase(ResourceTestCase):
     def register_resource(self):
@@ -211,7 +211,7 @@ class SiteResourceTestCase(ResourceTestCase):
         request = self.factory.get('/')
         view(request)
         
-        media_type, response_type, link = self.resource.generate_response.call_args[0]
+        media_type, response_type, link = self.site.generate_response.call_args[0]
         state = link.state
         
         with state.push_session(self.popped_states):
@@ -227,7 +227,7 @@ class ApplicationResourceTestCase(ResourceTestCase):
         request = self.factory.get('/')
         view(request)
         
-        media_type, response_type, link, = self.resource.generate_response.call_args[0]
+        media_type, response_type, link, = self.site.generate_response.call_args[0]
         state = link.state
         
         with state.push_session(self.popped_states):
@@ -253,7 +253,7 @@ class StorageResourceTestCase(ResourceTestCase):
         request = self.factory.get('/')
         view(request)
         
-        media_type, response_type, link = self.resource.generate_response.call_args[0]
+        media_type, response_type, link = self.site.generate_response.call_args[0]
         #list view sets the state here
         #self.assertEqual(len(state.get_resource_items()), 1)
     
@@ -264,7 +264,7 @@ class StorageResourceTestCase(ResourceTestCase):
         request = self.factory.get('/')
         view(request, path='test.txt')
         
-        media_type, response_type, link = self.resource.generate_response.call_args[0]
+        media_type, response_type, link = self.site.generate_response.call_args[0]
         state = link.state
         
         with state.push_session(self.popped_states):
@@ -284,7 +284,7 @@ class StorageResourceTestCase(ResourceTestCase):
         request = self.factory.post('/', update_data)
         view(request)
         
-        media_type, response_type, link = self.resource.generate_response.call_args[0]
+        media_type, response_type, link = self.site.generate_response.call_args[0]
         
         #self.assertEqual(link.rel, 'item')
         #if there was an error:
@@ -302,7 +302,7 @@ class StorageResourceTestCase(ResourceTestCase):
         request = self.factory.post('/', update_data)
         view(request, path='test.txt')
         
-        media_type, response_type, link = self.resource.generate_response.call_args[0]
+        media_type, response_type, link = self.site.generate_response.call_args[0]
         
         self.assertEqual(link.rel, 'item')
         #if not rel
@@ -317,7 +317,7 @@ class AuthenticationResourceTestCase(ResourceTestCase):
         request = self.factory.get('/')
         view(request)
         
-        media_type, response_type, link = self.resource.generate_response.call_args[0]
+        media_type, response_type, link = self.site.generate_response.call_args[0]
         state = link.state
         
         with state.push_session(self.popped_states):
@@ -329,7 +329,7 @@ class AuthenticationResourceTestCase(ResourceTestCase):
         request = self.factory.delete('/')
         view(request)
         
-        media_type, response_type, link = self.resource.generate_response.call_args[0]
+        media_type, response_type, link = self.site.generate_response.call_args[0]
         state = link.state
         
         with state.push_session(self.popped_states):
@@ -340,7 +340,7 @@ class AuthenticationResourceTestCase(ResourceTestCase):
         request = self.factory.post('/')
         view(request)
         
-        media_type, response_type, link = self.resource.generate_response.call_args[0]
+        media_type, response_type, link = self.site.generate_response.call_args[0]
         state = link.state
         
         with state.push_session(self.popped_states):

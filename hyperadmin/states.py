@@ -221,17 +221,13 @@ class EndpointState(State):
     
     @property
     def site(self):
-        return self.resource.site
+        return self.get('site', self.resource.site)
     
     def reverse(self, name, *args, **kwargs):
-        if 'reverse' in self:
-            return self['reverse'](name, *args, **kwargs)
         return self.site.reverse(name, *args, **kwargs)
     
     def generate_response(self, media_type, response_type, link):
-        if 'generate_response' in self:
-            self['generate_response'](media_type, response_type, link, state=self)
-        return self.resource.generate_response(media_type, response_type, link, state=self)
+        return self.site.generate_response(media_type, response_type, link, state=self)
     
     def _set_item(self, val):
         self['item'] = val
