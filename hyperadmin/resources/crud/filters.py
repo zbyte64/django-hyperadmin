@@ -15,7 +15,7 @@ class BaseFilter(object):
                 "a 'title'." % self.__class__.__name__)
     
     def make_link(self, **kwargs):
-        return self.index.make_link(**kwargs)
+        return self.index.get_link(**kwargs)
     
     def populate_state(self):
         pass

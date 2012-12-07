@@ -67,6 +67,8 @@ class BaseEndpoint(object):
     
     state_class = EndpointState
     
+    endpoint_class = None #descriptor of the endpoint
+    
     def __init__(self, **kwargs):
         super(BaseEndpoint, self).__init__(**kwargs)
         self.common_state = self.get_common_state()

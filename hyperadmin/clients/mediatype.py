@@ -59,5 +59,5 @@ class MediaTypeClient(Client):
         return patterns('', *new_patterns)
     
     def generate_response(self, media_type, content_type, link, state):
-        media_type = self.get_media_types().get(content_type, media_type)(view=state.endpoint)
+        media_type = self.get_media_types().get(content_type, media_type)(endpoint=state.endpoint)
         return media_type.serialize(content_type=content_type, link=link, state=state)

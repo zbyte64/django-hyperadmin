@@ -70,11 +70,11 @@ class ModelResourceTestCase(ResourceTestCase):
         media_type, response_type, link = self.site.generate_response.call_args[0]
         state = link.state
         #assert False, str(self.popped_states)
-        with state.push_session(self.popped_states):
-            assert 'auth' in state, str(self.popped_states.dicts)
+        with state.patch_session(auth=self.user):
+            #assert 'auth' in state, str(self.popped_states.dicts)
             self.assertEqual(len(state.get_resource_items()), User.objects.count())
             
-            links = state.links.get_index_queries()
+            links = state.links.get_filter_links()
             self.assertTrue(links, str(links))
             
             links = state.links.get_breadcrumbs()

@@ -12,6 +12,7 @@ class ListLinkPrototype(LinkPrototype):
 
 
 class ListEndpoint(Endpoint):
+    endpoint_class = 'index'
     name_suffix = 'list'
     url_suffix = r'^$'
     

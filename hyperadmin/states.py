@@ -153,10 +153,10 @@ class State(MergeDict):
         return SESSION_STATE
     
     def get_dictionaries(self):
-        return [self.session, self.global_state, self.active_dictionary] + self.substates
+        return [self.active_dictionary, self.session, self.global_state] + self.substates
     
     def __copy__(self):
-        substates = self.global_state.dicts + [self.active_dictionary] + list(self.substates)
+        substates = [self.active_dictionary] + self.global_state.dicts + list(self.substates)
         ret = self.__class__(substates=substates)
         return ret
     
@@ -313,11 +313,8 @@ class EndpointState(State):
     def get_namespaces(self):
         return self.endpoint.get_namespaces()
     
-    def get_dictionaries(self):
-        return [self.session, self.global_state, self.active_dictionary] + self.substates
-    
     def __copy__(self):
-        substates = self.global_state.dicts + [self.active_dictionary] + list(self.substates)
+        substates = [self.active_dictionary] + self.global_state.dicts + list(self.substates)
         ret = self.__class__(self.endpoint, copy(self.meta), substates=substates)
         return ret
 

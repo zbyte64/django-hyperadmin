@@ -28,7 +28,7 @@ class Html5MediaType(MediaType):
         if 'display_fields' in state.meta:
             context['display_fields'] = state.meta['display_fields']
         
-        view_class_context = 'get_%s_context_data' % self.view.view_class
+        view_class_context = 'get_%s_context_data' % self.endpoint.endpoint_class
         if hasattr(self, view_class_context):
             context = getattr(self, view_class_context)(link, state, context)
         
@@ -41,15 +41,15 @@ class Html5MediaType(MediaType):
     def get_template_names(self):
         params = {
             'base': self.template_dir_name,
-            'view_class': self.view.view_class,
+            'endpoint_class': self.endpoint.endpoint_class,
             'resource_name': getattr(self.resource, 'resource_name', None),
             'app_name': self.resource.app_name,
         }
         
         names = [
-            '{base}/{app_name}/{resource_name}/{view_class}.html'.format(**params),
-            '{base}/{app_name}/{view_class}.html'.format(**params),
-            '{base}/{view_class}.html'.format(**params),
+            '{base}/{app_name}/{resource_name}/{endpoint_class}.html'.format(**params),
+            '{base}/{app_name}/{endpoint_class}.html'.format(**params),
+            '{base}/{endpoint_class}.html'.format(**params),
             self.template_name,
         ]
         
@@ -73,7 +73,7 @@ class Html5MediaType(MediaType):
     
     def check_csrf(self):
         csrf_middleware = CsrfViewMiddleware()
-        response = csrf_middleware.process_view(self.view.request, self.deserialize, self.view.args, self.view.kwargs)
+        response = csrf_middleware.process_view(self.endpoint.request, self.deserialize, [], {})
         if response is not None:
             assert False, 'csrf failed' #TODO APIException(response) or SuspiciousOperation ....
             raise response

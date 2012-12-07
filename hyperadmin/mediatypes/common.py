@@ -11,13 +11,13 @@ class MediaType(object):
         for media_type in cls.recognized_media_types:
             BUILTIN_MEDIA_TYPES[media_type] = cls
     
-    def __init__(self, view):
-        self.view = view
-        self.request = view.request
+    def __init__(self, endpoint):
+        self.endpoint = endpoint
+        self.request = endpoint.request
     
     @property
     def resource(self):
-        return self.view.resource
+        return self.endpoint.resource
     
     @property
     def site(self):

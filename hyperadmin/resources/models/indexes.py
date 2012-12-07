@@ -26,14 +26,14 @@ class ModelIndex(Index):
                 prompt = unicode(header["text"])
                 classes = ["sortby"]
                 if "url" in header:
-                    links.append(self.get_resource_link(url=header["url"], prompt=prompt, classes=classes+["primary"], rel="sortby"))
+                    links.append(self.get_link(url=header["url"], prompt=prompt, classes=classes+["primary"], rel="sortby"))
                 else:
                     if header["ascending"]:
                         classes.append("ascending")
                     if header["sorted"]:
                         classes.append("sorted")
-                    links.append(self.get_resource_link(url=header["url_primary"], prompt=prompt, classes=classes+["primary"], rel="sortby"))
-                    links.append(self.get_resource_link(url=header["url_remove"], prompt=prompt, classes=classes+["remove"], rel="sortby"))
-                    links.append(self.get_resource_link(url=header["url_toggle"], prompt=prompt, classes=classes+["toggle"], rel="sortby"))
+                    links.append(self.get_link(url=header["url_primary"], prompt=prompt, classes=classes+["primary"], rel="sortby"))
+                    links.append(self.get_link(url=header["url_remove"], prompt=prompt, classes=classes+["remove"], rel="sortby"))
+                    links.append(self.get_link(url=header["url_toggle"], prompt=prompt, classes=classes+["toggle"], rel="sortby"))
         return links
 

@@ -67,15 +67,16 @@ class DeleteLinkPrototype(LinkPrototype):
         return self.on_success()
 
 class ListEndpoint(Endpoint):
+    endpoint_class = 'change_list'
     name_suffix = 'list'
     url_suffix = r'^$'
-    
-    def __init__(self, index_name='primary', **kwargs):
-        super(ListEndpoint, self).__init__(**kwargs)
-        self.index_name = index_name
+    index_name = 'primary'
     
     def get_index(self):
-        return self.resource.get_index(self.index_name)
+        if 'index' not in self.state:
+            self.state['index'] = self.resource.get_index(self.index_name)
+            self.state['index'].populate_state()
+        return self.state['index']
     
     def get_view_class(self):
         return self.resource.list_view
@@ -89,11 +90,16 @@ class ListEndpoint(Endpoint):
         links.add_link('create', link_factor='LO')
         return links
     
-    def get_index_queries(self):
+    def get_filter_links(self):
         links = self.create_link_collection()
         index = self.get_index()
         links.extend(index.get_filter_links(rel='filter'))
-        #links.extend(index.get_pagination_links())
+        return links
+    
+    def get_pagination_links(self):
+        links = self.create_link_collection()
+        index = self.get_index()
+        links.extend(index.get_pagination_links(rel='paginate'))
         return links
     
     def get_instances(self):
@@ -107,6 +113,7 @@ class ListEndpoint(Endpoint):
         
 
 class CreateEndpoint(Endpoint):
+    endpoint_class = 'change_form'
     name_suffix = 'add'
     url_suffix = r'^add/$'
     
@@ -120,6 +127,7 @@ class CreateEndpoint(Endpoint):
         return [self.link_prototypes['create'].get_link(rel='breadcrumb', use_request_url=True, link_factor='LO')]
 
 class DetailEndpoint(Endpoint):
+    endpoint_class = 'change_form'
     name_suffix = 'detail'
     url_suffix = r'^(?P<pk>\w+)/$'
     
@@ -143,6 +151,7 @@ class DetailEndpoint(Endpoint):
         return [self.link_prototypes['update'].get_link(item=self.state.item, rel='breadcrumb', use_request_url=True, link_factor='LO')]
 
 class DeleteEndpoint(Endpoint):
+    endpoint_class = 'delete_confirmation'
     name_suffix = 'delete'
     url_suffix = r'^(?P<pk>\w+)/delete/$'
     

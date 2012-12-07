@@ -4,14 +4,13 @@ from hyperadmin.hyperobjects import Link
 from hyperadmin.resources.crud.crud import CRUDResource
 from hyperadmin.resources.storages import views
 from hyperadmin.resources.storages.forms import UploadForm, UploadLinkForm
-from hyperadmin.resources.storages.changelist import StorageChangeList, StoragePaginator
+from hyperadmin.resources.storages.indexes import StorageIndex
 from hyperadmin.resources.storages.endpoints import ListEndpoint, CreateEndpoint, CreateUploadEndpoint, DetailEndpoint, DeleteEndpoint
 
 
 class StorageResource(CRUDResource):
     #resource_adaptor = storage object
-    changelist_class = StorageChangeList
-    paginator_class = StoragePaginator
+    #paginator_class = StoragePaginator
     form_class = UploadForm
     upload_link_form_class = UploadLinkForm
     
@@ -61,9 +60,11 @@ class StorageResource(CRUDResource):
         except NotImplementedError:
             return [], [] #dirs, files
     
+    def get_indexes(self):
+        return {'primary':StorageIndex('primary', self, self.get_index_query('primary'))}
+    
     def get_primary_query(self):
-        path = self.state.params.get('path', '')
-        return self.get_listing(path)
+        return self.get_listing
     
     def get_instances(self):
         '''
@@ -114,5 +115,4 @@ class StorageResource(CRUDResource):
         return item.instance.name
     
     def get_paginator_kwargs(self):
-        return {'storage':self.storage,
-                'state':self.state,}
+        return {}

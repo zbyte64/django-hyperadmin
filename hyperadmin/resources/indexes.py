@@ -32,7 +32,7 @@ class Index(object):
                     active_index = new_index
         return active_index
     
-    def make_link(self, **kwargs):
+    def get_link(self, **kwargs):
         return self.resource.get_link(**kwargs)
     
     def get_filter_links(self, **link_kwargs):
@@ -51,7 +51,7 @@ class Index(object):
             return self.paginator_class(index, **kwargs)
         return self.resource.get_paginator(index, **kwargs)
     
-    def get_pagination_links(self):
+    def get_pagination_links(self, **link_kwargs):
         links = list()
         if 'paginator' in self.state:
             paginator = self.state['paginator']
@@ -60,7 +60,14 @@ class Index(object):
                 if page == '.':
                     continue
                 url = self.state.get_query_string({self.page_var: page+1})
-                links.append(self.make_link(url=url, prompt=u"%s" % page, classes=classes, rel="pagination"))
+                kwargs = {
+                    'url':url,
+                    'prompt': u"%s" % page,
+                    'classes': classes,
+                    'rel': "pagination",
+                }
+                kwargs.update(link_kwargs)
+                links.append(self.get_link(**kwargs))
         return links
     
     def get_advaned_link(self):

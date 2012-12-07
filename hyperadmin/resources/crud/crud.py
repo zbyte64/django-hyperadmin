@@ -2,7 +2,6 @@ from django.core.paginator import Paginator
 
 from hyperadmin.resources.resources import BaseResource
 from hyperadmin.resources.indexes import PrimaryIndex
-from hyperadmin.resources.crud.changelist import ChangeList
 from hyperadmin.resources.crud.hyperobjects import ListResourceItem
 from hyperadmin.resources.crud.endpoints import ListEndpoint, CreateEndpoint, DetailEndpoint, DeleteEndpoint
 
@@ -14,7 +13,6 @@ class CRUDResource(BaseResource):
     list_display = ('__str__',) #TODO should list all field by default
     list_resource_item_class = ListResourceItem
     paginator_class = Paginator
-    changelist_class = ChangeList
     
     #TODO support the following:
     actions = []
