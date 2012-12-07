@@ -67,6 +67,7 @@ class Endpoint(View):
     url_suffix = None
     resource = None
     state = None #CONSIDER: does this default to a global state?
+    global_state = None
     
     state_class = EndpointState
     
@@ -91,6 +92,7 @@ class Endpoint(View):
         """
         #CONSIDER does it make sense to proxy? perhaps we should just merge
         #can we get the view state?
+        self.request = request
         self.initialize_state()
         handler = self.get_internal_view()
         return handler(request, *args, **kwargs)
@@ -98,7 +100,8 @@ class Endpoint(View):
     def get_view_kwargs(self):
         kwargs = self.resource.get_view_kwargs()
         kwargs.update({'endpoint': self,
-                       'state': self.state})
+                       'state': self.state,
+                       'global_state': self.global_state,})
         return kwargs
     
     def get_view_class(self):
@@ -130,10 +133,13 @@ class Endpoint(View):
         view = self.get_view()
         return url(self.get_url_suffix(), view, name=self.get_url_name(),)
     
-    def get_url(self, **kwargs):
+    def reverse(self, *args, **kwargs):
         if self.state:
-            return self.state.reverse(self.get_url_name(), **kwargs)
-        return self.resource.reverse(self.get_url_name(), **kwargs)
+            return self.state.reverse(*args, **kwargs)
+        return self.resource.reverse(*args, **kwargs)
+    
+    def get_url(self, **kwargs):
+        return self.reverse(self.get_url_name(), **kwargs)
     
     #TODO better name => get_internal_links?
     def get_links(self):

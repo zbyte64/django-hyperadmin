@@ -74,8 +74,8 @@ class ListEndpoint(Endpoint):
     name_suffix = 'list'
     url_suffix = r'^$'
     
-    def __init__(self, resource, index_name='primary'):
-        super(ListEndpoint, self).__init__(resource=resource)
+    def __init__(self, index_name='primary', **kwargs):
+        super(ListEndpoint, self).__init__(**kwargs)
         self.index_name = index_name
     
     def get_index(self):

@@ -1,5 +1,18 @@
+from copy import copy
+
+from django.views.generic import View
+from django.conf.urls import patterns
+
 from hyperadmin.clients.common import Client
 
+
+class EndpointProxy(View):
+    endpoint = None
+    endpoint_kwargs = {}
+    
+    def dispatch(self, request, *args, **kwargs):
+        view = self.endpoint.get_view(**self.endpoint_kwargs)
+        return view(request, *args, **kwargs)
 
 class MediaTypeClient(Client):
     '''
@@ -18,11 +31,34 @@ class MediaTypeClient(Client):
         return media_types
     
     def get_urls(self):
-        media_types = self.get_media_types()
         try:
-            with self.api_endpoint.state.patch_state(reverse=self.reverse, media_types=media_types) as state:
-                urls = self.api_endpoint.get_urls()
-                return urls
+            return self.traverse(self.api_endpoint.get_urls())
         except Exception as error:
             print error
             raise
+    
+    def get_endpoint_kwargs(self):
+        return {
+            'global_state': {
+                'reverse':self.reverse,
+                'generate_response': self.generate_response,
+            }
+        }
+    
+    #TODO find a better name
+    def traverse(self, urlpatterns):
+        new_patterns = list()
+        for entry in urlpatterns:
+            entry = copy(entry)
+            if hasattr(entry, '_callback') and hasattr(entry._callback, 'endpoint'):
+                endpoint = entry._callback.endpoint
+                entry._callback = EndpointProxy.as_view(endpoint=endpoint, endpoint_kwargs=self.get_endpoint_kwargs())
+                entry._callback.endpoint = endpoint
+            elif hasattr(entry, 'url_patterns'):
+                entry._urlconf_module = self.traverse(entry.url_patterns)
+            new_patterns.append(entry)
+        return patterns('', *new_patterns)
+    
+    def generate_response(self, media_type, content_type, link, state):
+        media_type = self.get_media_types().get(content_type, media_type)(view=state.endpoint)
+        return media_type.serialize(content_type=content_type, link=link, state=state)
