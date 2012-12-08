@@ -16,12 +16,14 @@ class BaseResource(BaseEndpoint):
     resource_item_class = ResourceItem
     form_class = EmptyForm
     
-    def __init__(self, resource_adaptor, site, parent_resource=None):
-        self.resource_adaptor = resource_adaptor
-        self.site = site
-        self.parent = parent_resource
+    resource_adaptor = None
+    site = None
+    parent = None
+    
+    def __init__(self, **kwargs):
+        assert 'resource_adaptor' in kwargs
         self.links = LinkCollectionProvider(self)
-        super(BaseResource, self).__init__()
+        super(BaseResource, self).__init__(**kwargs)
     
     def get_app_name(self):
         raise NotImplementedError
@@ -120,9 +122,6 @@ class BaseResource(BaseEndpoint):
     
     def get_instances(self):
         return []
-    
-    def get_resource_items(self):
-        return [self.get_resource_item(instance) for instance in self.get_instances()]
     
     def get_resource_link_item(self):
         return None

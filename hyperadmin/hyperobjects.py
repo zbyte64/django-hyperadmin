@@ -276,6 +276,7 @@ class ResourceItemLinkCollectionProvider(LinkCollectionProvider):
     def _get_link_kwargs(self):
         return {'item':self.container}
 
+#CONSIDER, this is more of an endpoint item
 class ResourceItem(object):
     '''
     Represents an instance that is bound to a resource
@@ -326,7 +327,7 @@ class ResourceItem(object):
         """
         Returns a string representing the item
         """
-        return self.resource.get_item_prompt(self)
+        return self.endpoint.get_item_prompt(self)
     
     def get_resource_items(self):
         return [self]

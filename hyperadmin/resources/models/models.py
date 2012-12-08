@@ -220,13 +220,12 @@ class ModelResource(BaseModelResource):
     
     def get_item_namespaces(self, item):
         namespaces = super(ModelResource, self).get_item_namespaces(item)
-        
         for inline in self.inline_instances:
             name = 'inline-%s' % inline.rel_name
             inline = inline.fork_state(parent=item.instance, namespace=name)
-            assert inline.state.resource == inline
+            #assert inline.state.resource == inline
             assert inline.endpoints.values()[0].resource == inline
-            link = inline.get_resource_link()
+            link = inline.get_link()
             namespace = Namespace(name=name, link=link, state=inline.state)
             namespaces[name] = namespace
         return namespaces
@@ -241,8 +240,11 @@ class InlineModelResource(BaseModelResource):
     fk_name = None
     rel_name = None
     
-    def __init__(self, parent):
-        super(InlineModelResource, self).__init__(resource_adaptor=self.model, site=parent.site, parent_resource=parent)
+    def __init__(self, parent, **kwargs):
+        kwargs['site'] = parent.site
+        kwargs['resource_adaptor'] = self.model
+        kwargs['parent'] = parent
+        super(InlineModelResource, self).__init__(**kwargs)
         
         from django.db.models.fields.related import RelatedObject
         from django.forms.models import _get_foreign_key
@@ -294,12 +296,15 @@ class InlineModelResource(BaseModelResource):
     def get_form_class(self):
         if self.form_class:
             return self.form_class
+        
+        resource = self
+        
         class AdminForm(forms.ModelForm):
             state = self.state
             
             def save(self, commit=True):
                 instance = super(AdminForm, self).save(commit=False)
-                setattr(instance, self.state['resource'].fk.name, self.state['parent'])
+                setattr(instance, resource.fk.name, self.state['parent'])
                 if commit:
                     instance.save()
                 return instance

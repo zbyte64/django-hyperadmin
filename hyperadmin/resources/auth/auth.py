@@ -40,3 +40,10 @@ class AuthResource(BaseResource):
     
     def get_absolute_url(self):
         return self.link_prototypes['login'].get_url()
+    
+    def get_link(self, **kwargs):
+        #must include endpoint in kwargs
+        link_kwargs = {'rel':'self',
+                       'prompt':self.get_prompt(),}
+        link_kwargs.update(kwargs)
+        return self.link_prototypes['login'].get_link(**link_kwargs)

@@ -46,7 +46,7 @@ class ResourceSite(object):
     
     def get_application_resource_kwargs(self, **kwargs):
         params = self.get_resource_kwargs(**kwargs)
-        params['parent_resource'] = self.site_resource
+        params['parent'] = self.site_resource
         return params
     
     def register_application(self, app_name, app_class=None, **options):

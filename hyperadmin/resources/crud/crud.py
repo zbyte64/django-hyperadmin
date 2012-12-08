@@ -86,7 +86,7 @@ class CRUDResource(BaseResource):
     
     def get_resource_items(self):
         instances = self.get_instances()
-        if state.has_view_class('change_list'):
+        if self.state.has_view_class('change_list'):
             return [self.get_list_resource_item(instance) for instance in instances]
         return [self.get_resource_item(instance) for instance in instances]
     

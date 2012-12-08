@@ -59,17 +59,21 @@ class LinkPrototype(object):
     def get_url(self, **kwargs):
         return self.endpoint.get_url(**kwargs)
 
-class BaseEndpoint(object):
+class BaseEndpoint(View):
     state = None #for this particular endpoint
     #TODO find a better name for "common_state"
     common_state = None #shared by endpoints of the same resource
     session_state = SESSION_STATE #state representing the current request
     
+    global_state = None #for overiding the global state while processing
+    
     state_class = EndpointState
+    view_class = None
     
     endpoint_class = None #descriptor of the endpoint
     
     def __init__(self, **kwargs):
+        self._init_kwargs = kwargs
         super(BaseEndpoint, self).__init__(**kwargs)
         self.common_state = self.get_common_state()
         self.initialize_state()
@@ -118,29 +122,6 @@ class BaseEndpoint(object):
         return LinkCollection(endpoint=self)
     
     #link_prototypes
-
-class Endpoint(BaseEndpoint, View):
-    """
-    Represents an API endpoint
-    
-    Behaves like a class based view
-    Initialized originally without a state; should endpoint be a class based view that pumps to another?
-    """
-    name_suffix = None
-    view_class = None
-    url_suffix = None
-    resource = None
-    
-    global_state = None #for overiding the global state while processing
-    
-    def __init__(self, **kwargs):
-        self._init_kwargs = kwargs
-        self.links = LinkCollectionProvider(self, kwargs['resource'].links)
-        super(Endpoint, self).__init__(**kwargs)
-    
-    @property
-    def link_prototypes(self):
-        return self.resource.link_prototypes
     
     def dispatch(self, request, *args, **kwargs):
         """
@@ -152,22 +133,6 @@ class Endpoint(BaseEndpoint, View):
         handler = self.get_internal_view()
         return handler(request, *args, **kwargs)
     
-    def get_view_kwargs(self):
-        kwargs = self.resource.get_view_kwargs()
-        kwargs.update({'endpoint': self,
-                       'global_state': self.global_state,
-                       'state': self.state,})
-        return kwargs
-    
-    def get_view_class(self):
-        return self.view_class
-    
-    def get_internal_view(self):
-        init = self.get_view_kwargs()
-        klass = self.get_view_class()
-        assert klass
-        return klass.as_view(**init)
-    
     def get_view(self, **kwargs):
         kwargs.update(self._init_kwargs)
         view = type(self).as_view(**kwargs)
@@ -175,6 +140,84 @@ class Endpoint(BaseEndpoint, View):
         view.endpoint = self
         #thus allowing us to do: myview.endpoint.get_view(**some_new_kwargs)
         return view
+    
+    def fork(self, **kwargs):
+        kwargs.update(self._init_kwargs)
+        return type(self)(**kwargs)
+    
+    def fork_state(self, **kwargs):
+        new_endpoint = self.fork()
+        new_endpoint.state.update(kwargs)
+        return new_endpoint
+    
+    def get_resource_item(self, instance):
+        raise NotImplementedError
+    
+    def get_instances(self):
+        raise NotImplementedError
+    
+    def get_resource_items(self):
+        instances = self.get_instances()
+        return [self.get_resource_item(instance) for instance in instances]
+    
+    def get_item_url(self, item):
+        raise NotImplementedError
+    
+    def get_form_class(self):
+        raise NotImplementedError
+    
+    def get_form_kwargs(self, **kwargs):
+        raise NotImplementedError
+    
+    def get_view_class(self):
+        return self.view_class
+    
+    def get_view_kwargs(self):
+        raise NotImplementedError
+    
+    def get_internal_view(self):
+        init = self.get_view_kwargs()
+        klass = self.get_view_class()
+        assert klass
+        return klass.as_view(**init)
+    
+    def get_namespaces(self):
+        raise NotImplementedError
+    
+    def get_item_namespaces(self, item):
+        raise NotImplementedError
+    
+    def get_item_link(self, item):
+        raise NotImplementedError
+    
+    def get_item_prompt(self, item):
+        raise NotImplementedError
+
+class Endpoint(BaseEndpoint):
+    """
+    Represents an API endpoint
+    
+    Behaves like a class based view
+    Initialized originally without a state; should endpoint be a class based view that pumps to another?
+    """
+    name_suffix = None
+    url_suffix = None
+    resource = None
+    
+    def __init__(self, **kwargs):
+        self.links = LinkCollectionProvider(self, kwargs['resource'].links)
+        super(Endpoint, self).__init__(**kwargs)
+    
+    @property
+    def link_prototypes(self):
+        return self.resource.link_prototypes
+    
+    def get_view_kwargs(self):
+        kwargs = self.resource.get_view_kwargs()
+        kwargs.update({'endpoint': self,
+                       'global_state': self.global_state,
+                       'state': self.state,})
+        return kwargs
     
     def get_base_url_name(self):
         return self.resource.get_base_url_name()
@@ -189,9 +232,6 @@ class Endpoint(BaseEndpoint, View):
         view = self.get_view()
         return url(self.get_url_suffix(), view, name=self.get_url_name(),)
     
-    def get_url(self, **kwargs):
-        return self.reverse(self.get_url_name(), **kwargs)
-    
     #TODO better name => get_internal_links?
     def get_links(self):
         """
@@ -205,10 +245,6 @@ class Endpoint(BaseEndpoint, View):
     def get_instances(self):
         return self.resource.get_instances()
     
-    def get_resource_items(self):
-        instances = self.get_instances()
-        return [self.get_resource_item(instance) for instance in instances]
-    
     def get_common_state(self):
         return self.resource.state
     
@@ -220,6 +256,9 @@ class Endpoint(BaseEndpoint, View):
     
     def get_item_url(self, item):
         return self.resource.get_item_url(item)
+    
+    def get_item_prompt(self, item):
+        return self.resource.get_item_prompt(item)
     
     def get_form_class(self):
         return self.resource.get_form_class()

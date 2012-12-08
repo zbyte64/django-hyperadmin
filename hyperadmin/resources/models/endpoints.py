@@ -5,7 +5,7 @@ class InlineListEndpoint(ListEndpoint):
         pk = self.state['parent'].pk
         return super(ListEndpoint, self).get_url(pk=pk)
 
-class InlineCreateEndpoint(DetailEndpoint):
+class InlineCreateEndpoint(CreateEndpoint):
     def get_url(self):
         pk = self.state['parent'].pk
         return super(CreateEndpoint, self).get_url(pk=pk)
