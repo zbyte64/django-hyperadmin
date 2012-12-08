@@ -134,7 +134,7 @@ class BaseResource(BaseEndpoint):
         return self.link_prototypes['list'].get_link(**link_kwargs)
     
     def get_breadcrumb(self):
-        return self.get_link(rel='breadcrumb')
+        return self.get_link(rel='breadcrumb', link_factor='LO')
     
     def get_breadcrumbs(self):
         if self.parent:

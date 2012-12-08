@@ -1,4 +1,5 @@
 from django.contrib.auth import logout
+from django import forms
 
 from hyperadmin.resources.endpoints import LinkPrototype, Endpoint
 
@@ -23,14 +24,20 @@ class LoginLinkPrototype(LinkPrototype):
         form = link.get_form(**submit_kwargs)
         if form.is_valid():
             form.save()
-            self.state.session['authenticated'] = True
+            self.common_state.session['authenticated'] = True
             return self.on_success()
         return link.clone(form=form)
     
     def on_success(self):
-        return self.resource.site.site_resource.get_resource_link()
+        return self.resource.site.site_resource.get_link()
 
 class LogoutLinkPrototype(LinkPrototype):
+    def get_form_class(self):
+        return forms.Form
+    
+    def get_form_kwargs(self, **kwargs):
+        return {}
+    
     def show_link(self, **kwargs):
         return self.common_state.get('authenticated', False) or self.state.session['auth'].is_authenticated()
     
@@ -40,6 +47,7 @@ class LogoutLinkPrototype(LinkPrototype):
         link_kwargs = {'url':self.get_url(),
                        'on_submit':self.handle_submission,
                        'method':'POST',
+                       'form_class': self.get_form_class(),
                        'prompt':'Logout',
                        'rel':'logout',}
         link_kwargs.update(kwargs)

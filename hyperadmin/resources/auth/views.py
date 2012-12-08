@@ -2,6 +2,7 @@ from django.views.generic import View
 
 from hyperadmin.resources.views import ResourceViewMixin
 
+
 class AuthViewMixin(ResourceViewMixin):
     def get_common_state_data(self):
         state = super(AuthViewMixin, self).get_common_state_data()
