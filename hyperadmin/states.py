@@ -217,7 +217,7 @@ class EndpointState(State):
     
     @property
     def resource(self):
-        return self.endpoint.resource
+        return getattr(self.endpoint, 'resource', self.endpoint)
     
     @property
     def site(self):
