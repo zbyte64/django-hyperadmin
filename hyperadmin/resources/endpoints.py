@@ -205,7 +205,7 @@ class Endpoint(BaseEndpoint):
     resource = None
     
     def __init__(self, **kwargs):
-        self.links = LinkCollectionProvider(self, kwargs['resource'].links)
+        self.links = LinkCollectionProvider(self)
         super(Endpoint, self).__init__(**kwargs)
     
     @property
@@ -276,3 +276,7 @@ class Endpoint(BaseEndpoint):
     
     def get_item_link(self, item):
         return self.resource.get_item_link(item=item)
+    
+    def get_breadcrumbs(self):
+        return self.resource.get_breadcrumbs()
+

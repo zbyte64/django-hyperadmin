@@ -75,13 +75,13 @@ class ModelResourceTestCase(ResourceTestCase):
             self.assertEqual(len(state.get_resource_items()), User.objects.count())
             
             links = state.links.get_filter_links()
-            self.assertTrue(links, str(links))
+            self.assertTrue(links, 'filter links are empty')
             
             links = state.links.get_breadcrumbs()
-            self.assertTrue(links, str(links))
+            self.assertTrue(links, 'breadcrumbs are empty')
             
             links = state.links.get_outbound_links()
-            self.assertTrue(links, str(links))
+            self.assertTrue(links, 'outbound links are empty')
     
     def test_get_detail(self):
         instance = self.user
