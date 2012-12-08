@@ -290,7 +290,7 @@ class ResourceItem(object):
     
     @property
     def resource(self):
-        return self.endpoint.resource
+        return getattr(self.endpoint, 'resource', self.endpoint)
     
     @property
     def state(self):
