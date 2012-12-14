@@ -15,11 +15,13 @@ class APIRequest(object):
         super(APIRequest, self).__init__()
     
         
-    def get_session_data(self):
+    def populate_session_data_from_request(self, request):
         #TODO consult site object
-        data = {'request': self.request}
-        if hasattr(self.request, 'user'):
-            data['auth'] = self.request.user
+        data = {'request': request}
+        if hasattr(request, 'user'):
+            data['auth'] = request.user
+        self.session_state.update(data)
+        #TODO set response type & request type
         return data
     
     def get_response_type(self, patch_meta=True):
