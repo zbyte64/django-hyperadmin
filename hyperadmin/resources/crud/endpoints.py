@@ -148,7 +148,9 @@ class CreateEndpoint(Endpoint):
         return {'create':CreateLinkPrototype(endpoint=self)}
     
     def get_breadcrumbs(self):
-        return [self.link_prototypes['create'].get_link(rel='breadcrumb', use_request_url=True, link_factor='LO')]
+        breadcrumbs = super(CreateEndpoint, self).get_breadcrumbs()
+        breadcrumbs.add_link('create', rel='breadcrumb', link_factor='LO')
+        return breadcrumbs
 
 class DetailEndpoint(Endpoint):
     endpoint_class = 'change_form'
@@ -172,7 +174,9 @@ class DetailEndpoint(Endpoint):
         return super(DetailEndpoint, self).get_url(pk=item.instance.pk)
     
     def get_breadcrumbs(self):
-        return [self.link_prototypes['update'].get_link(item=self.state.item, rel='breadcrumb', use_request_url=True, link_factor='LO')]
+        breadcrumbs = super(DetailEndpoint, self).get_breadcrumbs()
+        breadcrumbs.add_link('update', item=self.state.item, rel='breadcrumb', link_factor='LO')
+        return breadcrumbs
 
 class DeleteEndpoint(Endpoint):
     endpoint_class = 'delete_confirmation'
@@ -189,6 +193,8 @@ class DeleteEndpoint(Endpoint):
         return super(DeleteEndpoint, self).get_url(pk=item.instance.pk)
     
     def get_breadcrumbs(self):
-        return [self.link_prototypes['update'].get_link(item=self.state.item, rel='breadcrumb', use_request_url=True, link_factor='LO'), 
-                self.link_prototypes['delete'].get_link(item=self.state.item, rel='breadcrumb', use_request_url=True, link_factor='LO')]
+        breadcrumbs = super(DeleteEndpoint, self).get_breadcrumbs()
+        breadcrumbs.add_link('update', item=self.state.item, rel='breadcrumb', link_factor='LO')
+        breadcrumbs.add_link('delete', item=self.state.item, rel='breadcrumb', link_factor='LO')
+        return breadcrumbs
 

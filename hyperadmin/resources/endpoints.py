@@ -216,7 +216,7 @@ class Endpoint(BaseEndpoint):
     url_suffix = None
     
     def __init__(self, **kwargs):
-        self.links = LinkCollectionProvider(self, kwargs['resource'].links)
+        self.links = LinkCollectionProvider(self)
         super(Endpoint, self).__init__(**kwargs)
     
     def get_resource(self):
@@ -296,3 +296,6 @@ class Endpoint(BaseEndpoint):
     
     def get_main_link_prototype(self):
         return self.resource.get_main_link_prototype()
+    
+    def get_breadcrumbs(self):
+        return self.resource.get_breadcrumbs()

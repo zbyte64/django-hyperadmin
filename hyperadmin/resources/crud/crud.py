@@ -108,6 +108,12 @@ class CRUDResource(BaseResource):
     def get_paginator(self, index, **kwargs):
         return self.get_paginator_class()(index, **kwargs)
     
+    def get_outbound_links(self):
+        links = self.create_link_collection()
+        links.add_link('list', link_factor='LO')
+        links.add_link('create', link_factor='LO')
+        return links
+    
     def get_actions(self, request):
         actions = self.site.get_actions(request)
         for func in self.actions:
