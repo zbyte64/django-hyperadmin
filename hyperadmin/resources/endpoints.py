@@ -214,13 +214,20 @@ class Endpoint(BaseEndpoint):
     """
     name_suffix = None
     url_suffix = None
-    resource = None
-    
-    #self.resource => if state do endpoint lookup
     
     def __init__(self, **kwargs):
         self.links = LinkCollectionProvider(self, kwargs['resource'].links)
         super(Endpoint, self).__init__(**kwargs)
+    
+    def get_resource(self):
+        if self.state:
+            pass #TODO consult state or api request
+        return self._resource
+    
+    def set_resource(self, resource):
+        self._resource = resource
+    
+    resource = property(get_resource, set_resource)
     
     @property
     def link_prototypes(self):
