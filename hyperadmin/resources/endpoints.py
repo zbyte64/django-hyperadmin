@@ -1,8 +1,9 @@
 from django.conf.urls.defaults import url
 from django.views.generic import View
 
-from hyperadmin.hyperobjects import Link, LinkCollection, LinkCollectionProvider
+from hyperadmin.hyperobjects import Link, LinkCollection, LinkCollectionProvider, ResourceItem
 from hyperadmin.states import EndpointState, SESSION_STATE
+from hyperadmin.views import EndpointViewMixin
 
 
 class LinkPrototype(object):
@@ -59,7 +60,7 @@ class LinkPrototype(object):
     def get_url(self, **kwargs):
         return self.endpoint.get_url(**kwargs)
 
-class BaseEndpoint(View):
+class BaseEndpoint(EndpointViewMixin, View):
     state = None #for this particular endpoint
     #TODO find a better name for "common_state"
     common_state = None #shared by endpoints of the same resource
@@ -68,21 +69,20 @@ class BaseEndpoint(View):
     global_state = None #for overiding the global state while processing
     
     state_class = EndpointState
-    view_class = None
     
     endpoint_class = None #descriptor of the endpoint
+    
+    form_class = None
+    resource_item_class = ResourceItem
     
     def __init__(self, **kwargs):
         self._init_kwargs = kwargs
         super(BaseEndpoint, self).__init__(**kwargs)
         self.common_state = self.get_common_state()
-        self.initialize_state()
+        #self.initialize_state()
     
     def get_common_state(self):
         return None
-    
-    def get_state_data(self):
-        return {}
     
     def get_meta(self):
         return {}
@@ -105,6 +105,8 @@ class BaseEndpoint(View):
         kwargs['data'].update(data)
         self.state = self.get_state_class()(**kwargs)
         self.state.meta = self.get_meta()
+        if self.common_state is None:
+            self.common_state = self.state
         return self.state
     
     def reverse(self, *args, **kwargs):
@@ -115,6 +117,9 @@ class BaseEndpoint(View):
     def get_base_url_name(self):
         raise NotImplementedError
     
+    def get_url_name(self):
+        raise NotImplementedError
+    
     def get_url(self, **kwargs):
         return self.reverse(self.get_url_name(), **kwargs)
     
@@ -123,18 +128,9 @@ class BaseEndpoint(View):
     
     #link_prototypes
     
-    def dispatch(self, request, *args, **kwargs):
-        """
-        Endpoint simply dispatches to a defined class based view
-        """
-        #CONSIDER does it make sense to proxy? perhaps we should just merge
-        #can we get the view state?
-        self.request = request
-        handler = self.get_internal_view()
-        return handler(request, *args, **kwargs)
-    
     def get_view(self, **kwargs):
         kwargs.update(self._init_kwargs)
+        kwargs.update(self.get_view_kwargs())
         view = type(self).as_view(**kwargs)
         #allow for retreiving the endpoint from url patterns
         view.endpoint = self
@@ -150,11 +146,15 @@ class BaseEndpoint(View):
         new_endpoint.state.update(kwargs)
         return new_endpoint
     
-    def get_resource_item(self, instance):
-        raise NotImplementedError
+    def get_resource_item_class(self):
+        return self.resource_item_class
+    
+    def get_resource_item(self, instance, **kwargs):
+        kwargs.setdefault('endpoint', self)
+        return self.get_resource_item_class()(instance=instance, **kwargs)
     
     def get_instances(self):
-        raise NotImplementedError
+        return []
     
     def get_resource_items(self):
         instances = self.get_instances()
@@ -164,34 +164,46 @@ class BaseEndpoint(View):
         raise NotImplementedError
     
     def get_form_class(self):
-        raise NotImplementedError
+        return self.form_class
     
-    def get_form_kwargs(self, **kwargs):
-        raise NotImplementedError
-    
-    def get_view_class(self):
-        return self.view_class
+    def get_form_kwargs(self, item=None, **kwargs):
+        if item is not None:
+            kwargs.setdefault('instance', item.instance)
+        return kwargs
     
     def get_view_kwargs(self):
-        raise NotImplementedError
-    
-    def get_internal_view(self):
-        init = self.get_view_kwargs()
-        klass = self.get_view_class()
-        assert klass
-        return klass.as_view(**init)
+        return {}
     
     def get_namespaces(self):
-        raise NotImplementedError
+        return {}
     
     def get_item_namespaces(self, item):
+        return {}
+    
+    def get_item_link(self, item, **kwargs):
+        link_kwargs = {'url':item.get_absolute_url(),
+                       'endpoint':self,
+                       'rel':'item',
+                       'prompt':item.get_prompt(),}
+        link_kwargs.update(kwargs)
+        item_link = Link(**link_kwargs)
+        return item_link
+    
+    def get_main_link_prototype(self):
         raise NotImplementedError
     
-    def get_item_link(self, item):
-        raise NotImplementedError
+    def get_link(self, **kwargs):
+        link_kwargs = {'rel':'self',
+                       'endpoint': self,
+                       'prompt':self.get_prompt(),}
+        link_kwargs.update(kwargs)
+        return self.get_main_link_prototype().get_link(**link_kwargs)
     
     def get_item_prompt(self, item):
-        raise NotImplementedError
+        return unicode(item.instance)
+    
+    def get_prompt(self):
+        return unicode(self)
 
 class Endpoint(BaseEndpoint):
     """
@@ -204,6 +216,8 @@ class Endpoint(BaseEndpoint):
     url_suffix = None
     resource = None
     
+    #self.resource => if state do endpoint lookup
+    
     def __init__(self, **kwargs):
         self.links = LinkCollectionProvider(self, kwargs['resource'].links)
         super(Endpoint, self).__init__(**kwargs)
@@ -213,9 +227,8 @@ class Endpoint(BaseEndpoint):
         return self.resource.link_prototypes
     
     def get_view_kwargs(self):
-        kwargs = self.resource.get_view_kwargs()
-        kwargs.update({'endpoint': self,
-                       'global_state': self.global_state,
+        return self.resource.get_view_kwargs()
+        kwargs.update({'global_state': self.global_state,
                        'state': self.state,})
         return kwargs
     
@@ -249,10 +262,7 @@ class Endpoint(BaseEndpoint):
         return self.resource.state
     
     def get_resource_link(self, **kwargs):
-        link_kwargs = {'rel':'self',
-                       'prompt':self.resource.get_prompt(),}
-        link_kwargs.update(kwargs)
-        return self.link_prototypes['list'].get_link(**kwargs)
+        return self.resource.get_link(**kwargs)
     
     def get_item_url(self, item):
         return self.resource.get_item_url(item)
@@ -261,7 +271,7 @@ class Endpoint(BaseEndpoint):
         return self.resource.get_item_prompt(item)
     
     def get_form_class(self):
-        return self.resource.get_form_class()
+        return self.form_class or self.resource.get_form_class()
     
     def get_form_kwargs(self, **kwargs):
         form_kwargs = kwargs.get('form_kwargs', None) or {}
@@ -276,3 +286,6 @@ class Endpoint(BaseEndpoint):
     
     def get_item_link(self, item):
         return self.resource.get_item_link(item=item)
+    
+    def get_main_link_prototype(self):
+        return self.resource.get_main_link_prototype()

@@ -1,5 +1,5 @@
 from django.conf.urls.defaults import patterns
-from django.core.urlresolvers import reverse
+from django.core.urlresolvers import reverse, RegexURLResolver
 from django.utils.datastructures import SortedDict
 from django.http import HttpResponse, HttpResponseRedirect
 from django.utils.encoding import iri_to_uri
@@ -143,6 +143,20 @@ class ResourceSite(object):
     
     def get_absolute_url(self):
         return self.site_resource.get_absolute_url()
+    
+    def get_endpoint_by_absolute_url(self, url):
+        abs_url = self.get_absolute_url()
+        url = url[len(abs_url):]
+        return self.get_endpoint_by_url(url)
+    
+    def get_endpoint_by_url(self, url):
+        urlconf_module, app_name, namespace = self.urls
+        resolver = RegexURLResolver('', urlconf_module, app_name=app_name, namespace=namespace)
+        match = resolver.resolve(url)
+        endpoint = match.func.endpoint
+        #TODO endpoint should have state populated by url
+        return endpoint.fork_from_url(url)
+        return endpoint
     
     def get_actions(self, request):
         return SortedDict()

@@ -32,9 +32,6 @@ class InlineModelMixin(object):
         self.common_state['parent'] = self.get_parent()
         return super(InlineModelMixin, self).get_common_state_data()
     
-    def get_changelist_links(self):
-        return []
-    
     def get_parent(self):
         if not hasattr(self, '_parent'):
             queryset = self.resource.parent.get_queryset()

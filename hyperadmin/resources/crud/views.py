@@ -21,13 +21,13 @@ class CRUDResourceViewMixin(ResourceViewMixin):
         return kwargs
     
     def can_add(self):
-        return self.endpoint.link_prototypes['create'].show_link()
+        return self.link_prototypes['create'].show_link()
     
     def can_change(self, item=None):
-        return self.endpoint.link_prototypes['update'].show_link(item=item)
+        return self.link_prototypes['update'].show_link(item=item)
     
     def can_delete(self, item=None):
-        return self.endpoint.link_prototypes['delete'].show_link(item=item)
+        return self.link_prototypes['delete'].show_link(item=item)
     
     def get_create_link(self, form_kwargs=None, **link_kwargs):
         if form_kwargs is None: form_kwargs = dict()

@@ -131,14 +131,17 @@ class ModelResourceTestCase(ResourceTestCase):
             self.assertEqual(state.item.instance, instance)
 
 class InlineModelResourceTestCase(ResourceTestCase):
+    def setUp(self):
+        super(InlineModelResourceTestCase, self).setUp()
+        self.test_group = Group.objects.get_or_create(name='testgroup')[0]
+        self.user.groups.add(self.test_group)
+    
     def register_resource(self):
         self.site.register(User, UserResource)
-        return self.site.registry[User].inline_instances[0]
+        self.user_resource = self.site.registry[User]
+        return self.user_resource.inline_instances[0]
     
     def test_get_list(self):
-        group = Group.objects.get_or_create(name='testgroup')[0]
-        self.user.groups.add(group)
-        
         view = self.resource.endpoints['list'].get_view()
         request = self.factory.get('/')
         view(request, pk=self.user.pk)
@@ -149,12 +152,36 @@ class InlineModelResourceTestCase(ResourceTestCase):
         with state.push_session(self.popped_states):
             self.assertEqual(len(state.get_resource_items()), self.user.groups.all().count())
     
+    def test_namespaced_form(self):
+        instance = self.user
+        view = self.user_resource.endpoints['detail'].get_view()
+        request = self.factory.get('/')
+        view(request, pk=instance.pk)
+        
+        media_type, response_type, link = self.site.generate_response.call_args[0]
+        state = link.state
+        
+        with state.push_session(self.popped_states):
+            self.assertEqual(len(state.get_resource_items()), 1)
+            self.assertTrue(state.item)
+            self.assertEqual(state.item.instance, instance)
+            
+            item_namespaces = state.item.get_namespaces()
+            self.assertTrue(item_namespaces)
+            namespace = item_namespaces.values()[0]
+            self.assertTrue(namespace.link.get_absolute_url())
+            
+            inline_items = namespace.state.get_resource_items()
+            self.assertTrue(inline_items)
+            item = inline_items[0]
+            inline_link = item.get_link()
+            self.assertEqual(inline_link.get_link_factor(), 'LO')
+            self.assertTrue(inline_link.get_absolute_url())
+            edit_link = inline_link.submit()
+    
     #TODO
     def test_get_detail(self):
         return
-        group = Group.objects.get_or_create(name='testgroup')[0]
-        self.user.groups.add(group)
-        
         instance = self.user
         view_kwargs = self.resource.get_view_kwargs()
         view = self.resource.detail_view.as_view(**view_kwargs)

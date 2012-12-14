@@ -13,7 +13,6 @@ class EmptyForm(forms.Form):
 
 class BaseResource(BaseEndpoint):
     resource_class = '' #hint to the client how this resource is used
-    resource_item_class = ResourceItem
     form_class = EmptyForm
     
     resource_adaptor = None
@@ -90,18 +89,9 @@ class BaseResource(BaseEndpoint):
     def get_item_url(self, item):
         return None
     
-    def get_form_class(self):
-        return self.form_class
-    
-    def get_form_kwargs(self, item=None, **kwargs):
-        if item is not None:
-            kwargs.setdefault('instance', item.instance)
-        return kwargs
-    
     def get_view_kwargs(self):
         return {
             'resource': self,
-            'resource_site': self.site,
         }
     
     def get_related_resource_from_field(self, field):
@@ -111,27 +101,16 @@ class BaseResource(BaseEndpoint):
         return self.site.get_html_type_from_field(field)
     
     def get_absolute_url(self):
-        raise NotImplementedError
-    
-    def get_resource_item_class(self):
-        return self.resource_item_class
-    
-    def get_resource_item(self, instance, **kwargs):
-        kwargs.setdefault('endpoint', self)
-        return self.get_resource_item_class()(instance=instance, **kwargs)
-    
-    def get_instances(self):
-        return []
+        return self.get_url()
     
     def get_resource_link_item(self):
         return None
     
-    def get_link(self, **kwargs):
-        #must include endpoint in kwargs
-        link_kwargs = {'rel':'self',
-                       'prompt':self.get_prompt(),}
-        link_kwargs.update(kwargs)
-        return self.link_prototypes['list'].get_link(**link_kwargs)
+    def get_url_name(self):
+        return self.get_main_link_prototype().get_url_name()
+    
+    def get_main_link_prototype(self):
+        return self.link_prototypes['list']
     
     def get_breadcrumb(self):
         return self.get_link(rel='breadcrumb', link_factor='LO')
@@ -144,27 +123,7 @@ class BaseResource(BaseEndpoint):
         breadcrumbs.append(self.get_breadcrumb())
         return breadcrumbs
     
-    def get_prompt(self):
-        return unicode(self)
-    
-    def get_item_prompt(self, item):
-        return unicode(item.instance)
-    
     #TODO deprecate
-    def get_item_link(self, item, **kwargs):
-        link_kwargs = {'url':item.get_absolute_url(),
-                       'endpoint':self,
-                       'rel':'item',
-                       'prompt':item.get_prompt(),}
-        link_kwargs.update(kwargs)
-        item_link = Link(**link_kwargs)
-        return item_link
-    
-    def get_namespaces(self):
-        return dict()
-    
-    def get_item_namespaces(self, item):
-        return dict()
     
     #def get_link_url(self, link):
     #    return self.state.get_link_url(link)

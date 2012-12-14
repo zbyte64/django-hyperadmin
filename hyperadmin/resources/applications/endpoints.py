@@ -13,11 +13,10 @@ class ListLinkPrototype(LinkPrototype):
 
 class ListEndpoint(Endpoint):
     endpoint_class = 'index'
+    view_class = 'app_index'
+    
     name_suffix = 'list'
     url_suffix = r'^$'
-    
-    def get_view_class(self):
-        return self.resource.list_view
     
     def get_links(self):
         return {'list':ListLinkPrototype(endpoint=self),}

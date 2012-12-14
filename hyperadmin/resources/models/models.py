@@ -57,11 +57,6 @@ class BaseModelResource(CRUDResource):
     def get_prompt(self):
         return self.resource_name
     
-    def get_view_kwargs(self):
-        kwargs = super(BaseModelResource, self).get_view_kwargs()
-        kwargs['model'] = self.model
-        return kwargs
-    
     def get_primary_query(self, **kwargs):
         return self.get_queryset()
     

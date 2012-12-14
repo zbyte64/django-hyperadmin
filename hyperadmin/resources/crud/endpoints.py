@@ -78,12 +78,9 @@ class ListEndpoint(Endpoint):
             self.state['index'].populate_state()
         return self.state['index']
     
-    def get_view_class(self):
-        return self.resource.list_view
-    
     def get_links(self):
-        return {'list':ListLinkPrototype(endpoint=self),
-                'rest-create':CreateLinkPrototype(endpoint=self),}
+        return {'list':ListLinkPrototype(endpoint=self), #on get
+                'rest-create':CreateLinkPrototype(endpoint=self), }#on post
     
     def get_outbound_links(self):
         links = self.create_link_collection()
@@ -110,7 +107,34 @@ class ListEndpoint(Endpoint):
     
     def get_resource_item(self, instance):
         return self.resource.get_list_resource_item(instance, endpoint=self)
+    
+    def post(self, request, *args, **kwargs):
+        #if not self.can_add():
+        #    return http.HttpResponseForbidden(_(u"You may not add an object"))
+        #TODO
+        form_kwargs = self.get_request_form_kwargs()
+        form_link = self.get_link(form_kwargs=form_kwargs, use_request_url=True)
+        response_link = form_link.submit()
+        return response_link
+    
+    def get_meta(self):
+        resource_item = self.resource.get_list_resource_item(instance=None)
+        form = resource_item.get_form()
+        data = dict()
+        data['display_fields'] = list()
+        for field in form:
+            data['display_fields'].append({'prompt':field.label})
+        return data
+    
+    def get_common_state_data(self):
+        data = super(ListEndpoint, self).get_common_state_data()
         
+        index = self.get_index()
+        paginator = index.get_paginator()
+        data['index'] = index
+        self.state.meta['object_count'] = paginator.count
+        self.state.meta['number_of_pages'] = paginator.num_pages
+        return data
 
 class CreateEndpoint(Endpoint):
     endpoint_class = 'change_form'

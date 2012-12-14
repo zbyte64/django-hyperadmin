@@ -6,6 +6,61 @@ from copy import copy
 from django.http import QueryDict
 
 
+class APIRequest(object):
+    def __init__(self, site, path, payload=None):
+        self.site = site
+        self.path = path
+        self.payload = payload
+        self.session_state = SessionState()
+        super(APIRequest, self).__init__()
+    
+        
+    def get_session_data(self):
+        #TODO consult site object
+        data = {'request': self.request}
+        if hasattr(self.request, 'user'):
+            data['auth'] = self.request.user
+        return data
+    
+    def get_response_type(self, patch_meta=True):
+        if patch_meta:
+            src = self.patched_meta
+        else:
+            src = self.request.META
+        val = src.get('HTTP_ACCEPT', '')
+        media_types = self.site.media_types.keys()
+        if not media_types:
+            return val
+        return mimeparse.best_match(media_types, val) or val
+    
+    def get_request_type(self, patch_meta=True):
+        if patch_meta:
+            src = self.patched_meta
+        else:
+            src = self.request.META
+        val = src.get('CONTENT_TYPE', src.get('HTTP_ACCEPT', ''))
+        media_types = self.site.media_types.keys()
+        if not media_types:
+            return val
+        return mimeparse.best_match(media_types, val) or val
+    
+    def get_request_media_type(self):
+        content_type = self.get_request_type()
+        media_type_cls = self.site.media_types.get(content_type, None)
+        if media_type_cls is None:
+            raise ValueError('Unrecognized request content type "%s". Choices are: %s' % (content_type, self.site.media_types.keys()))
+        return media_type_cls(self.endpoint)
+    
+    def get_response_media_type(self):
+        content_type = self.get_response_type()
+        media_type_cls = self.site.media_types.get(content_type, None)
+        if media_type_cls is None:
+            raise ValueError('Unrecognized request content type "%s". Choices are: %s' % (content_type, self.site.media_types.keys()))
+        return media_type_cls(self.endpoint)
+    
+    def generate_response(self, link):
+        return self.state.generate_response(self.get_response_media_type(), self.get_response_type(), link)
+
 class Link(object):
     """
     Represents an available action or state transition.
@@ -36,6 +91,10 @@ class Link(object):
     @property
     def state(self):
         return self.endpoint.state
+    
+    @property
+    def site(self):
+        return self.state.site
     
     @property
     def rel(self):
@@ -176,9 +235,11 @@ class Link(object):
         on_submit = self.on_submit
         
         if on_submit is None:
-            pass #TODO follow link
-        
-        return on_submit(link=self, submit_kwargs=kwargs)
+            #TODO implement the following
+            endpoint = self.site.get_endpoint_by_absolute_url(self.get_absolute_url())
+            return endpoint.get_main_link()
+        else:
+            return on_submit(link=self, submit_kwargs=kwargs)
     
     def clone(self, **kwargs):
         a_clone = copy(self)
