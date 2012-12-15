@@ -221,6 +221,7 @@ class Endpoint(BaseEndpoint):
     
     def get_resource(self):
         if self.state:
+            #return self.state.get_resource(self.resource.get_base_url_name())
             pass #TODO consult state or api request
         return self._resource
     

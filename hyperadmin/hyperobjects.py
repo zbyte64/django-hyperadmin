@@ -7,6 +7,11 @@ from django.http import QueryDict
 
 
 class APIRequest(object):
+    get_to_meta_map = {
+        '_HTTP_ACCEPT':'HTTP_ACCEPT',
+        '_CONTENT_TYPE':'CONTENT_TYPE',
+    }
+    
     def __init__(self, site, path, payload=None):
         self.site = site
         self.path = path
@@ -14,32 +19,43 @@ class APIRequest(object):
         self.session_state = SessionState()
         super(APIRequest, self).__init__()
     
-        
     def populate_session_data_from_request(self, request):
         #TODO consult site object
-        data = {'request': request}
+        data = {'endpoints': {},
+                'resources': {},
+                'request': request,
+                'meta': self.patched_meta(request),
+                'extra_get_params': self.get_passthrough_params(request),}
         if hasattr(request, 'user'):
             data['auth'] = request.user
         self.session_state.update(data)
         #TODO set response type & request type
         return data
     
-    def get_response_type(self, patch_meta=True):
-        if patch_meta:
-            src = self.patched_meta
-        else:
-            src = self.request.META
+    def patched_meta(self, request):
+        meta = dict(request.META)
+        for src, dst in self.get_to_meta_map.iteritems():
+            if src in request.GET:
+                meta[dst] = request.GET[src]
+        return meta
+    
+    def get_passthrough_params(self, request):
+        pass_through_params = dict()
+        for src, dst in self.get_to_meta_map.iteritems():
+            if src in request.GET:
+                pass_through_params[src] = request.GET[src]
+        return pass_through_params
+    
+    def get_response_type(self):
+        src = self.session_state['meta']
         val = src.get('HTTP_ACCEPT', '')
         media_types = self.site.media_types.keys()
         if not media_types:
             return val
         return mimeparse.best_match(media_types, val) or val
     
-    def get_request_type(self, patch_meta=True):
-        if patch_meta:
-            src = self.patched_meta
-        else:
-            src = self.request.META
+    def get_request_type(self):
+        src = self.session_state['meta']
         val = src.get('CONTENT_TYPE', src.get('HTTP_ACCEPT', ''))
         media_types = self.site.media_types.keys()
         if not media_types:
@@ -62,6 +78,18 @@ class APIRequest(object):
     
     def generate_response(self, link):
         return self.state.generate_response(self.get_response_media_type(), self.get_response_type(), link)
+    
+    def get_resource(self, urlname):
+        if urlname not in self.session_state['resources']:
+            resource = self.site.get_resource_from_urlname(urlname)
+            self.session_state['resources'][urlname] = resource.api_dispatch(self)
+        return self.session_state['resources'][urlname]
+    
+    def get_endpoint(self, urlname):
+        if urlname not in self.session_state['endpoints']:
+            endpoint = self.site.get_endpoint_from_urlname(urlname)
+            self.session_state['endpoints'][urlname] = endpoint.api_dispatch(self)
+        return self.session_state['endpoints'][urlname]
 
 class Link(object):
     """
