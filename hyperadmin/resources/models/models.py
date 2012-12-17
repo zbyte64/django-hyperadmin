@@ -197,10 +197,10 @@ class ModelResource(BaseModelResource):
         from hyperadmin.resources.models.endpoints import ListEndpoint, CreateEndpoint, DetailEndpoint, DeleteEndpoint
         endpoints = super(CRUDResource, self).get_view_endpoints()
         endpoints.extend([
-            ListEndpoint(resource=self, site=self.site, index_name='filter'),
-            CreateEndpoint(resource=self, site=self.site),
-            DetailEndpoint(resource=self, site=self.site),
-            DeleteEndpoint(resource=self, site=self.site),
+            (ListEndpoint, {'index_name':'filter'}),
+            (CreateEndpoint, {}),
+            (DetailEndpoint, {}),
+            (DeleteEndpoint, {}),
         ])
         return endpoints
     
@@ -266,10 +266,10 @@ class InlineModelResource(BaseModelResource):
     def get_view_endpoints(self):
         endpoints = super(CRUDResource, self).get_view_endpoints()
         endpoints.extend([
-            InlineListEndpoint(resource=self, site=self.site),
-            InlineCreateEndpoint(resource=self, site=self.site),
-            InlineDetailEndpoint(resource=self, site=self.site),
-            InlineDeleteEndpoint(resource=self, site=self.site),
+            (InlineListEndpoint, {}),
+            (InlineCreateEndpoint, {}),
+            (InlineDetailEndpoint, {}),
+            (InlineDeleteEndpoint, {}),
         ])
         return endpoints
     

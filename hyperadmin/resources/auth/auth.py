@@ -38,8 +38,8 @@ class AuthResource(BaseResource):
     def get_view_endpoints(self):
         endpoints = super(AuthResource, self).get_view_endpoints()
         endpoints.extend([
-            LoginEndpoint(resource=self, site=self.site),
-            LogoutEndpoint(resource=self, site=self.site),
+            (LoginEndpoint, {}),
+            (LogoutEndpoint, {}),
         ])
         return endpoints
     

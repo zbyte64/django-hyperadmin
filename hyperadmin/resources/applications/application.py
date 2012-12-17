@@ -25,7 +25,7 @@ class ApplicationResource(BaseResource):
     
     def get_view_endpoints(self):
         endpoints = super(ApplicationResource, self).get_view_endpoints()
-        endpoints.append(ListEndpoint(resource=self, site=self.site))
+        endpoints.append((ListEndpoint, {}))
         return endpoints
     
     def get_urls(self):

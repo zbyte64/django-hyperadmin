@@ -6,7 +6,7 @@ from hyperadmin.resources.endpoints import LinkPrototype, Endpoint
 
 class LoginLinkPrototype(LinkPrototype):
     def show_link(self, **kwargs):
-        return not self.common_state.get('authenticated', True) or self.state.session['auth'].is_anonymous()
+        return not self.common_state.get('authenticated', True) or self.api_request.user.is_anonymous()
     
     def get_link_kwargs(self, **kwargs):
         kwargs = super(LoginLinkPrototype, self).get_link_kwargs(**kwargs)
@@ -39,7 +39,7 @@ class LogoutLinkPrototype(LinkPrototype):
         return {}
     
     def show_link(self, **kwargs):
-        return self.common_state.get('authenticated', False) or self.state.session['auth'].is_authenticated()
+        return self.common_state.get('authenticated', False) or self.api_request.user.is_authenticated()
     
     def get_link_kwargs(self, **kwargs):
         kwargs = super(LogoutLinkPrototype, self).get_link_kwargs(**kwargs)
@@ -54,7 +54,7 @@ class LogoutLinkPrototype(LinkPrototype):
         return super(LogoutLinkPrototype, self).get_link_kwargs(**link_kwargs)
     
     def handle_submission(self, link, submit_kwargs):
-        logout(self.state.session['request'])
+        logout(self.api_request.request)
         self.common_state['authenticated'] = False
         return self.on_success()
     

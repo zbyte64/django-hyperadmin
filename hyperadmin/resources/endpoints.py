@@ -24,6 +24,10 @@ class LinkPrototype(object):
     def common_state(self):
         return self.endpoint.common_state
     
+    @property
+    def api_request(self):
+        return self.endpoint.api_request
+    
     def show_link(self, **kwargs):
         return True
     
@@ -85,12 +89,21 @@ class BaseEndpoint(EndpointViewMixin, View):
     def __init__(self, **kwargs):
         self._init_kwargs = kwargs
         super(BaseEndpoint, self).__init__(**kwargs)
-        #self.common_state = self.get_common_state()
-        #self.initialize_state()
     
     def get_common_state(self):
-        return self.state
+        return None
     common_state = property(get_common_state)
+    
+    def get_state(self):
+        if not hasattr(self, '_state'):
+            assert self.api_request, "Endpoints without an api request are not allowed to have a state"
+            self.initialize_state()
+        return self._state
+    
+    def set_state(self, state):
+        self._state = state
+    
+    state = property(get_state, set_state)
     
     def get_meta(self):
         return {}
@@ -235,6 +248,9 @@ class Endpoint(BaseEndpoint):
     def __init__(self, **kwargs):
         self.links = LinkCollectionProvider(self)
         super(Endpoint, self).__init__(**kwargs)
+        
+        #if self.api_request:
+        #    self.initialize_state()
     
     def get_resource(self):
         if self.api_request:
@@ -257,7 +273,7 @@ class Endpoint(BaseEndpoint):
         return kwargs
     
     def get_base_url_name(self):
-        return self.resource.get_base_url_name()
+        return self._resource.get_base_url_name()
     
     def get_url_name(self):
         return self.get_base_url_name() + self.name_suffix

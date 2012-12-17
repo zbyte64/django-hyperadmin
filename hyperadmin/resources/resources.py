@@ -23,8 +23,10 @@ class BaseResource(BaseEndpoint):
         self.links = LinkCollectionProvider(self)
         super(BaseResource, self).__init__(**kwargs)
         
-        if self.api_request:
-            self.initialize_state()
+        #if self.api_request:
+        #    self.initialize_state()
+        
+        self.register_endpoints()
     
     def get_app_name(self):
         raise NotImplementedError
@@ -33,24 +35,28 @@ class BaseResource(BaseEndpoint):
     def get_base_url_name(self):
         return self.app_name
     
+    def register_endpoints(self):
+        self.endpoints = SortedDict()
+        for endpoint_cls, kwargs in self.get_view_endpoints():
+            self.register_endpoint(endpoint_cls, **kwargs)
+    
+    def register_endpoint(self, endpoint_cls, **kwargs):
+        kwargs = self.get_endpoint_kwargs(**kwargs)
+        endpoint = endpoint_cls(**kwargs)
+        self.endpoints[endpoint.name_suffix] = endpoint
+    
+    def get_endpoint_kwargs(self, **kwargs):
+        kwargs.setdefault('resource', self)
+        kwargs.setdefault('site', self.site)
+        kwargs.setdefault('api_request', self.api_request)
+        return kwargs
+    
     def get_view_endpoints(self):
         """
-        Returns a list of dictionaries containing the following elements:
-        
-        * url: relative regex url
-        * view: the view object
-        * name: name for urlresolver
+        Returns a list of tuples containing
+        (endpoint class, endpoint kwargs)
         """
         return []
-    
-    @property
-    def endpoints(self):
-        if not hasattr(self, '_endpoints'):
-            self._endpoints = SortedDict()
-            for endpoint in self.get_view_endpoints():
-                assert hasattr(endpoint, 'name_suffix')
-                self._endpoints[endpoint.name_suffix] = endpoint
-        return self._endpoints
     
     @property
     def link_prototypes(self):

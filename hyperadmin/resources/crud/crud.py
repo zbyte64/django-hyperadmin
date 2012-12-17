@@ -36,10 +36,10 @@ class CRUDResource(BaseResource):
     def get_view_endpoints(self):
         endpoints = super(CRUDResource, self).get_view_endpoints()
         endpoints.extend([
-            ListEndpoint(resource=self, site=self.site),
-            CreateEndpoint(resource=self, site=self.site),
-            DetailEndpoint(resource=self, site=self.site),
-            DeleteEndpoint(resource=self, site=self.site),
+            (ListEndpoint, {})
+            (CreateEndpoint, {}),
+            (DetailEndpoint, {}),
+            (DeleteEndpoint, {}),
         ])
         return endpoints
     
