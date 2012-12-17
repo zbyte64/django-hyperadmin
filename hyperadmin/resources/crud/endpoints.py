@@ -31,7 +31,7 @@ class UpdateLinkPrototype(LinkPrototype):
         return self.resource.has_change_permission(item=kwargs.get('item', None))
     
     def get_link_kwargs(self, **kwargs):
-        item = kwargs.get('item')
+        item = kwargs['item']
         
         kwargs = super(UpdateLinkPrototype, self).get_link_kwargs(**kwargs)
         
@@ -49,7 +49,7 @@ class DeleteLinkPrototype(LinkPrototype):
         return self.resource.has_delete_permission(item=kwargs.get('item', None))
     
     def get_link_kwargs(self, **kwargs):
-        item = kwargs.get('item')
+        item = kwargs['item']
         
         kwargs = super(DeleteLinkPrototype, self).get_link_kwargs(**kwargs)
         
@@ -78,9 +78,9 @@ class ListEndpoint(Endpoint):
             self.state['index'].populate_state()
         return self.state['index']
     
-    def get_links(self):
-        return {'list':ListLinkPrototype(endpoint=self), #on get
-                'rest-create':CreateLinkPrototype(endpoint=self), }#on post
+    def get_link_prototypes(self):
+        return {'GET':ListLinkPrototype(endpoint=self, name='list'),
+                'POST':CreateLinkPrototype(endpoint=self, name='rest-create'), }
     
     def get_outbound_links(self):
         links = self.create_link_collection()
@@ -108,15 +108,6 @@ class ListEndpoint(Endpoint):
     def get_resource_item(self, instance):
         return self.resource.get_list_resource_item(instance, endpoint=self)
     
-    def post(self, request, *args, **kwargs):
-        #if not self.can_add():
-        #    return http.HttpResponseForbidden(_(u"You may not add an object"))
-        #TODO
-        form_kwargs = self.get_request_form_kwargs()
-        form_link = self.get_link(form_kwargs=form_kwargs, use_request_url=True)
-        response_link = form_link.submit()
-        return response_link
-    
     def get_meta(self):
         resource_item = self.resource.get_list_resource_item(instance=None)
         form = resource_item.get_form()
@@ -141,29 +132,39 @@ class CreateEndpoint(Endpoint):
     name_suffix = 'add'
     url_suffix = r'^add/$'
     
-    def get_view_class(self):
-        return self.resource.add_view
-    
-    def get_links(self):
-        return {'create':CreateLinkPrototype(endpoint=self)}
+    def get_link_prototypes(self):
+        return {'GET':CreateLinkPrototype(endpoint=self, name='create'),
+                'POST':CreateLinkPrototype(endpoint=self, name='create'),}
     
     def get_breadcrumbs(self):
         breadcrumbs = super(CreateEndpoint, self).get_breadcrumbs()
         breadcrumbs.add_link('create', rel='breadcrumb', link_factor='LO')
         return breadcrumbs
 
-class DetailEndpoint(Endpoint):
+class DetailMixin(object):
+    def get_object(self):
+        raise NotImplementedError
+    
+    def get_item(self):
+        if not getattr(self, 'object', None):
+            self.object = self.get_object()
+        return self.get_resource_item(self.object)
+    
+    def get_common_state_data(self):
+        data = super(DetailMixin, self).get_common_state_data()
+        data['item'] = self.get_item()
+        return data
+
+class DetailEndpoint(DetailMixin, Endpoint):
     endpoint_class = 'change_form'
     name_suffix = 'detail'
     url_suffix = r'^(?P<pk>\w+)/$'
     
-    def get_view_class(self):
-        return self.resource.detail_view
-    
-    def get_links(self):
-        return {'update':UpdateLinkPrototype(endpoint=self),
-                'rest-update':UpdateLinkPrototype(endpoint=self, link_kwargs={'method':'PUT'}),
-                'rest-delete':DeleteLinkPrototype(endpoint=self, link_kwargs={'method':'DELETE'}),}
+    def get_link_prototypes(self):
+        return {'GET':UpdateLinkPrototype(endpoint=self, name='update'),
+                'POST':UpdateLinkPrototype(endpoint=self, name='update'),
+                'PUT':UpdateLinkPrototype(endpoint=self, name='rest-update', link_kwargs={'method':'PUT'}),
+                'DELETE':DeleteLinkPrototype(endpoint=self, name='rest-delete', link_kwargs={'method':'DELETE'}),}
     
     def get_item_outbound_links(self, item):
         links = self.create_link_collection()
@@ -178,16 +179,14 @@ class DetailEndpoint(Endpoint):
         breadcrumbs.add_link('update', item=self.state.item, rel='breadcrumb', link_factor='LO')
         return breadcrumbs
 
-class DeleteEndpoint(Endpoint):
+class DeleteEndpoint(DetailMixin, Endpoint):
     endpoint_class = 'delete_confirmation'
     name_suffix = 'delete'
     url_suffix = r'^(?P<pk>\w+)/delete/$'
     
-    def get_view_class(self):
-        return self.resource.delete_view
-    
-    def get_links(self):
-        return {'delete':DeleteLinkPrototype(endpoint=self)}
+    def get_link_prototypes(self):
+        return {'GET':DeleteLinkPrototype(endpoint=self, name='delete'),
+                'POST':DeleteLinkPrototype(endpoint=self, name='delete'),}
     
     def get_url(self, item):
         return super(DeleteEndpoint, self).get_url(pk=item.instance.pk)

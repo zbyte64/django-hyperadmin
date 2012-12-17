@@ -23,14 +23,14 @@ class JSON(MediaType):
         content = json.dumps(data, cls=DjangoJSONEncoder)
         return http.HttpResponse(content, content_type)
     
-    def deserialize(self):
-        if hasattr(self.request, 'body'):
-            payload = self.request.body
+    def deserialize(self, request):
+        if hasattr(request, 'body'):
+            payload = request.body
         else:
-            payload = self.request.raw_post_data
+            payload = request.raw_post_data
         data = json.loads(payload)
         return {'data':data,
-                'files':self.request.FILES,}
+                'files':request.FILES,}
 
 JSON.register_with_builtins()
 
@@ -41,7 +41,7 @@ class JSONP(JSON):
     
     def get_jsonp_callback(self):
         #TODO make configurable
-        return self.request.GET['callback']
+        return self.api_request.params['callback']
     
     def serialize(self, content_type, link, state):
         data = self.get_payload(link, state)

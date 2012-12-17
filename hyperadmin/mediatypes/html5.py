@@ -65,15 +65,15 @@ class Html5MediaType(MediaType):
         
         return response
     
-    def deserialize(self):
-        self.check_csrf()
+    def deserialize(self, request):
+        self.check_csrf(request)
         
-        return {'data':self.request.POST,
-                'files':self.request.FILES,}
+        return {'data':request.POST,
+                'files':request.FILES,}
     
-    def check_csrf(self):
+    def check_csrf(self, request):
         csrf_middleware = CsrfViewMiddleware()
-        response = csrf_middleware.process_view(self.endpoint.request, self.deserialize, [], {})
+        response = csrf_middleware.process_view(request, self.deserialize, [], {})
         if response is not None:
             assert False, 'csrf failed' #TODO APIException(response) or SuspiciousOperation ....
             raise response

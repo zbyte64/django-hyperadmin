@@ -122,7 +122,7 @@ class BaseModelResource(CRUDResource):
         return queryset
     
     def has_add_permission(self):
-        user = self.state['auth']
+        user = self.api_request.user
         if self.opts.auto_created:
             # We're checking the rights to an auto-created intermediate model,
             # which doesn't have its own individual permissions. The user needs
@@ -133,7 +133,7 @@ class BaseModelResource(CRUDResource):
             self.opts.app_label + '.' + self.opts.get_add_permission())
 
     def has_change_permission(self, item=None):
-        user = self.state['auth']
+        user = self.api_request.user
         
         if item:
             obj = item.instance
@@ -151,7 +151,7 @@ class BaseModelResource(CRUDResource):
             opts.app_label + '.' + opts.get_change_permission(), obj)
 
     def has_delete_permission(self, item=None):
-        user = self.state['auth']
+        user = self.api_request.user
         #obj = item.instance
         if self.opts.auto_created:
             # We're checking the rights to an auto-created intermediate model,
@@ -194,13 +194,13 @@ class ModelResource(BaseModelResource):
         self.inline_instances.append(inline_cls(self))
     
     def get_view_endpoints(self):
-        from hyperadmin.resources.crud.endpoints import ListEndpoint, CreateEndpoint, DetailEndpoint, DeleteEndpoint
+        from hyperadmin.resources.models.endpoints import ListEndpoint, CreateEndpoint, DetailEndpoint, DeleteEndpoint
         endpoints = super(CRUDResource, self).get_view_endpoints()
         endpoints.extend([
-            ListEndpoint(resource=self, index_name='filter'),
-            CreateEndpoint(resource=self),
-            DetailEndpoint(resource=self),
-            DeleteEndpoint(resource=self),
+            ListEndpoint(resource=self, site=self.site, index_name='filter'),
+            CreateEndpoint(resource=self, site=self.site),
+            DetailEndpoint(resource=self, site=self.site),
+            DeleteEndpoint(resource=self, site=self.site),
         ])
         return endpoints
     
@@ -217,7 +217,7 @@ class ModelResource(BaseModelResource):
         namespaces = super(ModelResource, self).get_item_namespaces(item)
         for inline in self.inline_instances:
             name = 'inline-%s' % inline.rel_name
-            inline = inline.fork_state(parent=item.instance, namespace=name)
+            inline = inline.fork_state(parent=item.instance, namespace=name, api_request=self.api_request)
             #assert inline.state.resource == inline
             assert inline.endpoints.values()[0].resource == inline
             link = inline.get_link()
@@ -266,10 +266,10 @@ class InlineModelResource(BaseModelResource):
     def get_view_endpoints(self):
         endpoints = super(CRUDResource, self).get_view_endpoints()
         endpoints.extend([
-            InlineListEndpoint(resource=self),
-            InlineCreateEndpoint(resource=self),
-            InlineDetailEndpoint(resource=self),
-            InlineDeleteEndpoint(resource=self),
+            InlineListEndpoint(resource=self, site=self.site),
+            InlineCreateEndpoint(resource=self, site=self.site),
+            InlineDetailEndpoint(resource=self, site=self.site),
+            InlineDeleteEndpoint(resource=self, site=self.site),
         ])
         return endpoints
     

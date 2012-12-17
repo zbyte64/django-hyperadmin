@@ -1,5 +1,6 @@
 from hyperadmin.resources.endpoints import LinkPrototype, Endpoint
 from hyperadmin.resources.crud.endpoints import ListEndpoint as BaseListEndpoint, CreateEndpoint, DetailEndpoint as BaseDetailEndpoint, DeleteEndpoint as BaseDeleteEndpoint
+from hyperadmin.resources.storages.views import BoundFile
 
 
 class CreateUploadLinkPrototype(LinkPrototype):
@@ -38,16 +39,25 @@ class CreateUploadEndpoint(Endpoint):
     def get_view_class(self):
         return self.resource.upload_link_view
     
-    def get_links(self):
-        return {'upload':CreateUploadLinkPrototype(endpoint=self)}
+    def get_link_prototypes(self):
+        return {'GET':CreateUploadLinkPrototype(endpoint=self, name='upload'),
+                'POST':CreateUploadLinkPrototype(endpoint=self, name='upload')}
 
-class DetailEndpoint(BaseDetailEndpoint):
+class DetailMixin(object):
+    def get_object(self):
+        if not hasattr(self, 'object'):
+            self.object = BoundFile(self.resource.resource_adaptor, self.kwargs['path'])
+            if not self.object.exists():
+                raise http.Http404
+        return self.object
+
+class DetailEndpoint(DetailMixin, BaseDetailEndpoint):
     url_suffix = r'^(?P<path>.+)/$'
     
     def get_url(self, item):
         return super(BaseDetailEndpoint, self).get_url(path=item.instance.name)
 
-class DeleteEndpoint(BaseDeleteEndpoint):
+class DeleteEndpoint(DetailMixin, BaseDeleteEndpoint):
     url_suffix = r'^(?P<path>.+)/delete/$'
     
     def get_url(self, item):

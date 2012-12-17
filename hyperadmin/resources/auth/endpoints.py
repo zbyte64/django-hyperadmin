@@ -66,12 +66,10 @@ class LoginEndpoint(Endpoint):
     name_suffix = 'login'
     url_suffix = r'^$'
     
-    def get_view_class(self):
-        return self.resource.detail_view
-    
-    def get_links(self):
-        return {'login':LoginLinkPrototype(endpoint=self),
-                'rest-logout':LogoutLinkPrototype(endpoint=self, link_kwargs={'method':'DELETE'}),}
+    def get_link_prototypes(self):
+        return {'GET':LoginLinkPrototype(endpoint=self, name='login'),
+                'POST':LoginLinkPrototype(endpoint=self, name='login'),
+                'DELETE':LogoutLinkPrototype(endpoint=self, name='rest-logout', link_kwargs={'method':'DELETE'}),}
     
     def get_outbound_links(self):
         links = self.create_link_collection()
@@ -82,9 +80,7 @@ class LogoutEndpoint(Endpoint):
     name_suffix = 'logout'
     url_suffix = r'^logout/$'
     
-    def get_view_class(self):
-        return self.resource.logout_view
-    
-    def get_links(self):
-        return {'logout':LogoutLinkPrototype(endpoint=self)}
+    def get_link_prototypes(self):
+        return {'GET':LogoutLinkPrototype(endpoint=self, name='logout'),
+                'POST':LogoutLinkPrototype(endpoint=self, name='logout'),}
 

@@ -18,5 +18,5 @@ class ListEndpoint(Endpoint):
     name_suffix = 'list'
     url_suffix = r'^$'
     
-    def get_links(self):
-        return {'list':ListLinkPrototype(endpoint=self),}
+    def get_link_prototypes(self):
+        return {'GET':ListLinkPrototype(endpoint=self, name='list'),}

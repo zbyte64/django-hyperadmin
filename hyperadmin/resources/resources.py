@@ -16,13 +16,15 @@ class BaseResource(BaseEndpoint):
     form_class = EmptyForm
     
     resource_adaptor = None
-    site = None
     parent = None
     
     def __init__(self, **kwargs):
         assert 'resource_adaptor' in kwargs
         self.links = LinkCollectionProvider(self)
         super(BaseResource, self).__init__(**kwargs)
+        
+        if self.api_request:
+            self.initialize_state()
     
     def get_app_name(self):
         raise NotImplementedError
@@ -55,7 +57,8 @@ class BaseResource(BaseEndpoint):
         if not hasattr(self, '_link_prototypes'):
             self._link_prototypes = dict()
             for endpoint in self.endpoints.itervalues():
-                self._link_prototypes.update(endpoint.get_links())
+                for prototype in endpoint.get_link_prototypes().itervalues():
+                    self._link_prototypes[prototype.name] = prototype
         return self._link_prototypes
     
     def get_urls(self):
@@ -89,11 +92,6 @@ class BaseResource(BaseEndpoint):
     def get_item_url(self, item):
         return None
     
-    def get_view_kwargs(self):
-        return {
-            'resource': self,
-        }
-    
     def get_related_resource_from_field(self, field):
         return self.site.get_related_resource_from_field(field)
     
@@ -109,8 +107,8 @@ class BaseResource(BaseEndpoint):
     def get_url_name(self):
         return self.get_main_link_prototype().get_url_name()
     
-    def get_main_link_prototype(self):
-        return self.link_prototypes['list']
+    def get_main_link_name(self):
+        return 'list'
     
     def get_breadcrumb(self):
         return self.get_link(rel='breadcrumb', link_factor='LO')
@@ -122,11 +120,6 @@ class BaseResource(BaseEndpoint):
             breadcrumbs = self.create_link_collection()
         breadcrumbs.append(self.get_breadcrumb())
         return breadcrumbs
-    
-    #TODO deprecate
-    
-    #def get_link_url(self, link):
-    #    return self.state.get_link_url(link)
     
     def get_paginator_kwargs(self):
         return {}

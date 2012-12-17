@@ -93,11 +93,11 @@ class CollectionJSON(MediaType):
         assert content_type in self.recognized_media_types, "%s no in %s" % (content_type, self.recognized_media_types)
         return http.HttpResponse(content, content_type)
     
-    def deserialize(self):
-        if hasattr(self.request, 'body'):
-            payload = self.request.body
+    def deserialize(self, request):
+        if hasattr(request, 'body'):
+            payload = request.body
         else:
-            payload = self.request.raw_post_data
+            payload = request.raw_post_data
         data = json.loads(payload)
         data = data['data']
         form_data = dict()

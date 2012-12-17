@@ -10,13 +10,14 @@ class SiteResource(BaseResource):
     resource_class = 'resourcelisting'
     list_view = views.SiteResourceView
     form_class = ViewResourceForm
+    auth_resource = None
     
-    def __init__(self, auth_resource=None, **kwargs):
-        super(SiteResource, self).__init__(resource_adaptor=dict(), **kwargs)
-        if auth_resource is None:
+    def __init__(self, **kwargs):
+        kwargs.setdefault('resource_adaptor', dict())
+        super(SiteResource, self).__init__(**kwargs)
+        if self.auth_resource is None:
             from hyperadmin.resources.auth.auth import AuthResource
-            auth_resource = AuthResource
-        self.auth_resource = auth_resource(**kwargs)
+            self.auth_resource = AuthResource(**kwargs)
     
     def get_prompt(self):
         return self.site.name
@@ -27,7 +28,7 @@ class SiteResource(BaseResource):
     
     def get_view_endpoints(self):
         endpoints = super(SiteResource, self).get_view_endpoints()
-        endpoints.append(ListEndpoint(resource=self))
+        endpoints.append(ListEndpoint(resource=self, site=self.site))
         return endpoints
     
     def get_urls(self):

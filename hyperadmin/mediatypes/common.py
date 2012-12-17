@@ -11,20 +11,16 @@ class MediaType(object):
         for media_type in cls.recognized_media_types:
             BUILTIN_MEDIA_TYPES[media_type] = cls
     
-    def __init__(self, endpoint):
-        self.endpoint = endpoint
-        self.request = endpoint.request
-    
-    @property
-    def resource(self):
-        return self.endpoint.resource
+    def __init__(self, api_request):
+        self.api_request = api_request
     
     @property
     def site(self):
-        return self.resource.site
+        return self.api_request.site
     
+    #TODO
     def handle_redirect(self, link):
-        if self.request.method != 'GET':
+        if self.api_request.method != 'GET':
             response = http.HttpResponse(link.get_absolute_url(), status=303)
             response['Location'] = link.get_absolute_url()
         else:
@@ -32,7 +28,7 @@ class MediaType(object):
         return response
     
     def detect_redirect(self, link):
-        if link.get_absolute_url() != self.request.get_full_path():
+        if link.get_absolute_url() != self.api_request.get_full_path():
             return True
         return False
     
@@ -42,7 +38,7 @@ class MediaType(object):
         '''
         raise NotImplementedError
     
-    def deserialize(self):
+    def deserialize(self, request):
         '''
         returns keyword arguments for instantiating a form
         '''
@@ -62,8 +58,8 @@ class MediaType(object):
         return data
     
     def get_related_resource_from_field(self, field):
-        return self.resource.get_related_resource_from_field(field)
+        return self.site.get_related_resource_from_field(field)
     
     def get_html_type_from_field(self, field):
-        return self.resource.get_html_type_from_field(field)
+        return self.site.get_html_type_from_field(field)
 

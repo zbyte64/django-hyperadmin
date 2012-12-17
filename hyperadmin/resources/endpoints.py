@@ -7,8 +7,9 @@ from hyperadmin.views import EndpointViewMixin
 
 
 class LinkPrototype(object):
-    def __init__(self, endpoint, link_kwargs={}):
+    def __init__(self, endpoint, name, link_kwargs={}):
         self.endpoint = endpoint
+        self.name = name
         self.link_kwargs = link_kwargs
     
     @property
@@ -34,7 +35,7 @@ class LinkPrototype(object):
     
     def get_link_kwargs(self, **kwargs):
         kwargs.update(self.link_kwargs)
-        kwargs['form_kwargs'] = self.get_form_kwargs(**kwargs)
+        kwargs['form_kwargs'] = self.get_form_kwargs(**kwargs.get('form_kwargs', {}))
         kwargs.setdefault('endpoint', self.endpoint)
         assert self.endpoint.state, 'link creation must come from a dispatched endpoint'
         return kwargs
@@ -59,11 +60,17 @@ class LinkPrototype(object):
     
     def get_url(self, **kwargs):
         return self.endpoint.get_url(**kwargs)
+    
+    def get_url_name(self):
+        return self.endpoint.get_url_name()
 
 class BaseEndpoint(EndpointViewMixin, View):
+    api_request = None
+    
+    site = None
     state = None #for this particular endpoint
     #TODO find a better name for "common_state"
-    common_state = None #shared by endpoints of the same resource
+    #common_state = None #shared by endpoints of the same resource
     session_state = SESSION_STATE #state representing the current request
     
     global_state = None #for overiding the global state while processing
@@ -78,11 +85,12 @@ class BaseEndpoint(EndpointViewMixin, View):
     def __init__(self, **kwargs):
         self._init_kwargs = kwargs
         super(BaseEndpoint, self).__init__(**kwargs)
-        self.common_state = self.get_common_state()
+        #self.common_state = self.get_common_state()
         #self.initialize_state()
     
     def get_common_state(self):
-        return None
+        return self.state
+    common_state = property(get_common_state)
     
     def get_meta(self):
         return {}
@@ -105,8 +113,8 @@ class BaseEndpoint(EndpointViewMixin, View):
         kwargs['data'].update(data)
         self.state = self.get_state_class()(**kwargs)
         self.state.meta = self.get_meta()
-        if self.common_state is None:
-            self.common_state = self.state
+        #if self.common_state is None:
+        #    self.common_state = self.state
         return self.state
     
     def reverse(self, *args, **kwargs):
@@ -189,8 +197,11 @@ class BaseEndpoint(EndpointViewMixin, View):
         item_link = Link(**link_kwargs)
         return item_link
     
-    def get_main_link_prototype(self):
+    def get_main_link_name(self):
         raise NotImplementedError
+    
+    def get_main_link_prototype(self):
+        return self.link_prototypes[self.get_main_link_name()]
     
     def get_link(self, **kwargs):
         link_kwargs = {'rel':'self',
@@ -204,6 +215,12 @@ class BaseEndpoint(EndpointViewMixin, View):
     
     def get_prompt(self):
         return unicode(self)
+    
+    def api_permission_check(self, api_request):
+        return self.site.api_permission_check(api_request)
+    
+    def generate_response(self, link):
+        return self.state.generate_response(self.api_request.get_response_media_type(), self.api_request.get_response_type(), link)
 
 class Endpoint(BaseEndpoint):
     """
@@ -220,9 +237,8 @@ class Endpoint(BaseEndpoint):
         super(Endpoint, self).__init__(**kwargs)
     
     def get_resource(self):
-        if self.state:
-            #return self.state.get_resource(self.resource.get_base_url_name())
-            pass #TODO consult state or api request
+        if self.api_request:
+            return self.api_request.get_resource(self._resource.get_url_name())
         return self._resource
     
     def set_resource(self, resource):
@@ -253,12 +269,14 @@ class Endpoint(BaseEndpoint):
         view = self.get_view()
         return url(self.get_url_suffix(), view, name=self.get_url_name(),)
     
-    #TODO better name => get_internal_links?
-    def get_links(self):
+    def get_link_prototypes(self):
         """
-        return a dictionary of endpoint links
+        return a dictionary of link prototypes where the key is the accepted HTTP Method
         """
         return {}
+    
+    def get_main_link_name(self):
+        return self.get_link_prototypes()['GET'].name
     
     def get_resource_item(self, instance):
         return self.resource.get_resource_item(instance, endpoint=self)
@@ -268,6 +286,7 @@ class Endpoint(BaseEndpoint):
     
     def get_common_state(self):
         return self.resource.state
+    common_state = property(get_common_state)
     
     def get_resource_link(self, **kwargs):
         return self.resource.get_link(**kwargs)
@@ -282,9 +301,17 @@ class Endpoint(BaseEndpoint):
         return self.form_class or self.resource.get_form_class()
     
     def get_form_kwargs(self, **kwargs):
+        if self.common_state.item:
+            kwargs['item'] = self.common_state.item
+        return self.resource.get_form_kwargs(**kwargs)
+    
+    def get_link_kwargs(self, **kwargs):
         form_kwargs = kwargs.get('form_kwargs', None) or {}
-        form_kwargs['item'] = kwargs.get('item', None)
-        return self.resource.get_form_kwargs(**form_kwargs)
+        form_kwargs = self.get_form_kwargs(**form_kwargs)
+        kwargs['form_kwargs'] = form_kwargs
+        if self.common_state.item:
+            kwargs['item'] = self.common_state.item
+        return kwargs
     
     def get_namespaces(self):
         return self.resource.get_namespaces()
@@ -295,8 +322,8 @@ class Endpoint(BaseEndpoint):
     def get_item_link(self, item):
         return self.resource.get_item_link(item=item)
     
-    def get_main_link_prototype(self):
-        return self.resource.get_main_link_prototype()
-    
     def get_breadcrumbs(self):
         return self.resource.get_breadcrumbs()
+    
+    def api_permission_check(self, api_request):
+        return self.resource.api_permission_check(api_request)

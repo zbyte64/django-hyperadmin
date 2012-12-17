@@ -2,7 +2,6 @@ import os
 
 from hyperadmin.hyperobjects import Link
 from hyperadmin.resources.crud.crud import CRUDResource
-from hyperadmin.resources.storages import views
 from hyperadmin.resources.storages.forms import UploadForm, UploadLinkForm
 from hyperadmin.resources.storages.indexes import StorageIndex
 from hyperadmin.resources.storages.endpoints import ListEndpoint, CreateEndpoint, CreateUploadEndpoint, DetailEndpoint, DeleteEndpoint
@@ -14,24 +13,25 @@ class StorageResource(CRUDResource):
     form_class = UploadForm
     upload_link_form_class = UploadLinkForm
     
-    list_view = views.StorageListView
-    add_view = views.StorageCreateView
-    upload_link_view = views.StorageUploadLinkView
-    detail_view = views.StorageDetailView
-    delete_view = views.StorageDeleteView
-    
     def __init__(self, **kwargs):
-        self._app_name = kwargs.pop('app_name', '-storages')
-        self._resource_name = kwargs.pop('resource_name')
+        kwargs.setdefault('app_name', '-storages')
         super(StorageResource, self).__init__(**kwargs)
     
     def get_app_name(self):
         return self._app_name
-    app_name = property(get_app_name)
+    
+    def set_app_name(self, name):
+        self._app_name = name
+    
+    app_name = property(get_app_name, set_app_name)
     
     def get_resource_name(self):
         return self._resource_name
-    resource_name = property(get_resource_name)
+    
+    def set_resource_name(self, name):
+        self._resource_name = name
+    
+    resource_name = property(get_resource_name, set_resource_name)
     
     def get_storage(self):
         return self.resource_adaptor
@@ -43,11 +43,11 @@ class StorageResource(CRUDResource):
     def get_view_endpoints(self):
         endpoints = super(CRUDResource, self).get_view_endpoints()
         endpoints.extend([
-            ListEndpoint(resource=self),
-            CreateEndpoint(resource=self),
-            CreateUploadEndpoint(resource=self),
-            DetailEndpoint(resource=self),
-            DeleteEndpoint(resource=self),
+            ListEndpoint(resource=self, site=self.site),
+            CreateEndpoint(resource=self, site=self.site),
+            CreateUploadEndpoint(resource=self, site=self.site),
+            DetailEndpoint(resource=self, site=self.site),
+            DeleteEndpoint(resource=self, site=self.site),
         ])
         return endpoints
     
@@ -75,7 +75,8 @@ class StorageResource(CRUDResource):
         if self.state.has_view_class('change_form'):
             return []
         dirs, files = self.get_primary_query()
-        instances = [views.BoundFile(self.storage, file_name) for file_name in files]
+        from hyperadmin.resources.storages.views import BoundFile
+        instances = [BoundFile(self.storage, file_name) for file_name in files]
         return instances
     
     def get_index_queries(self):

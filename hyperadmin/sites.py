@@ -91,12 +91,13 @@ class ResourceSite(object):
     def get_login_url(self):
         return self.site_resource.auth_resource.get_absolute_url()
     
-    def api_permission_check(self, request):
-        if not request.user.is_authenticated():
+    def api_permission_check(self, api_request):
+        user = api_request.user
+        if not user.is_authenticated():
             redirect_to = self.get_login_url()
             response = HttpResponseRedirect(redirect_to)
             return response
-        if not request.user.is_staff:
+        if not user.is_staff:
             redirect_to = self.get_login_url()
             response = HttpResponse('Unauthorized', status=401)
             response['Location'] = iri_to_uri(redirect_to)
@@ -144,19 +145,24 @@ class ResourceSite(object):
     def get_absolute_url(self):
         return self.site_resource.get_absolute_url()
     
-    def get_endpoint_by_absolute_url(self, url):
-        abs_url = self.get_absolute_url()
-        url = url[len(abs_url):]
-        return self.get_endpoint_by_url(url)
+    def get_resource_from_urlname(self, urlname):
+        return self.get_endpoint_from_urlname(urlname).resource
     
-    def get_endpoint_by_url(self, url):
+    def get_endpoint_from_urlname(self, urlname):
         urlconf_module, app_name, namespace = self.urls
-        resolver = RegexURLResolver('', urlconf_module, app_name=app_name, namespace=namespace)
-        match = resolver.resolve(url)
-        endpoint = match.func.endpoint
-        #TODO endpoint should have state populated by url
-        return endpoint.fork_from_url(url)
-        return endpoint
+        main_resolver = RegexURLResolver('', urlconf_module, app_name=app_name, namespace=namespace)
+        
+        def lookup_urlname(resolver, name):
+            for pattern in resolver.url_patterns:
+                if getattr(pattern, 'url_patterns', None):
+                    ret = lookup_urlname(pattern, name)
+                    if ret is not None:
+                        return ret
+                elif hasattr(pattern, 'name') and pattern.name == urlname:
+                    return pattern.callback.endpoint
+            return None
+        
+        return lookup_urlname(main_resolver, urlname)
     
     def get_actions(self, request):
         return SortedDict()

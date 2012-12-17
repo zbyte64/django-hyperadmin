@@ -11,17 +11,21 @@ class ApplicationResource(BaseResource):
     list_view = views.ApplicationResourceView
     form_class = ViewResourceForm
     
-    def __init__(self, app_name, **kwargs):
-        super(ApplicationResource, self).__init__(resource_adaptor=dict(), **kwargs)
-        self._app_name = app_name
+    def __init__(self, **kwargs):
+        kwargs.setdefault('resource_adaptor', dict())
+        super(ApplicationResource, self).__init__(**kwargs)
     
     def get_app_name(self):
         return self._app_name
-    app_name = property(get_app_name)
+    
+    def set_app_name(self, name):
+        self._app_name = name
+    
+    app_name = property(get_app_name, set_app_name)
     
     def get_view_endpoints(self):
         endpoints = super(ApplicationResource, self).get_view_endpoints()
-        endpoints.append(ListEndpoint(resource=self))
+        endpoints.append(ListEndpoint(resource=self, site=self.site))
         return endpoints
     
     def get_urls(self):

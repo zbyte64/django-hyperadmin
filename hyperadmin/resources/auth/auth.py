@@ -11,18 +11,26 @@ class AuthResource(BaseResource):
     logout_view = views.AuthenticationLogoutView
     
     def __init__(self, **kwargs):
-        self._app_name = kwargs.pop('app_name', '-authentication')
-        self._resource_name = kwargs.pop('resource_name', 'auth')
+        kwargs.setdefault('app_name', '-authentication')
+        kwargs.setdefault('resource_name', 'auth')
         kwargs.setdefault('resource_adaptor', None)
         super(AuthResource, self).__init__(**kwargs)
     
     def get_app_name(self):
         return self._app_name
-    app_name = property(get_app_name)
+    
+    def set_app_name(self, name):
+        self._app_name = name
+    
+    app_name = property(get_app_name, set_app_name)
     
     def get_resource_name(self):
         return self._resource_name
-    resource_name = property(get_resource_name)
+    
+    def set_resource_name(self, name):
+        self._resource_name = name
+    
+    resource_name = property(get_resource_name, set_resource_name)
     
     def get_prompt(self):
         return self.resource_name
@@ -30,16 +38,16 @@ class AuthResource(BaseResource):
     def get_view_endpoints(self):
         endpoints = super(AuthResource, self).get_view_endpoints()
         endpoints.extend([
-            LoginEndpoint(resource=self),
-            LogoutEndpoint(resource=self),
+            LoginEndpoint(resource=self, site=self.site),
+            LogoutEndpoint(resource=self, site=self.site),
         ])
         return endpoints
     
     def api_permission_check(self, request):
         return None #resource is accessible to all
     
-    def get_absolute_url(self):
-        return self.link_prototypes['login'].get_url()
+    def get_main_link_name(self):
+        return 'login'
     
     def get_link(self, **kwargs):
         #must include endpoint in kwargs

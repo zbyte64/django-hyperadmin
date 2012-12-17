@@ -31,7 +31,7 @@ class Passthrough(MediaType):
             return self.handle_redirect(link)
         return PassthroughResponse('Unavailable (passthrough media type)', content_type, link=link, state=state)
     
-    def deserialize(self):
+    def deserialize(self, request):
         #TODO should punt to the real media type
-        return {'data':self.request.POST,
-                'files':self.request.FILES,}
+        return {'data':request.POST,
+                'files':request.FILES,}
