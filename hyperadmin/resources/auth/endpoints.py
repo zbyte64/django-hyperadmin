@@ -6,6 +6,7 @@ from hyperadmin.resources.endpoints import LinkPrototype, Endpoint
 
 class LoginLinkPrototype(LinkPrototype):
     def show_link(self, **kwargs):
+        return True
         return not self.common_state.get('authenticated', True) or self.api_request.user.is_anonymous()
     
     def get_link_kwargs(self, **kwargs):

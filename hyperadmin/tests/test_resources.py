@@ -204,7 +204,9 @@ class InlineModelResourceTestCase(ResourceTestCase):
         inline_link = item.get_link()
         self.assertEqual(inline_link.get_link_factor(), 'LO')
         self.assertTrue(inline_link.get_absolute_url())
-        edit_link = inline_link.submit()
+        
+        #TODO
+        #edit_link = inline_link.submit()
     
     #TODO
     def test_get_detail(self):
@@ -368,7 +370,7 @@ class StorageResourceTestCase(ResourceTestCase):
         link = call_kwargs['link']
         state = call_kwargs['state']
         
-        self.assertEqual(link.rel, 'item')
+        self.assertEqual(link.rel, 'update')
         #if not rel
         #self.assertTrue(link.form.errors)
 
