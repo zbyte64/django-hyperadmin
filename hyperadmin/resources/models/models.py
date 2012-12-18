@@ -218,17 +218,6 @@ class ModelResource(BaseModelResource):
             
             namespace = Namespace(name=name, endpoint=inline, state_data={'parent':item.instance})
             namespaces[name] = namespace
-            assert 'parent' in namespace.state
-            continue
-            
-            inline = inline.fork(api_request=self.api_request)
-            inline.state.update({'parent':item.instance, 
-                                 'namespace':name,})
-            #assert inline.state.resource == inline
-            assert inline.endpoints.values()[0].resource == inline, str(inline.endpoints.values()[0].resource) +":" + str(inline)
-            link = inline.get_link()
-            namespace = Namespace(name=name, link=link, state=inline.state)
-            namespaces[name] = namespace
         return namespaces
 
 class InlineModelResource(BaseModelResource):

@@ -143,6 +143,10 @@ class ResourceSite(object):
     def get_absolute_url(self):
         return self.site_resource.get_absolute_url()
     
+    def generate_response(self, media_type, content_type, link, state):
+        request = state.endpoint.api_request.request
+        return media_type.serialize(request=request, content_type=content_type, link=link, state=state)
+    
     def get_resource_from_urlname(self, urlname):
         return self.get_endpoint_from_urlname(urlname).resource
     

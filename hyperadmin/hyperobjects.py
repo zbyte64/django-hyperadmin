@@ -19,8 +19,9 @@ class APIRequest(object):
         #self.params = params
         from hyperadmin.states import State
         self.session_state = State()
-        self.session_state['resources'] = dict()
-        self.session_state['endpoints'] = dict()
+        self.endpoint_state = State()
+        self.endpoint_state['resources'] = dict()
+        self.endpoint_state['endpoints'] = dict()
         super(APIRequest, self).__init__()
     
     def get_response_type(self):
@@ -54,16 +55,16 @@ class APIRequest(object):
         return media_type_cls(self)
     
     def get_resource(self, urlname):
-        if urlname not in self.session_state['resources']:
+        if urlname not in self.endpoint_state['resources']:
             resource = self.site.get_resource_from_urlname(urlname)
-            self.session_state['resources'][urlname] = resource.fork(api_request=self)
-        return self.session_state['resources'][urlname]
+            self.endpoint_state['resources'][urlname] = resource.fork(api_request=self)
+        return self.endpoint_state['resources'][urlname]
     
     def get_endpoint(self, urlname):
-        if urlname not in self.session_state['endpoints']:
+        if urlname not in self.endpoint_state['endpoints']:
             endpoint = self.site.get_endpoint_from_urlname(urlname)
-            self.session_state['endpoints'][urlname] = endpoint.fork(api_request=self)
-        return self.session_state['endpoints'][urlname]
+            self.endpoint_state['endpoints'][urlname] = endpoint.fork(api_request=self)
+        return self.endpoint_state['endpoints'][urlname]
     
     def generate_response(self, link, state):
         media_type = self.get_response_media_type()
@@ -313,6 +314,7 @@ class Link(object):
             endpoint = self.endpoint.fork(api_request=api_request)
             #TODO state to be processed
             #endpoint = self.site.get_endpoint_by_absolute_url(self.get_absolute_url())
+            return None
             return endpoint.get_link()
         else:
             return on_submit(link=self, submit_kwargs=kwargs)
@@ -393,6 +395,7 @@ class NamespaceAPIRequest(APIRequest):
         super(NamespaceAPIRequest, self).__init__(api_request.site, path, url_args, url_kwargs)
         for key, val in kwargs.iteritems():
             setattr(self, key, val)
+        self.session_state.update(api_request.session_state)
     
     @property
     def payload(self):
@@ -429,7 +432,7 @@ class Namespace(object):
         self.endpoint = endpoint.fork(api_request=self.api_request)
         self.endpoint.state.update(state_data)
         #self.api_request.session_state['endpoints'][self.endpoint.get_url_name()] = self.endpoint
-        self.api_request.session_state['resources'][self.endpoint.get_url_name()] = self.endpoint
+        self.api_request.endpoint_state['resources'][self.endpoint.get_url_name()] = self.endpoint
     
     def get_namespaces(self):
         return dict()
