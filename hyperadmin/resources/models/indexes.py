@@ -1,4 +1,4 @@
-from hyperadmin.resources.indexes import Index
+from hyperadmin.indexes import Index
 
 
 class ModelIndex(Index):

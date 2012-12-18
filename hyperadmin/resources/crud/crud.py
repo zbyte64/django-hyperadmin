@@ -1,7 +1,7 @@
 from django.core.paginator import Paginator
 
+from hyperadmin.indexes import PrimaryIndex
 from hyperadmin.resources.resources import BaseResource
-from hyperadmin.resources.indexes import PrimaryIndex
 from hyperadmin.resources.crud.hyperobjects import ListResourceItem
 from hyperadmin.resources.crud.endpoints import ListEndpoint, CreateEndpoint, DetailEndpoint, DeleteEndpoint
 

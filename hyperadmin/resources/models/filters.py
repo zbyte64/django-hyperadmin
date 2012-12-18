@@ -15,7 +15,7 @@ try:
 except ImportError:
     from hyperadmin.resources.models.util import lookup_needs_distinct, prepare_lookup_value
 
-from hyperadmin.resources.crud.filters import BaseChoicesFilter, BaseFilter
+from hyperadmin.filters import BaseChoicesFilter, BaseFilter
 
 SEARCH_VAR = 'q'
 

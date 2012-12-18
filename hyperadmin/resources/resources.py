@@ -3,7 +3,7 @@ from django.conf.urls.defaults import patterns
 from django.utils.datastructures import SortedDict
 
 from hyperadmin.hyperobjects import Link, ResourceItem, LinkCollectionProvider
-from hyperadmin.resources.endpoints import BaseEndpoint
+from hyperadmin.endpoints import BaseEndpoint
 
 
 class EmptyForm(forms.Form):

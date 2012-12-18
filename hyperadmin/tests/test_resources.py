@@ -8,7 +8,7 @@ from django.core.files.base import ContentFile
 
 from hyperadmin.resources.models.models import ModelResource, InlineModelResource
 from hyperadmin.sites import ResourceSite
-from hyperadmin.hyperobjects import APIRequest
+from hyperadmin.apirequests import APIRequest
 
 from common import GenericURLResolver, SuperUserRequestFactory
 

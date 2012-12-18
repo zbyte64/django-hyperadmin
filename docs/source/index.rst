@@ -10,7 +10,7 @@ Welcome to Django Hyperadmin's documentation
    manual/admin
    manual/api
    manual/hyperobjects
-   manual/changelist
+   manual/indexes
    manual/clients
    manual/mediatypes
    manual/other_resources

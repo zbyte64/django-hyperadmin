@@ -1,7 +1,7 @@
 from django.contrib.auth import logout
 from django import forms
 
-from hyperadmin.resources.endpoints import LinkPrototype, Endpoint
+from hyperadmin.endpoints import LinkPrototype, Endpoint
 
 
 class LoginLinkPrototype(LinkPrototype):

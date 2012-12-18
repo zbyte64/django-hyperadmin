@@ -1,4 +1,4 @@
-from hyperadmin.resources.endpoints import LinkPrototype, Endpoint
+from hyperadmin.endpoints import LinkPrototype, Endpoint
 
 
 class ListLinkPrototype(LinkPrototype):

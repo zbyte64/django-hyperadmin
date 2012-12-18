@@ -1,7 +1,7 @@
 from django.conf.urls.defaults import patterns, url, include
 from django import forms
 
-from hyperadmin.hyperobjects import Namespace
+from hyperadmin.apirequests import Namespace
 from hyperadmin.resources.crud.crud import CRUDResource
 from hyperadmin.resources.models.indexes import ModelIndex
 from hyperadmin.resources.models.endpoints import InlineListEndpoint, InlineCreateEndpoint, InlineDetailEndpoint, InlineDeleteEndpoint
