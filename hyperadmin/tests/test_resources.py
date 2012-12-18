@@ -31,6 +31,9 @@ class MockAPIRequest(APIRequest):
         super(MockAPIRequest, self).__init__(site, path, url_args, url_kwargs)
         for key, val in kwargs.iteritems():
             setattr(self, key, val)
+    
+    def get_full_path(self):
+        return self.path
 
 class ResourceTestCase(unittest.TestCase):
     def setUp(self):

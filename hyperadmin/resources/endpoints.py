@@ -41,6 +41,8 @@ class LinkPrototype(object):
         kwargs.update(self.link_kwargs)
         kwargs['form_kwargs'] = self.get_form_kwargs(**kwargs.get('form_kwargs', {}))
         kwargs.setdefault('endpoint', self.endpoint)
+        if kwargs.pop('use_request_url', False):
+            kwargs['url'] = self.endpoint.api_request.get_full_path()
         assert self.endpoint.state, 'link creation must come from a dispatched endpoint'
         return kwargs
     
