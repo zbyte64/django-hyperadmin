@@ -32,7 +32,6 @@ class DeleteEndpoint(DetailMixin, BaseDeleteEndpoint):
 class InlineModelMixin(object):
     def get_common_state_data(self):
         self.common_state['parent'] = self.get_parent_instance()
-        print self.common_state
         return super(InlineModelMixin, self).get_common_state_data()
     
     def get_parent_instance(self):
