@@ -62,7 +62,17 @@ class LogoutLinkPrototype(LinkPrototype):
         return self.endpoint.link_prototypes['login'].get_link()
 
 
-class LoginEndpoint(Endpoint):
+class AuthMixin(object):
+    def get_common_state_data(self):
+        state = super(AuthMixin, self).get_common_state_data()
+        state['authenticated'] = self.api_request.user.is_authenticated()
+        return state
+    
+    def get_form_kwargs(self, **defaults):
+        defaults['request'] = self.api_request.request
+        return defaults
+
+class LoginEndpoint(AuthMixin, Endpoint):
     name_suffix = 'login'
     url_suffix = r'^$'
     
@@ -76,7 +86,7 @@ class LoginEndpoint(Endpoint):
         links.add_link('logout', link_factor='LO')
         return links
 
-class LogoutEndpoint(Endpoint):
+class LogoutEndpoint(AuthMixin, Endpoint):
     name_suffix = 'logout'
     url_suffix = r'^logout/$'
     

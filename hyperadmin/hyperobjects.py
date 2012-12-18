@@ -64,6 +64,11 @@ class APIRequest(object):
             endpoint = self.site.get_endpoint_from_urlname(urlname)
             self.session_state['endpoints'][urlname] = endpoint.fork(api_request=self)
         return self.session_state['endpoints'][urlname]
+    
+    def generate_response(self, link, state):
+        media_type = self.get_response_media_type()
+        content_type = self.get_request_type()
+        return media_type.serialize(request=self.request, content_type=content_type, link=link, state=state)
 
 class HTTPAPIRequest(APIRequest):
     get_to_meta_map = {

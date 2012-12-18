@@ -85,7 +85,7 @@ class CollectionJSON(MediaType):
         data.update(href=form_link.get_absolute_url(), version="1.0", meta=state.meta)
         return data
     
-    def serialize(self, content_type, link, state):
+    def serialize(self, request, content_type, link, state):
         if self.detect_redirect(link):
             return self.handle_redirect(link)
         data = self.prepare_collection(link, state)

@@ -9,6 +9,7 @@ from django.core.files.base import ContentFile
 from hyperadmin.resources.models.models import ModelResource, InlineModelResource
 from hyperadmin.states import GlobalState
 from hyperadmin.sites import ResourceSite
+from hyperadmin.hyperobjects import APIRequest
 
 from common import GenericURLResolver, SuperUserRequestFactory
 
@@ -25,7 +26,13 @@ class UserResource(ModelResource):
     list_filter = ['is_active', 'is_staff', 'is_superuser']
     date_hierarchy = 'date_joined'
     search_fields = ['email', 'username']
-    
+
+class MockAPIRequest(APIRequest):
+    def __init__(self, site, path='/', url_args=[], url_kwargs={}, **kwargs):
+        super(MockAPIRequest, self).__init__(site, path, url_args, url_kwargs)
+        for key, val in kwargs.iteritems():
+            setattr(self, key, val)
+
 class ResourceTestCase(unittest.TestCase):
     def setUp(self):
         self.site = ResourceSite()
@@ -33,7 +40,7 @@ class ResourceTestCase(unittest.TestCase):
         
         self.user = User.objects.get_or_create(username='superuser', is_staff=True, is_active=True, is_superuser=True)[0]
         self.resource = self.register_resource()
-        self.site.generate_response = MagicMock(return_value=HttpResponse())
+        
         self.factory = SuperUserRequestFactory(user=self.user, HTTP_ACCEPT='text/html')
         
         self.resolver = GenericURLResolver(r'^', self.site.get_urls())
@@ -54,6 +61,16 @@ class ResourceTestCase(unittest.TestCase):
             self.popped_states.dicts.append(dictionary)
         GlobalState.pop_stack = record_pop
     
+    def get_api_request(self, **kwargs):
+        kwargs.setdefault('site', self.site)
+        kwargs.setdefault('user', self.user)
+        kwargs.setdefault('params', {})
+        api_request = MockAPIRequest(**kwargs)
+        
+        api_request.generate_response = MagicMock(return_value=HttpResponse())
+        
+        return api_request
+    
     def register_resource(self):
         raise NotImplementedError
 
@@ -63,11 +80,13 @@ class ModelResourceTestCase(ResourceTestCase):
         return self.site.registry[User]
     
     def test_get_list(self):
-        view = self.resource.endpoints['list'].get_view()
+        api_request = self.get_api_request()
+        endpoint = self.resource.endpoints['list'].fork(api_request=api_request)
+        view = endpoint.get_view()
         request = self.factory.get('/')
         view(request)
         
-        media_type, response_type, link = self.site.generate_response.call_args[0]
+        media_type, response_type, link = api_request.generate_response.call_args[0]
         state = link.state
         #assert False, str(self.popped_states)
         with state.patch_session(auth=self.user):

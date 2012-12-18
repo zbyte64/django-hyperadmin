@@ -159,8 +159,9 @@ class BaseEndpoint(EndpointViewMixin, View):
         return view
     
     def fork(self, **kwargs):
-        kwargs.update(self._init_kwargs)
-        return type(self)(**kwargs)
+        params = dict(self._init_kwargs)
+        params.update(kwargs)
+        return type(self)(**params)
     
     def fork_state(self, **kwargs):
         new_endpoint = self.fork()
@@ -233,7 +234,7 @@ class BaseEndpoint(EndpointViewMixin, View):
         return self.site.api_permission_check(api_request)
     
     def generate_response(self, link):
-        return self.state.generate_response(self.api_request.get_response_media_type(), self.api_request.get_response_type(), link)
+        return self.api_request.generate_response(link=link, state=self.state)
 
 class Endpoint(BaseEndpoint):
     """

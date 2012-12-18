@@ -28,7 +28,7 @@ class Html5MediaType(MediaType):
         if 'display_fields' in state.meta:
             context['display_fields'] = state.meta['display_fields']
         
-        view_class_context = 'get_%s_context_data' % self.endpoint.endpoint_class
+        view_class_context = 'get_%s_context_data' % state['view_class']
         if hasattr(self, view_class_context):
             context = getattr(self, view_class_context)(link, state, context)
         
@@ -38,12 +38,12 @@ class Html5MediaType(MediaType):
         
         return context
     
-    def get_template_names(self):
+    def get_template_names(self, state):
         params = {
             'base': self.template_dir_name,
-            'endpoint_class': self.endpoint.endpoint_class,
-            'resource_name': getattr(self.resource, 'resource_name', None),
-            'app_name': self.resource.app_name,
+            'endpoint_class': state['view_class'],
+            'resource_name': state.get('resource_name', None),
+            'app_name': state.get('app_name', None),
         }
         
         names = [
@@ -55,12 +55,12 @@ class Html5MediaType(MediaType):
         
         return names
     
-    def serialize(self, content_type, link, state):
+    def serialize(self, request, content_type, link, state):
         if self.detect_redirect(link):
             return self.handle_redirect(link)
         context = self.get_context_data(link=link, state=state)
         
-        response = self.response_class(request=self.request, template=self.get_template_names(), context=context)
+        response = self.response_class(request=request, template=self.get_template_names(state), context=context)
         response['Content-Type'] = 'text/html'
         
         return response

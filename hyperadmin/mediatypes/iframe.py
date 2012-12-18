@@ -42,12 +42,12 @@ class IframeMediaType(MediaType):
     def get_template_names(self):
         return [self.template_name]
     
-    def serialize(self, content_type, link, state):
+    def serialize(self, request, content_type, link, state):
         if self.detect_redirect(link):
             return self.handle_redirect(link)
         
         context = self.get_context_data(link=link, state=state)
-        response = self.response_class(request=self.request, template=self.get_template_names(), context=context)
+        response = self.response_class(request=request, template=self.get_template_names(), context=context)
         response['Content-Type'] = 'text/html'
         return response
     

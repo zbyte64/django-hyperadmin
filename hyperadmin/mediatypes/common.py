@@ -32,7 +32,7 @@ class MediaType(object):
             return True
         return False
     
-    def serialize(self, content_type, link, state):
+    def serialize(self, request, content_type, link, state):
         '''
         Return an HttpResponse
         '''

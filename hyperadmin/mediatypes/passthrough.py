@@ -26,7 +26,7 @@ class Passthrough(MediaType):
             return True
         return False
     
-    def serialize(self, content_type, link, state):
+    def serialize(self, request, content_type, link, state):
         if self.detect_redirect(link):
             return self.handle_redirect(link)
         return PassthroughResponse('Unavailable (passthrough media type)', content_type, link=link, state=state)

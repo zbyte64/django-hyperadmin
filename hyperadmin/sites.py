@@ -139,9 +139,6 @@ class ResourceSite(object):
     def reverse(self, name, *args, **kwargs):
         return reverse('%s:%s' % (self.name, name), args=args, kwargs=kwargs)#, current_app=self.app_name)
     
-    def generate_response(self, media_type, content_type, link, state):
-        return media_type.serialize(content_type=content_type, link=link, state=state)
-    
     def get_absolute_url(self):
         return self.site_resource.get_absolute_url()
     

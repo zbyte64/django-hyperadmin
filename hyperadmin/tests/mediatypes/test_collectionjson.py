@@ -13,47 +13,45 @@ class CollectionJsonTestCase(MediaTypeTestCase):
     content_type = 'application/vnd.Collection+JSON'
     
     def get_adaptor(self):
-        class MockView(object):
-            resource = self.resource
-            request = self.factory.get('/')
-        return CollectionJSON(MockView())
+        self.api_request = self.get_api_request()
+        return CollectionJSON(self.api_request)
     
     def test_queryset_serialize(self):
-        endpoint = self.resource.endpoints['list']
-        with endpoint.session_state.patch_state(auth=self.user):
-            link = endpoint.link_prototypes['list'].get_link()
-            state = endpoint.state
-            
-            response = self.adaptor.serialize(content_type=self.content_type, link=link, state=state)
-            data = json.loads(response.content)
-            json_items = data['collection']['items']
-            self.assertEqual(len(json_items), len(ContentType.objects.all()))
+        endpoint = self.resource.endpoints['list'].fork(api_request=self.api_request)
+        
+        link = endpoint.link_prototypes['list'].get_link()
+        state = endpoint.state
+        
+        response = self.adaptor.serialize(request=self.factory.get('/'), content_type=self.content_type, link=link, state=state)
+        data = json.loads(response.content)
+        json_items = data['collection']['items']
+        self.assertEqual(len(json_items), len(ContentType.objects.all()))
     
     def test_model_instance_serialize(self):
         instance = ContentType.objects.all()[0]
-        endpoint = self.resource.endpoints['detail']
-        with endpoint.session_state.patch_state(auth=self.user):
-            endpoint.state.item = item = endpoint.get_resource_item(instance)
-            link = item.get_link()
-            state = endpoint.state
-            
-            response = self.adaptor.serialize(content_type=self.content_type, link=link, state=state)
-            data = json.loads(response.content)
-            json_items = data['collection']['items']
-            self.assertEqual(len(json_items), 1)
+        endpoint = self.resource.endpoints['detail'].fork(api_request=self.api_request)
+        
+        endpoint.state.item = item = endpoint.get_resource_item(instance)
+        link = item.get_link()
+        state = endpoint.state
+        
+        response = self.adaptor.serialize(request=self.factory.get('/'), content_type=self.content_type, link=link, state=state)
+        data = json.loads(response.content)
+        json_items = data['collection']['items']
+        self.assertEqual(len(json_items), 1)
     
     def test_site_resource_serialize(self):
         site_resource = SiteResource(site=site)
         
-        endpoint = site_resource.endpoints['list']
-        with endpoint.session_state.patch_state(auth=self.user):
-            link = endpoint.link_prototypes['list'].get_link()
-            state = endpoint.state
-            
-            response = self.adaptor.serialize(content_type=self.content_type, link=link, state=state)
-            data = json.loads(response.content)
-            json_items = data['collection']['items']
-            #assert False, str(json_items)
+        endpoint = site_resource.endpoints['list'].fork(api_request=self.api_request)
+        
+        link = endpoint.link_prototypes['list'].get_link()
+        state = endpoint.state
+        
+        response = self.adaptor.serialize(request=self.factory.get('/'), content_type=self.content_type, link=link, state=state)
+        data = json.loads(response.content)
+        json_items = data['collection']['items']
+        #assert False, str(json_items)
     
     def test_application_resource_serialize(self):
         app_resource = ApplicationResource(site=site, app_name='testapp')
@@ -62,7 +60,7 @@ class CollectionJsonTestCase(MediaTypeTestCase):
         link = app_resource.get_resource_link()
         state = self.resource.state
         
-        response = self.adaptor.serialize(content_type=self.content_type, link=link, state=state)
+        response = self.adaptor.serialize(request=self.factory.get('/'), content_type=self.content_type, link=link, state=state)
         data = json.loads(response.content)
         json_items = data['collection']['items']
         #assert False, str(json_items)
@@ -79,10 +77,8 @@ class CollectionJsonTestCase(MediaTypeTestCase):
 
 class CollectionNextJsonTestCase(MediaTypeTestCase):
     def get_adaptor(self):
-        class MockView(object):
-            resource = self.resource
-            request = self.factory.get('/')
-        return CollectionNextJSON(MockView())
+        self.api_request = self.get_api_request()
+        return CollectionNextJSON(self.api_request)
     
     def test_convert_field(self):
         form_class = self.resource.get_form_class()
