@@ -82,6 +82,12 @@ class BaseResource(BaseEndpoint):
     def api_permission_check(self, request):
         return self.site.api_permission_check(request)
     
+    def get_state_data(self):
+        data = super(BaseResource, self).get_state_data()
+        data.update({'resource_name': getattr(self, 'resource_name', None),
+                     'app_name': self.app_name,})
+        return data
+    
     def get_indexes(self):
         return {}
     

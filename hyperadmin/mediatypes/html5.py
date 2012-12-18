@@ -28,7 +28,7 @@ class Html5MediaType(MediaType):
         if 'display_fields' in state.meta:
             context['display_fields'] = state.meta['display_fields']
         
-        view_class_context = 'get_%s_context_data' % state['view_class']
+        view_class_context = 'get_%s_context_data' % state['endpoint_class']
         if hasattr(self, view_class_context):
             context = getattr(self, view_class_context)(link, state, context)
         
@@ -41,7 +41,7 @@ class Html5MediaType(MediaType):
     def get_template_names(self, state):
         params = {
             'base': self.template_dir_name,
-            'endpoint_class': state['view_class'],
+            'endpoint_class': state['endpoint_class'],
             'resource_name': state.get('resource_name', None),
             'app_name': state.get('app_name', None),
         }

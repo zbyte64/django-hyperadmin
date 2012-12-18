@@ -81,6 +81,7 @@ class BaseEndpoint(EndpointViewMixin, View):
     state_class = EndpointState
     
     endpoint_class = None #descriptor of the endpoint
+    endpoint_classes = []
     
     form_class = None
     resource_item_class = ResourceItem
@@ -118,6 +119,17 @@ class BaseEndpoint(EndpointViewMixin, View):
     
     def get_meta(self):
         return {}
+    
+    def get_endpoint_classes(self):
+        res_classes = list(self.endpoint_classes)
+        res_classes.append(self.endpoint_class)
+        return res_classes
+    
+    def get_state_data(self):
+        data = {'endpoint_class':self.endpoint_class,
+                'endpoint_classes':self.get_endpoint_classes(),
+                'params':self.api_request.params,}
+        return data
     
     def get_state_kwargs(self):
         kwargs = {

@@ -129,6 +129,7 @@ class ListEndpoint(Endpoint):
 
 class CreateEndpoint(Endpoint):
     endpoint_class = 'change_form'
+    endpoint_classes = ['add_form']
     name_suffix = 'add'
     url_suffix = r'^add/$'
     
