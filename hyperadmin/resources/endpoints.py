@@ -2,7 +2,7 @@ from django.conf.urls.defaults import url
 from django.views.generic import View
 
 from hyperadmin.hyperobjects import Link, LinkCollection, LinkCollectionProvider, ResourceItem
-from hyperadmin.states import EndpointState, SESSION_STATE
+from hyperadmin.states import EndpointState
 from hyperadmin.views import EndpointViewMixin
 
 
@@ -75,7 +75,6 @@ class BaseEndpoint(EndpointViewMixin, View):
     state = None #for this particular endpoint
     #TODO find a better name for "common_state"
     #common_state = None #shared by endpoints of the same resource
-    session_state = SESSION_STATE #state representing the current request
     
     global_state = None #for overiding the global state while processing
     
@@ -89,6 +88,18 @@ class BaseEndpoint(EndpointViewMixin, View):
     def __init__(self, **kwargs):
         self._init_kwargs = kwargs
         super(BaseEndpoint, self).__init__(**kwargs)
+    
+    def get_parent(self):
+        if getattr(self, '_parent', None) is None:
+            return None
+        if self.api_request:
+            return self.api_request.get_resource(self._parent.get_url_name())
+        return self._parent
+    
+    def set_parent(self, parent):
+        self._parent = parent
+    
+    parent = property(get_parent, set_parent)
     
     def get_common_state(self):
         return None
@@ -126,8 +137,6 @@ class BaseEndpoint(EndpointViewMixin, View):
         kwargs['data'].update(data)
         self.state = self.get_state_class()(**kwargs)
         self.state.meta = self.get_meta()
-        #if self.common_state is None:
-        #    self.common_state = self.state
         return self.state
     
     def reverse(self, *args, **kwargs):
@@ -249,19 +258,10 @@ class Endpoint(BaseEndpoint):
     def __init__(self, **kwargs):
         self.links = LinkCollectionProvider(self)
         super(Endpoint, self).__init__(**kwargs)
-        
-        #if self.api_request:
-        #    self.initialize_state()
     
-    def get_resource(self):
-        if self.api_request:
-            return self.api_request.get_resource(self._resource.get_url_name())
-        return self._resource
-    
-    def set_resource(self, resource):
-        self._resource = resource
-    
-    resource = property(get_resource, set_resource)
+    @property
+    def resource(self):
+        return self.parent
     
     @property
     def link_prototypes(self):
@@ -274,7 +274,7 @@ class Endpoint(BaseEndpoint):
         return kwargs
     
     def get_base_url_name(self):
-        return self._resource.get_base_url_name()
+        return self._parent.get_base_url_name()
     
     def get_url_name(self):
         return self.get_base_url_name() + self.name_suffix

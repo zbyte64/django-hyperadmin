@@ -36,9 +36,6 @@ class CreateUploadEndpoint(Endpoint):
     name_suffix = 'upload'
     url_suffix = r'^upload/$'
     
-    def get_view_class(self):
-        return self.resource.upload_link_view
-    
     def get_link_prototypes(self):
         return {'GET':CreateUploadLinkPrototype(endpoint=self, name='upload'),
                 'POST':CreateUploadLinkPrototype(endpoint=self, name='upload')}

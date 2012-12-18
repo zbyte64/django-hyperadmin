@@ -1,5 +1,4 @@
 from copy import copy
-import threading
 
 from django.utils.http import urlencode
 from django.utils.datastructures import MergeDict
@@ -8,155 +7,19 @@ from django.http import QueryDict
 from hyperadmin.hyperobjects import LinkCollectionProvider
 
 
-def assert_ids(merge_dict, ids=None):
-    if ids is None:
-        ids = set([id(merge_dict)])
-    for sdict in merge_dict.dicts:
-        did = id(sdict)
-        assert did not in ids
-        ids.add(did)
-        if isinstance(sdict, (MergeDict, GlobalState)):
-            assert_ids(sdict, ids)
-    return ids
-
-class GlobalState(object):
-    def __init__(self):
-        self.thread_states = threading.local()
-    
-    def get_stack(self):
-        if not hasattr(self.thread_states, 'stack'):
-            self.thread_states.stack = MergeDict()
-            self.thread_states.stack.dicts = list(self.thread_states.stack.dicts)
-        return self.thread_states.stack
-    
-    @property
-    def dicts(self):
-        return self.get_stack().dicts
-    
-    def __getitem__(self, key):
-        stack = self.get_stack()
-        assert_ids(stack)
-        return stack[key]
-    
-    def push_stack(self, kwargs):
-        stack = self.get_stack()
-        stack.dicts.insert(0, kwargs)
-        assert_ids(stack)
-        return kwargs
-    
-    def pop_stack(self):
-        stack = self.get_stack()
-        return stack.dicts.pop(0)
-    
-    def get(self, key, default=None):
-        try:
-            return self[key]
-        except KeyError:
-            return default
-    
-    def iteritems(self):
-        stack = self.get_stack()
-        return stack.iteritems()
-
-    def iterkeys(self):
-        for k, v in self.iteritems():
-            yield k
-
-    def itervalues(self):
-        for k, v in self.iteritems():
-            yield v
-
-    def items(self):
-        return list(self.iteritems())
-
-    def keys(self):
-        return list(self.iterkeys())
-
-    def values(self):
-        return list(self.itervalues())
-
-    def has_key(self, key):
-        stack = self.get_stack()
-        return stack.has_key(key)
-
-    __contains__ = has_key
-    __iter__ = iterkeys
-
-    def __str__(self):
-        stack = self.get_stack()
-        return str(stack)
-
-    def __repr__(self):
-        return '%s(%s)' % (self.__class__.__name__, str(self))
-
-class GlobalStatePatch(object):
-    def __init__(self, global_state, state_params):
-        self.global_state = global_state
-        self.state_params = state_params
-    
-    def __enter__(self):
-        return self.global_state.push_stack(self.state_params)
-    
-    def __exit__(self, type, value, traceback):
-        self.global_state.pop_stack()
-
-class SessionState(GlobalState):
-    @property
-    def active_dictionary(self):
-        stack = self.get_stack()
-        if not len(stack.dicts):
-            stack.dicts.append(dict())
-        return stack.dicts[0]
-    
-    def __setitem__(self, key, value):
-        self.active_dictionary[key] = value
-    
-    def __delitem__(self, key):
-        del self.active_dictionary[key]
-    
-    def pop(self, key, default=None):
-        return self.active_dictionary.pop(key, default)
-    
-    def update(self, other_dict):
-        self.active_dictionary.update(other_dict)
-    
-    #context functions
-    def patch_state(self, **kwargs):
-        return GlobalStatePatch(self, kwargs)
-    
-    def push_state(self, state):
-        return GlobalStatePatch(self, state)
-
-SESSION_STATE = SessionState()
-SESSION_STATE.__doc__ = '''
-Variables that should be accessible to all resources and endpoints go here.
-Typically put in "auth" which is the user object making the requests
-'''
-
-def push_session(state):
-    return SESSION_STATE.push_state(state)
-
-def patch_session(**kwargs):
-    return SESSION_STATE.patch_state(**kwargs)
-
 class State(MergeDict):
     def __init__(self, substates=[], data={}):
         self.active_dictionary = dict()
         self.substates = substates
-        self.session = self.get_session()
-        self.global_state = GlobalState() #TODO minimize the need for this as much as possible
         dictionaries = self.get_dictionaries()
         super(State, self).__init__(*dictionaries)
         self.update(data)
     
-    def get_session(self):
-        return SESSION_STATE
-    
     def get_dictionaries(self):
-        return [self.active_dictionary, self.session, self.global_state] + self.substates
+        return [self.active_dictionary] + self.substates
     
     def __copy__(self):
-        substates = [self.active_dictionary] + self.global_state.dicts + list(self.substates)
+        substates = self.get_dictionaries()
         ret = self.__class__(substates=substates)
         return ret
     
@@ -171,19 +34,6 @@ class State(MergeDict):
     
     def update(self, other_dict):
         self.active_dictionary.update(other_dict)
-    
-    #context functions
-    def patch_state(self, **kwargs):
-        return GlobalStatePatch(self.global_state, kwargs)
-    
-    def push_state(self, state):
-        return GlobalStatePatch(self.global_state, state)
-    
-    def patch_session(self, **kwargs):
-        return self.session.patch_state(**kwargs)
-    
-    def push_session(self, state):
-        return self.session.push_state(state)
 
 class EndpointStateLinkCollectionProvider(LinkCollectionProvider):
     def _get_link_functions(self, attr):
@@ -208,12 +58,13 @@ class EndpointState(State):
         
         #nuke previous state links
         self.update({'state_links': {},
-                     'extra_get_params':{},})
+                     'extra_get_params':{},
+                     'endpoint': self.endpoint,})
     
-    def __setitem__(self, key, value):
-        if key == 'state_links':
-            assert isinstance(value, dict)
-        return super(EndpointState, self).__setitem__(key, value)
+    def get_dictionaries(self):
+        if self.endpoint.api_request:
+            return [self.active_dictionary] + self.substates + [self.endpoint.api_request.session_state]
+        return [self.active_dictionary] + self.substates
     
     @property
     def resource(self):
@@ -221,7 +72,7 @@ class EndpointState(State):
     
     @property
     def site(self):
-        return self.get('site', self.resource.site)
+        return self.get('site', self.endpoint.site)
     
     def reverse(self, name, *args, **kwargs):
         return self.site.reverse(name, *args, **kwargs)
@@ -314,7 +165,7 @@ class EndpointState(State):
         return self.endpoint.get_namespaces()
     
     def __copy__(self):
-        substates = [self.active_dictionary] + self.global_state.dicts + list(self.substates)
+        substates = self.get_dictionaries()
         ret = self.__class__(self.endpoint, copy(self.meta), substates=substates)
         return ret
 

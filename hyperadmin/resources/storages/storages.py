@@ -93,6 +93,7 @@ class StorageResource(CRUDResource):
     def get_upload_link_form_kwargs(self, **kwargs):
         kwargs = self.get_form_kwargs(**kwargs)
         kwargs['resource'] = self
+        kwargs['request'] = self.api_request.request
         return kwargs
     
     def get_item_url(self, item):

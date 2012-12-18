@@ -5,8 +5,6 @@ from django.utils.cache import add_never_cache_headers
 
 import mimeparse
 
-from hyperadmin.states import push_session
-
 
 class ConditionalAccessMixin(object):
     etag_function = None

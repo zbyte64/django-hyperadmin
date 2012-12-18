@@ -191,7 +191,7 @@ class ModelResource(BaseModelResource):
             self.register_inline(inline_cls)
     
     def register_inline(self, inline_cls):
-        self.inline_instances.append(inline_cls(self))
+        self.inline_instances.append(inline_cls(parent=self, api_request=self.api_request))
     
     def get_view_endpoints(self):
         from hyperadmin.resources.models.endpoints import ListEndpoint, CreateEndpoint, DetailEndpoint, DeleteEndpoint
@@ -214,12 +214,24 @@ class ModelResource(BaseModelResource):
         return urlpatterns
     
     def get_item_namespaces(self, item):
+        assert self.api_request
         namespaces = super(ModelResource, self).get_item_namespaces(item)
         for inline in self.inline_instances:
+            #new api request, perhaps wrap in namespace?
             name = 'inline-%s' % inline.rel_name
-            inline = inline.fork_state(parent=item.instance, namespace=name, api_request=self.api_request)
+            
+            assert inline.api_request
+            
+            namespace = Namespace(name=name, endpoint=inline, state_data={'parent':item.instance})
+            namespaces[name] = namespace
+            assert 'parent' in namespace.state
+            continue
+            
+            inline = inline.fork(api_request=self.api_request)
+            inline.state.update({'parent':item.instance, 
+                                 'namespace':name,})
             #assert inline.state.resource == inline
-            assert inline.endpoints.values()[0].resource == inline
+            assert inline.endpoints.values()[0].resource == inline, str(inline.endpoints.values()[0].resource) +":" + str(inline)
             link = inline.get_link()
             namespace = Namespace(name=name, link=link, state=inline.state)
             namespaces[name] = namespace
@@ -243,7 +255,7 @@ class InlineModelResource(BaseModelResource):
         
         from django.db.models.fields.related import RelatedObject
         from django.forms.models import _get_foreign_key
-        self.fk = _get_foreign_key(self.parent.resource_adaptor, self.model, self.fk_name)
+        self.fk = _get_foreign_key(self._parent.resource_adaptor, self.model, self.fk_name)
         if self.rel_name is None:
             self.rel_name = RelatedObject(self.fk.rel.to, self.model, self.fk).get_accessor_name()
     

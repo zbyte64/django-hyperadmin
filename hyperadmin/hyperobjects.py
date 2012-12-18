@@ -17,8 +17,8 @@ class APIRequest(object):
         #self.method = method
         #self.user = user
         #self.params = params
-        from hyperadmin.states import SessionState
-        self.session_state = SessionState()
+        from hyperadmin.states import State
+        self.session_state = State()
         self.session_state['resources'] = dict()
         self.session_state['endpoints'] = dict()
         super(APIRequest, self).__init__()
@@ -68,6 +68,7 @@ class APIRequest(object):
     def generate_response(self, link, state):
         media_type = self.get_response_media_type()
         content_type = self.get_request_type()
+        return state.generate_response(media_type, content_type, link)
         return media_type.serialize(request=self.request, content_type=content_type, link=link, state=state)
 
 class HTTPAPIRequest(APIRequest):
@@ -307,8 +308,12 @@ class Link(object):
         
         if on_submit is None:
             #TODO implement the following
-            endpoint = self.site.get_endpoint_by_absolute_url(self.get_absolute_url())
-            return endpoint.get_main_link()
+            #make an api request
+            api_request = NamespaceAPIRequest(self.endpoint.api_request, path=self.get_absolute_url())
+            endpoint = self.endpoint.fork(api_request=api_request)
+            #TODO state to be processed
+            #endpoint = self.site.get_endpoint_by_absolute_url(self.get_absolute_url())
+            return endpoint.get_link()
         else:
             return on_submit(link=self, submit_kwargs=kwargs)
     
@@ -382,20 +387,65 @@ class LinkCollectionProvider(object):
         default_kwargs = self._get_link_kwargs()
         return ChainedLinkCollectionProvider(functions, default_kwargs)
 
+class NamespaceAPIRequest(APIRequest):
+    def __init__(self, api_request, path='/', url_args=[], url_kwargs={}, **kwargs):
+        self.original_api_request = api_request
+        super(NamespaceAPIRequest, self).__init__(api_request.site, path, url_args, url_kwargs)
+        for key, val in kwargs.iteritems():
+            setattr(self, key, val)
+    
+    @property
+    def payload(self):
+        return {}
+    
+    @property
+    def method(self):
+        return 'GET'
+    
+    def get_full_path(self):
+        #TODO
+        return self.original_api_request.get_full_path()
+    
+    @property
+    def user(self):
+        return self.original_api_request.user
+    
+    @property
+    def params(self):
+        if not hasattr(self, '_params'):
+            self._params = dict()
+        return self._params
+
 class Namespace(object):
     """
-    Represents data that is associated to our current state. Typically is an association with another resource.
+    Represents alternative data associated with the current api request
+    
+    Namespaced data is provided by another resource through an internal api request
     """
-    def __init__(self, name, link, state):
+    def __init__(self, name, endpoint, state_data={}):
         self.name = name
-        self.link = link
-        self.state = state.copy()
+        self.api_request = NamespaceAPIRequest(endpoint.api_request)
+        self.state_data = state_data
+        self.endpoint = endpoint.fork(api_request=self.api_request)
+        self.endpoint.state.update(state_data)
+        #self.api_request.session_state['endpoints'][self.endpoint.get_url_name()] = self.endpoint
+        self.api_request.session_state['resources'][self.endpoint.get_url_name()] = self.endpoint
     
     def get_namespaces(self):
         return dict()
     
     def get_prompt(self):
-        return self.state.resource.get_prompt()
+        return self.endpoint.get_prompt()
+    
+    @property
+    def link(self):
+        if not hasattr(self, '_link'):
+            self._link = self.endpoint.get_link()
+        return self._link
+    
+    @property
+    def state(self):
+        return self.endpoint.state
 
 class ResourceItemLinkCollectionProvider(LinkCollectionProvider):
     def __init__(self, container, parent=None):

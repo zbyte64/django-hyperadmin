@@ -16,15 +16,11 @@ class BaseResource(BaseEndpoint):
     form_class = EmptyForm
     
     resource_adaptor = None
-    parent = None
     
     def __init__(self, **kwargs):
         assert 'resource_adaptor' in kwargs
         self.links = LinkCollectionProvider(self)
         super(BaseResource, self).__init__(**kwargs)
-        
-        #if self.api_request:
-        #    self.initialize_state()
         
         self.register_endpoints()
     
@@ -46,7 +42,7 @@ class BaseResource(BaseEndpoint):
         self.endpoints[endpoint.name_suffix] = endpoint
     
     def get_endpoint_kwargs(self, **kwargs):
-        kwargs.setdefault('resource', self)
+        kwargs.setdefault('parent', self)
         kwargs.setdefault('site', self.site)
         kwargs.setdefault('api_request', self.api_request)
         return kwargs

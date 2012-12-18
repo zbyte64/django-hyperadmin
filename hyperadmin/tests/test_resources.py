@@ -7,7 +7,6 @@ from django.http import HttpResponse
 from django.core.files.base import ContentFile
 
 from hyperadmin.resources.models.models import ModelResource, InlineModelResource
-from hyperadmin.states import GlobalState
 from hyperadmin.sites import ResourceSite
 from hyperadmin.hyperobjects import APIRequest
 
@@ -50,7 +49,7 @@ class ResourceTestCase(unittest.TestCase):
             return ret
         
         self.site.reverse = reverse
-        
+        '''
         self.popped_states = MergeDict()
         self.popped_states.dicts = list()
         
@@ -60,6 +59,7 @@ class ResourceTestCase(unittest.TestCase):
             assert dictionary is not None
             self.popped_states.dicts.append(dictionary)
         GlobalState.pop_stack = record_pop
+        '''
     
     def get_api_request(self, **kwargs):
         kwargs.setdefault('site', self.site)
@@ -67,6 +67,7 @@ class ResourceTestCase(unittest.TestCase):
         kwargs.setdefault('params', {})
         kwargs.setdefault('method', 'GET')
         kwargs.setdefault('payload', {})
+        kwargs.setdefault('request', self.factory.get('/'))
         api_request = MockAPIRequest(**kwargs)
         
         api_request.generate_response = MagicMock(return_value=HttpResponse())
@@ -89,18 +90,18 @@ class ModelResourceTestCase(ResourceTestCase):
         call_kwargs = api_request.generate_response.call_args[1]
         link = call_kwargs['link']
         state = call_kwargs['state']
-        with state.patch_session(auth=self.user):
+        #with state.patch_session(auth=self.user):
             #assert 'auth' in state, str(self.popped_states.dicts)
-            self.assertEqual(len(state.get_resource_items()), User.objects.count())
-            
-            links = state.links.get_filter_links()
-            self.assertTrue(links, 'filter links are empty')
-            
-            links = state.links.get_breadcrumbs()
-            self.assertTrue(links, 'breadcrumbs are empty')
-            
-            links = state.links.get_outbound_links()
-            self.assertTrue(links, 'outbound links are empty')
+        self.assertEqual(len(state.get_resource_items()), User.objects.count())
+        
+        links = state.links.get_filter_links()
+        self.assertTrue(links, 'filter links are empty')
+        
+        links = state.links.get_breadcrumbs()
+        self.assertTrue(links, 'breadcrumbs are empty')
+        
+        links = state.links.get_outbound_links()
+        self.assertTrue(links, 'outbound links are empty')
     
     def test_get_detail(self):
         instance = self.user
@@ -112,10 +113,10 @@ class ModelResourceTestCase(ResourceTestCase):
         link = call_kwargs['link']
         state = call_kwargs['state']
         
-        with state.push_session(self.popped_states):
-            self.assertEqual(len(state.get_resource_items()), 1)
-            self.assertTrue(state.item)
-            self.assertEqual(state.item.instance, instance)
+        #with state.push_session(self.popped_states):
+        self.assertEqual(len(state.get_resource_items()), 1)
+        self.assertTrue(state.item)
+        self.assertEqual(state.item.instance, instance)
     
     def test_post_list(self):
         update_data = {
@@ -147,12 +148,12 @@ class ModelResourceTestCase(ResourceTestCase):
         link = call_kwargs['link']
         state = call_kwargs['state']
         
-        with state.push_session(self.popped_states):
-            self.assertTrue(link.form)
-            self.assertTrue(link.form.errors)
-            
-            self.assertTrue(state.item)
-            self.assertEqual(state.item.instance, instance)
+        #with state.push_session(self.popped_states):
+        self.assertTrue(link.form)
+        self.assertTrue(link.form.errors)
+        
+        self.assertTrue(state.item)
+        self.assertEqual(state.item.instance, instance)
 
 class InlineModelResourceTestCase(ResourceTestCase):
     def setUp(self):
@@ -174,8 +175,8 @@ class InlineModelResourceTestCase(ResourceTestCase):
         link = call_kwargs['link']
         state = call_kwargs['state']
         
-        with state.push_session(self.popped_states):
-            self.assertEqual(len(state.get_resource_items()), self.user.groups.all().count())
+        #with state.push_session(self.popped_states):
+        self.assertEqual(len(state.get_resource_items()), self.user.groups.all().count())
     
     def test_namespaced_form(self):
         instance = self.user
@@ -187,23 +188,23 @@ class InlineModelResourceTestCase(ResourceTestCase):
         link = call_kwargs['link']
         state = call_kwargs['state']
         
-        with state.push_session(self.popped_states):
-            self.assertEqual(len(state.get_resource_items()), 1)
-            self.assertTrue(state.item)
-            self.assertEqual(state.item.instance, instance)
+        #with state.push_session(self.popped_states):
+        self.assertEqual(len(state.get_resource_items()), 1)
+        self.assertTrue(state.item)
+        self.assertEqual(state.item.instance, instance)
+        
+        item_namespaces = state.item.get_namespaces()
+        self.assertTrue(item_namespaces)
+        namespace = item_namespaces.values()[0]
+        self.assertTrue(namespace.link.get_absolute_url())
             
-            item_namespaces = state.item.get_namespaces()
-            self.assertTrue(item_namespaces)
-            namespace = item_namespaces.values()[0]
-            self.assertTrue(namespace.link.get_absolute_url())
-            
-            inline_items = namespace.state.get_resource_items()
-            self.assertTrue(inline_items)
-            item = inline_items[0]
-            inline_link = item.get_link()
-            self.assertEqual(inline_link.get_link_factor(), 'LO')
-            self.assertTrue(inline_link.get_absolute_url())
-            edit_link = inline_link.submit()
+        inline_items = namespace.state.get_resource_items()
+        self.assertTrue(inline_items)
+        item = inline_items[0]
+        inline_link = item.get_link()
+        self.assertEqual(inline_link.get_link_factor(), 'LO')
+        self.assertTrue(inline_link.get_absolute_url())
+        edit_link = inline_link.submit()
     
     #TODO
     def test_get_detail(self):
@@ -268,8 +269,8 @@ class SiteResourceTestCase(ResourceTestCase):
         link = call_kwargs['link']
         state = call_kwargs['state']
         
-        with state.push_session(self.popped_states):
-            self.assertTrue(state.get_resource_items())
+        #with state.push_session(self.popped_states):
+        self.assertTrue(state.get_resource_items())
 
 class ApplicationResourceTestCase(ResourceTestCase):
     def register_resource(self):
@@ -285,8 +286,8 @@ class ApplicationResourceTestCase(ResourceTestCase):
         link = call_kwargs['link']
         state = call_kwargs['state']
         
-        with state.push_session(self.popped_states):
-            self.assertTrue(state.get_resource_items())
+        #with state.push_session(self.popped_states):
+        self.assertTrue(state.get_resource_items())
 
 class StorageResourceTestCase(ResourceTestCase):
     def register_resource(self):
@@ -325,12 +326,12 @@ class StorageResourceTestCase(ResourceTestCase):
         link = call_kwargs['link']
         state = call_kwargs['state']
         
-        with state.push_session(self.popped_states):
-            self.assertEqual(len(state.get_resource_items()), 1)
-            
-            item = state.get_resource_items()[0]
-            
-            self.assertEqual(item.instance.url, '/media/test.txt')
+        #with state.push_session(self.popped_states):
+        self.assertEqual(len(state.get_resource_items()), 1)
+        
+        item = state.get_resource_items()[0]
+        
+        self.assertEqual(item.instance.url, '/media/test.txt')
     
     def test_post_list(self):
         update_data = {
@@ -384,9 +385,9 @@ class AuthenticationResourceTestCase(ResourceTestCase):
         link = call_kwargs['link']
         state = call_kwargs['state']
         
-        with state.push_session(self.popped_states):
-            self.assertTrue(state['authenticated'])
-            self.assertTrue(state.links.get_outbound_links()) #TODO logout link?
+        #with state.push_session(self.popped_states):
+        self.assertTrue(state['authenticated'])
+        self.assertTrue(state.links.get_outbound_links()) #TODO logout link?
     
     def test_restful_logout(self):
         api_request = self.get_api_request(method='DELETE', request=self.factory.get('/'))

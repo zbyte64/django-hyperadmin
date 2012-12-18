@@ -32,6 +32,7 @@ class ResourceSite(object):
         resource = admin_class(**kwargs)
         app_name = resource.app_name
         resource.parent = self.register_application(app_name)
+        resource._init_kwargs['parent'] = resource.parent
         self.applications[app_name].register_resource(resource)
         self.registry[model] = resource
         return resource
