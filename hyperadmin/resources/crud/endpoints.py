@@ -176,7 +176,7 @@ class DetailEndpoint(DetailMixin, Endpoint):
     
     def get_breadcrumbs(self):
         breadcrumbs = super(DetailEndpoint, self).get_breadcrumbs()
-        breadcrumbs.add_link('update', item=self.state.item, rel='breadcrumb', link_factor='LO')
+        breadcrumbs.add_link('update', item=self.common_state.item, rel='breadcrumb', link_factor='LO')
         return breadcrumbs
 
 class DeleteEndpoint(DetailMixin, Endpoint):
@@ -193,7 +193,7 @@ class DeleteEndpoint(DetailMixin, Endpoint):
     
     def get_breadcrumbs(self):
         breadcrumbs = super(DeleteEndpoint, self).get_breadcrumbs()
-        breadcrumbs.add_link('update', item=self.state.item, rel='breadcrumb', link_factor='LO')
-        breadcrumbs.add_link('delete', item=self.state.item, rel='breadcrumb', link_factor='LO')
+        breadcrumbs.add_link('update', item=self.common_state.item, rel='breadcrumb', link_factor='LO')
+        breadcrumbs.add_link('delete', item=self.common_state.item, rel='breadcrumb', link_factor='LO')
         return breadcrumbs
 
