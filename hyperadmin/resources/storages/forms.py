@@ -1,7 +1,7 @@
 from django import forms
 from django.middleware.csrf import get_token
 
-from hyperadmin.resources.storages.views import BoundFile
+from hyperadmin.resources.storages.endpoints import BoundFile
 
 
 class UploadForm(forms.Form):

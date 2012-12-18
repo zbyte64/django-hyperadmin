@@ -3,7 +3,6 @@ from django import forms
 
 from hyperadmin.hyperobjects import Namespace
 from hyperadmin.resources.crud.crud import CRUDResource
-from hyperadmin.resources.models import views
 from hyperadmin.resources.models.indexes import ModelIndex
 from hyperadmin.resources.models.endpoints import InlineListEndpoint, InlineCreateEndpoint, InlineDetailEndpoint, InlineDeleteEndpoint
 
@@ -36,11 +35,6 @@ class BaseModelResource(CRUDResource):
     list_editable = ()
     search_fields = ()
     date_hierarchy = None
-    
-    list_view = views.ModelListView
-    add_view = views.ModelCreateView
-    detail_view = views.ModelDetailView
-    delete_view = views.ModelDeleteView
     
     @property
     def opts(self):
@@ -238,11 +232,6 @@ class ModelResource(BaseModelResource):
         return namespaces
 
 class InlineModelResource(BaseModelResource):
-    list_view = views.InlineModelListView
-    add_view = views.InlineModelCreateView
-    detail_view = views.InlineModelDetailView
-    delete_view = views.InlineModelDeleteView
-    
     model = None
     fk_name = None
     rel_name = None

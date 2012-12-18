@@ -1,14 +1,10 @@
 from hyperadmin.resources import BaseResource
-from hyperadmin.resources.auth import views
 from hyperadmin.resources.auth.forms import AuthenticationResourceForm
 from hyperadmin.resources.auth.endpoints import LoginEndpoint, LogoutEndpoint
 
 
 class AuthResource(BaseResource):
     form_class = AuthenticationResourceForm
-    
-    detail_view = views.AuthenticationResourceView
-    logout_view = views.AuthenticationLogoutView
     
     def __init__(self, **kwargs):
         kwargs.setdefault('app_name', '-authentication')

@@ -1,14 +1,12 @@
 from django.conf.urls.defaults import patterns, url, include
 
 from hyperadmin.resources import BaseResource
-from hyperadmin.resources.applications import views
 from hyperadmin.resources.applications.forms import ViewResourceForm
 from hyperadmin.resources.applications.endpoints import ListEndpoint
 
 
 class SiteResource(BaseResource):
     resource_class = 'resourcelisting'
-    list_view = views.SiteResourceView
     form_class = ViewResourceForm
     auth_resource = None
     

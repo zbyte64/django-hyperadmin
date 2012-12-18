@@ -1,5 +1,5 @@
 from hyperadmin.resources.indexes import Index
-from hyperadmin.resources.storages.views import BoundFile
+from hyperadmin.resources.storages.endpoints import BoundFile
 
 from django.core.paginator import Page
 

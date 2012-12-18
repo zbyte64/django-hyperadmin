@@ -1,7 +1,28 @@
 from hyperadmin.resources.endpoints import LinkPrototype, Endpoint
 from hyperadmin.resources.crud.endpoints import ListEndpoint as BaseListEndpoint, CreateEndpoint, DetailEndpoint as BaseDetailEndpoint, DeleteEndpoint as BaseDeleteEndpoint
-from hyperadmin.resources.storages.views import BoundFile
 
+
+class BoundFile(object):
+    def __init__(self, storage, name):
+        self.storage = storage
+        self.name = name
+    
+    @property
+    def pk(self):
+        return self.name
+    
+    @property
+    def url(self):
+        return self.storage.url(self.name)
+    
+    def delete(self):
+        return self.storage.delete(self.name)
+    
+    def exists(self):
+        return self.storage.exists(self.name)
+    
+    def __unicode__(self):
+        return self.name
 
 class CreateUploadLinkPrototype(LinkPrototype):
     def show_link(self, **kwargs):

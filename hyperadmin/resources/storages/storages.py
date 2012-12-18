@@ -4,7 +4,7 @@ from hyperadmin.hyperobjects import Link
 from hyperadmin.resources.crud.crud import CRUDResource
 from hyperadmin.resources.storages.forms import UploadForm, UploadLinkForm
 from hyperadmin.resources.storages.indexes import StorageIndex
-from hyperadmin.resources.storages.endpoints import ListEndpoint, CreateEndpoint, CreateUploadEndpoint, DetailEndpoint, DeleteEndpoint
+from hyperadmin.resources.storages.endpoints import ListEndpoint, CreateEndpoint, CreateUploadEndpoint, DetailEndpoint, DeleteEndpoint, BoundFile
 
 
 class StorageResource(CRUDResource):
@@ -75,7 +75,6 @@ class StorageResource(CRUDResource):
         if self.state.has_view_class('change_form'):
             return []
         dirs, files = self.get_primary_query()
-        from hyperadmin.resources.storages.views import BoundFile
         instances = [BoundFile(self.storage, file_name) for file_name in files]
         return instances
     
