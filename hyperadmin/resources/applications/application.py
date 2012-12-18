@@ -42,7 +42,7 @@ class ApplicationResource(BaseResource):
     
     def get_instances(self):
         #TODO sort by name
-        return self.resource_adaptor.values()
+        return [app.fork(api_request=self.api_request) for app in self.resource_adaptor.values()]
     
     def get_item_prompt(self, item):
         return item.instance.get_prompt()

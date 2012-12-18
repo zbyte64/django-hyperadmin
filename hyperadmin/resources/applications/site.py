@@ -51,9 +51,10 @@ class SiteResource(BaseResource):
         apps = [entry[1] for entry in sorted(applications, key=lambda x: x[0])]
         all_apps = list()
         for app in apps:
+            app = app.fork(api_request=self.api_request)
             all_apps.append(app)
             all_apps.extend(app.get_instances())
-        all_apps.append(self.auth_resource)
+        all_apps.append(self.auth_resource.fork(api_request=self.api_request))
         return all_apps
     
     def get_item_url(self, item):
