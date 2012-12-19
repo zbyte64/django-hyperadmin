@@ -212,6 +212,7 @@ class LinkCollection(list):
         This will only add the link if it exists and the person is allowed to view it.
         """
         if link_name not in self.link_prototypes:
+            print 'not found', self.link_prototypes
             return False
         endpoint_link = self.link_prototypes[link_name]
         if not endpoint_link.show_link(**kwargs):
@@ -267,7 +268,7 @@ class ResourceItemLinkCollectionProvider(LinkCollectionProvider):
     
     @property
     def parent(self):
-        return self.container.resource.links
+        return self.container.endpoint.links
     
     def _get_link_kwargs(self):
         return {'item':self.container}

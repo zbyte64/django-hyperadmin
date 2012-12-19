@@ -52,17 +52,6 @@ class ResourceTestCase(unittest.TestCase):
             return ret
         
         self.site.reverse = reverse
-        '''
-        self.popped_states = MergeDict()
-        self.popped_states.dicts = list()
-        
-        def record_pop(obj):
-            stack = obj.get_stack()
-            dictionary = stack.dicts.pop(0)
-            assert dictionary is not None
-            self.popped_states.dicts.append(dictionary)
-        GlobalState.pop_stack = record_pop
-        '''
     
     def get_api_request(self, **kwargs):
         kwargs.setdefault('site', self.site)
@@ -93,8 +82,7 @@ class ModelResourceTestCase(ResourceTestCase):
         call_kwargs = api_request.generate_response.call_args[1]
         link = call_kwargs['link']
         state = call_kwargs['state']
-        #with state.patch_session(auth=self.user):
-            #assert 'auth' in state, str(self.popped_states.dicts)
+        
         self.assertEqual(len(state.get_resource_items()), User.objects.count())
         
         links = state.links.get_filter_links()
@@ -116,10 +104,16 @@ class ModelResourceTestCase(ResourceTestCase):
         link = call_kwargs['link']
         state = call_kwargs['state']
         
-        #with state.push_session(self.popped_states):
         self.assertEqual(len(state.get_resource_items()), 1)
         self.assertTrue(state.item)
         self.assertEqual(state.item.instance, instance)
+        
+        links = state.links.get_breadcrumbs()
+        #TODO check for item breadcrumb
+        self.assertTrue(links, 'breadcrumbs are empty')
+        
+        links = state.item.links.get_item_outbound_links()
+        self.assertTrue(links, 'outbound links are empty')
     
     def test_post_list(self):
         update_data = {

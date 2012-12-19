@@ -370,7 +370,9 @@ class Endpoint(BaseEndpoint):
         return self.resource.get_item_link(item=item)
     
     def get_breadcrumbs(self):
-        return self.resource.get_breadcrumbs()
+        breadcrumbs = self.resource.get_breadcrumbs()
+        breadcrumbs.endpoint = self
+        return breadcrumbs
     
     def api_permission_check(self, api_request):
         return self.resource.api_permission_check(api_request)
