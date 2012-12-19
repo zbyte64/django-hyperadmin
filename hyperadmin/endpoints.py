@@ -302,9 +302,6 @@ class Endpoint(BaseEndpoint):
     
     def get_view_kwargs(self):
         return self.resource.get_view_kwargs()
-        kwargs.update({'global_state': self.global_state,
-                       'state': self.state,})
-        return kwargs
     
     def get_base_url_name(self):
         return self._parent.get_base_url_name()
