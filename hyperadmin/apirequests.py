@@ -1,3 +1,6 @@
+import mimeparse
+
+
 class APIRequest(object):
     def __init__(self, site, path, url_args, url_kwargs):
         self.site = site
