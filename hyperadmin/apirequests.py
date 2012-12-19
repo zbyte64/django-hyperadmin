@@ -64,6 +64,10 @@ class APIRequest(object):
         return media_type.serialize(request=self.request, content_type=content_type, link=link, state=state)
 
 class HTTPAPIRequest(APIRequest):
+    """
+    Represents an API Request spawned from a Django HTTP Request
+    """
+    
     get_to_meta_map = {
         '_HTTP_ACCEPT':'HTTP_ACCEPT',
         '_CONTENT_TYPE':'CONTENT_TYPE',

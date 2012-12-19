@@ -7,6 +7,13 @@ from hyperadmin.views import EndpointViewMixin
 
 
 class LinkPrototype(object):
+    """
+    Incapsulates logic related to a link. This class is responsible for:
+    
+    * creating link
+    * handling link submission
+    * controlling link visibility
+    """
     def __init__(self, endpoint, name, link_kwargs={}):
         self.endpoint = endpoint
         self.name = name
@@ -29,6 +36,9 @@ class LinkPrototype(object):
         return self.endpoint.api_request
     
     def show_link(self, **kwargs):
+        """
+        Checks the state and returns False if the link is not active.
+        """
         return True
     
     def get_form_class(self):
@@ -47,11 +57,17 @@ class LinkPrototype(object):
         return kwargs
     
     def get_link(self, **link_kwargs):
+        """
+        Creates and returns the link
+        """
         link_kwargs = self.get_link_kwargs(**link_kwargs)
         link = Link(**link_kwargs)
         return link
     
     def handle_submission(self, link, submit_kwargs):
+        """
+        Called when the link is submitted. Returns a link representing the response.
+        """
         form = link.get_form(**submit_kwargs)
         if form.is_valid():
             instance = form.save()
@@ -60,6 +76,9 @@ class LinkPrototype(object):
         return link.clone(form=form)
     
     def on_success(self, item=None):
+        """
+        Returns a link for a successful submission
+        """
         if item is not None:
             return item.get_link()
         return self.endpoint.get_resource_link()
@@ -71,6 +90,9 @@ class LinkPrototype(object):
         return self.endpoint.get_url_name()
 
 class BaseEndpoint(EndpointViewMixin, View):
+    """
+    Represents an API Endpoint
+    """
     api_request = None
     
     site = None
@@ -261,10 +283,7 @@ class BaseEndpoint(EndpointViewMixin, View):
 
 class Endpoint(BaseEndpoint):
     """
-    Represents an API endpoint
-    
-    Behaves like a class based view
-    Initialized originally without a state; should endpoint be a class based view that pumps to another?
+    Endpoint class that contains link prototypes and maps HTTP requests to those links.
     """
     name_suffix = None
     url_suffix = None

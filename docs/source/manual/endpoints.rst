@@ -12,6 +12,15 @@ LinkPrototype
    :members:
    :undoc-members:
 
+
+BaseEndpoint
+============
+
+.. autoclass:: BaseEndpoint
+   :members:
+   :undoc-members:
+
+
 Endpoint
 ========
 
