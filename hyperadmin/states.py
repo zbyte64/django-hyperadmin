@@ -62,9 +62,7 @@ class EndpointState(State):
                      'endpoint': self.endpoint,})
     
     def get_dictionaries(self):
-        if self.endpoint.api_request:
-            return [self.active_dictionary] + self.substates + [self.endpoint.api_request.session_state]
-        return [self.active_dictionary] + self.substates
+        return [self.active_dictionary] + self.substates + [self.endpoint.api_request.session_state]
     
     @property
     def resource(self):

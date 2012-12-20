@@ -63,9 +63,6 @@ class SiteResource(BaseResource):
     def get_item_outbound_links(self, item):
         return item.instance.links.get_outbound_links()
     
-    def get_absolute_url(self):
-        return self.link_prototypes['list'].get_url()
-    
     @property
     def applications(self):
         return self.site.applications
