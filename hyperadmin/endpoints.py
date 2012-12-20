@@ -95,7 +95,6 @@ class BaseEndpoint(EndpointViewMixin, View):
     """
     api_request = None
     
-    site = None
     state = None #for this particular endpoint
     #TODO find a better name for "common_state"
     #common_state = None #shared by endpoints of the same resource
@@ -113,6 +112,16 @@ class BaseEndpoint(EndpointViewMixin, View):
     def __init__(self, **kwargs):
         self._init_kwargs = kwargs
         super(BaseEndpoint, self).__init__(**kwargs)
+    
+    def get_site(self):
+        if self.api_request:
+            return self.api_request.get_site()
+        return self._site
+    
+    def set_site(self, site):
+        self._site = site
+    
+    site = property(get_site, set_site)
     
     def get_parent(self):
         if getattr(self, '_parent', None) is None:

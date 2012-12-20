@@ -43,7 +43,7 @@ class BaseResource(BaseEndpoint):
     
     def get_endpoint_kwargs(self, **kwargs):
         kwargs.setdefault('parent', self)
-        kwargs.setdefault('site', self.site)
+        kwargs.setdefault('site', self._site)
         kwargs.setdefault('api_request', self.api_request)
         return kwargs
     

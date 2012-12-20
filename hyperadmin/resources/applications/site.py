@@ -13,9 +13,10 @@ class SiteResource(BaseResource):
     def __init__(self, **kwargs):
         kwargs.setdefault('resource_adaptor', dict())
         super(SiteResource, self).__init__(**kwargs)
-        if self.auth_resource is None:
-            from hyperadmin.resources.auth.auth import AuthResource
-            self.auth_resource = AuthResource(**kwargs)
+    
+    @property
+    def auth_resource(self):
+        return self.site.auth_resource
     
     def get_prompt(self):
         return self.site.name

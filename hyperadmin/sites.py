@@ -4,22 +4,43 @@ from django.utils.datastructures import SortedDict
 from django.http import HttpResponse, HttpResponseRedirect
 from django.utils.encoding import iri_to_uri
 
+from hyperadmin.endpoints import BaseEndpoint
 from hyperadmin.resources.applications.site import SiteResource
 from hyperadmin.resources.applications.application import ApplicationResource
+from hyperadmin.resources.auth.auth import AuthResource
 
 import collections
 
 
-class ResourceSite(object):
+class Registry(dict):
+    def __init__(self, resource_site):
+        self.resource_site = resource_site
+    
+    def __getitem__(self, key):
+        item = super(Registry, self).__getitem__(key)
+        if self.resource_site.api_request:
+            return self.resource_site.api_request.get_resource(item.get_url_name())
+        return item
+    
+    def items(self):
+        items = super(Registry, self).items()
+        if self.resource_site.api_request:
+            items = [(key, self[key]) for key, val in items]
+        return items
+
+class ResourceSite(BaseEndpoint):
     site_resource_class = SiteResource
     application_resource_class = ApplicationResource
+    auth_resource_class = AuthResource
+    name = 'hyperadmin'
     
-    def __init__(self, name='hyperadmin'):
-        self.name = name
-        self.applications = dict()
-        self.registry = dict()
+    def __init__(self, **kwargs):
+        self.applications = Registry(self)
+        self.registry = Registry(self)
         self.media_types = dict()
+        super(ResourceSite, self).__init__(**kwargs)
         self.site_resource = self.site_resource_class(**self.get_resource_kwargs())
+        self.auth_resource = self.auth_resource_class(**self.get_resource_kwargs())
     
     def register(self, model_or_iterable, admin_class, **options):
         if isinstance(model_or_iterable, collections.Iterable):
@@ -37,8 +58,15 @@ class ResourceSite(object):
         self.registry[model] = resource
         return resource
     
+    def fork(self, **kwargs):
+        ret = super(ResourceSite, self).fork(**kwargs)
+        ret.applications.update(self.applications)
+        ret.registry.update(self.registry)
+        return ret
+    
     def get_resource_kwargs(self, **kwargs):
-        params = {'site': self}
+        params = {'site': self,
+                  'api_request': self.api_request,}
         params.update(kwargs)
         return params
     
@@ -89,20 +117,16 @@ class ResourceSite(object):
     def get_view_kwargs(self):
         return {'resource_site':self,}
     
-    def get_login_url(self):
-        return self.site_resource.auth_resource.get_absolute_url()
+    def get_login_link(self, api_request, **kwargs):
+        auth_resource = self.site_resource.auth_resource.fork(api_request=api_request)
+        return auth_resource.get_link(**kwargs)
     
     def api_permission_check(self, api_request):
         user = api_request.user
         if not user.is_authenticated():
-            redirect_to = self.get_login_url()
-            response = HttpResponseRedirect(redirect_to)
-            return response
+            return self.get_login_link(api_request, prompt='Login Required')
         if not user.is_staff:
-            redirect_to = self.get_login_url()
-            response = HttpResponse('Unauthorized', status=401)
-            response['Location'] = iri_to_uri(redirect_to)
-            return response
+            return self.get_login_link(api_request, prompt='Unauthorized', http_status=401)
     
     def get_related_resource_from_field(self, field):
         #TODO make more dynamic

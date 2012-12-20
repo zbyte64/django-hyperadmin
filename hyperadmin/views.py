@@ -70,8 +70,9 @@ class EndpointViewMixin(ConditionalAccessMixin):
         
         permission_response = self.api_permission_check(api_request)
         if permission_response is not None:
-            return permission_response
-        response_or_link = handler(api_request)
+            response_or_link = permission_response
+        else:
+            response_or_link = handler(api_request)
         if isinstance(response_or_link, Link):
             response = self.generate_response(response_or_link)
         else:

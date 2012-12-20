@@ -51,6 +51,14 @@ class ResourceTestCase(unittest.TestCase):
             ret = self.resolver.reverse(name, *args, **kwargs)
             return ret
         
+        original_fork = self.site.fork
+        
+        def fork(**kwargs):
+            ret = original_fork(**kwargs)
+            ret.reverse = reverse
+            return ret
+        
+        self.site.fork = fork
         self.site.reverse = reverse
     
     def get_api_request(self, **kwargs):

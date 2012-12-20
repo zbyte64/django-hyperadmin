@@ -25,7 +25,7 @@ class LoginLinkPrototype(LinkPrototype):
         form = link.get_form(**submit_kwargs)
         if form.is_valid():
             form.save()
-            self.common_state.session['authenticated'] = True
+            self.common_state['authenticated'] = True
             return self.on_success()
         return link.clone(form=form)
     

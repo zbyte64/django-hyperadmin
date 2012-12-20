@@ -60,6 +60,11 @@ class APIRequest(object):
             self.endpoint_state['endpoints'][urlname] = endpoint.fork(api_request=self)
         return self.endpoint_state['endpoints'][urlname]
     
+    def get_site(self):
+        if 'site' not in self.endpoint_state:
+            self.endpoint_state['site'] = self.site.fork(api_request=self)
+        return self.endpoint_state['site']
+    
     def generate_response(self, link, state):
         media_type = self.get_response_media_type()
         content_type = self.get_request_type()
