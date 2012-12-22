@@ -160,7 +160,7 @@ class CollectionHyperAdminJSON(CollectionNextJSON):
     
     def get_accepted_namespaces(self):
         namespaces = list()
-        for entry in self.request.META.get('HTTP_ACCEPT_NAMESPACES', '').split(','):
+        for entry in self.api_request.META.get('HTTP_ACCEPT_NAMESPACES', '').split(','):
             entry = entry.strip()
             if entry:
                 namespaces.append(entry)

@@ -11,6 +11,7 @@ class APIRequest(object):
         #self.method = method
         #self.user = user
         #self.params = params
+        #self.META = meta
         from hyperadmin.states import State
         self.session_state = State()
         self.endpoint_state = State()
@@ -18,17 +19,19 @@ class APIRequest(object):
         self.endpoint_state['endpoints'] = dict()
         super(APIRequest, self).__init__()
     
+    @property
+    def META(self):
+        return self.session_state['meta']
+    
     def get_response_type(self):
-        src = self.session_state['meta']
-        val = src.get('HTTP_ACCEPT', '')
+        val = self.META.get('HTTP_ACCEPT', '')
         media_types = self.site.media_types.keys()
         if not media_types:
             return val
         return mimeparse.best_match(media_types, val) or val
     
     def get_request_type(self):
-        src = self.session_state['meta']
-        val = src.get('CONTENT_TYPE', src.get('HTTP_ACCEPT', ''))
+        val = self.META.get('CONTENT_TYPE', self.META.get('HTTP_ACCEPT', ''))
         media_types = self.site.media_types.keys()
         if not media_types:
             return val

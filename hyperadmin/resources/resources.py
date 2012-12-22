@@ -24,6 +24,11 @@ class BaseResource(BaseEndpoint):
         
         self.register_endpoints()
     
+    @property
+    def resource(self):
+        #endpoints have a resource attribute
+        return self
+    
     def get_app_name(self):
         raise NotImplementedError
     app_name = property(get_app_name)
