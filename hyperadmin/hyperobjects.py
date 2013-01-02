@@ -197,6 +197,9 @@ class Link(object):
         for key, value in kwargs.iteritems():
             setattr(a_clone, key, value)
         return a_clone
+    
+    def __repr__(self):
+        return '<%s LF:%s Prompt:"%s" %s>' % (type(self), self.get_link_factor(), self.prompt, self.get_absolute_url())
 
 class LinkCollection(list):
     def __init__(self, endpoint):

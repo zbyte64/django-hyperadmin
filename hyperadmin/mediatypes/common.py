@@ -16,7 +16,7 @@ class MediaType(object):
     
     @property
     def site(self):
-        return self.api_request.site
+        return self.api_request.get_site()
     
     #TODO
     def handle_redirect(self, link):

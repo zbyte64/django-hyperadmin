@@ -72,7 +72,6 @@ class APIRequest(object):
         media_type = self.get_response_media_type()
         content_type = self.get_request_type()
         return state.generate_response(media_type, content_type, link)
-        return media_type.serialize(request=self.request, content_type=content_type, link=link, state=state)
 
 class HTTPAPIRequest(APIRequest):
     """

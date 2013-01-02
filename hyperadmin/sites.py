@@ -128,6 +128,10 @@ class ResourceSite(BaseEndpoint):
         if not user.is_staff:
             return self.get_login_link(api_request, prompt='Unauthorized', http_status=401)
     
+    def get_media_resource(self):
+        resource = self.applications['-storages'].resource_adaptor['media']
+        return self.get_resource(resource.resource_adaptor)
+    
     def get_related_resource_from_field(self, field):
         #TODO make more dynamic
         from django.forms import FileField
@@ -139,7 +143,7 @@ class ResourceSite(BaseEndpoint):
             if model in self.registry:
                 return self.registry[model]
         if isinstance(field, FileField):
-            return self.applications['-storages'].resource_adaptor['media'].get_upload_link_url()
+            return self.get_media_resource().link_prototypes['upload'].get_url()
         return None
     
     def get_html_type_from_field(self, field):

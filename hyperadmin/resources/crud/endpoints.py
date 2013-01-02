@@ -146,6 +146,9 @@ class CreateEndpoint(Endpoint):
         breadcrumbs = super(CreateEndpoint, self).get_breadcrumbs()
         breadcrumbs.add_link('create', rel='breadcrumb', link_factor='LO')
         return breadcrumbs
+    
+    def get_resource_items(self):
+        return []
 
 class DetailMixin(object):
     def get_object(self):
