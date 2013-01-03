@@ -315,8 +315,11 @@ class Endpoint(BaseEndpoint):
     def get_base_url_name(self):
         return self._parent.get_base_url_name()
     
+    def get_name_suffix(self):
+        return self.name_suffix
+    
     def get_url_name(self):
-        return self.get_base_url_name() + self.name_suffix
+        return self.get_base_url_name() + self.get_name_suffix()
     
     def get_url_suffix(self):
         return self.url_suffix

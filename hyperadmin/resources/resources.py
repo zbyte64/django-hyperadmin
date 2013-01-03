@@ -22,6 +22,7 @@ class BaseResource(BaseEndpoint):
         self.links = LinkCollectionProvider(self)
         super(BaseResource, self).__init__(**kwargs)
         
+        self.link_prototypes = dict()
         self.register_endpoints()
     
     @property
@@ -44,7 +45,10 @@ class BaseResource(BaseEndpoint):
     def register_endpoint(self, endpoint_cls, **kwargs):
         kwargs = self.get_endpoint_kwargs(**kwargs)
         endpoint = endpoint_cls(**kwargs)
-        self.endpoints[endpoint.name_suffix] = endpoint
+        self.endpoints[endpoint.get_name_suffix()] = endpoint
+        
+        for prototype in endpoint.get_link_prototypes().itervalues():
+            self.link_prototypes[prototype.name] = prototype
     
     def get_endpoint_kwargs(self, **kwargs):
         kwargs.setdefault('parent', self)
@@ -58,15 +62,6 @@ class BaseResource(BaseEndpoint):
         (endpoint class, endpoint kwargs)
         """
         return []
-    
-    @property
-    def link_prototypes(self):
-        if not hasattr(self, '_link_prototypes'):
-            self._link_prototypes = dict()
-            for endpoint in self.endpoints.itervalues():
-                for prototype in endpoint.get_link_prototypes().itervalues():
-                    self._link_prototypes[prototype.name] = prototype
-        return self._link_prototypes
     
     def get_urls(self):
         urlpatterns = self.get_extra_urls()
