@@ -334,8 +334,9 @@ class Endpoint(BaseEndpoint):
     def get_main_link_name(self):
         return self.get_link_prototypes()['GET'].name
     
-    def get_resource_item(self, instance):
-        return self.resource.get_resource_item(instance, endpoint=self)
+    def get_resource_item(self, instance, **kwargs):
+        kwargs.setdefault('endpoint', self)
+        return self.resource.get_resource_item(instance, **kwargs)
     
     def get_instances(self):
         return self.resource.get_instances()
