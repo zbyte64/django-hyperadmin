@@ -73,6 +73,21 @@ class APIRequest(object):
         content_type = self.get_request_type()
         return state.generate_response(media_type, content_type, link)
 
+class InternalAPIRequest(APIRequest):
+    """
+    An Internal API Request
+    """
+    def __init__(self, site, path='/', url_args=[], url_kwargs={}, **kwargs):
+        super(InternalAPIRequest, self).__init__(site, path, url_args, url_kwargs)
+        kwargs.setdefault('method', 'GET')
+        kwargs.setdefault('params', {})
+        kwargs.setdefault('payload', {})
+        for key, val in kwargs.iteritems():
+            setattr(self, key, val)
+    
+    def get_full_path(self):
+        return self.path
+
 class HTTPAPIRequest(APIRequest):
     """
     Represents an API Request spawned from a Django HTTP Request
@@ -139,21 +154,11 @@ class HTTPAPIRequest(APIRequest):
                 pass_through_params[src] = request.GET[src]
         return pass_through_params
 
-class NamespaceAPIRequest(APIRequest):
+class NamespaceAPIRequest(InternalAPIRequest):
     def __init__(self, api_request, path='/', url_args=[], url_kwargs={}, **kwargs):
         self.original_api_request = api_request
-        super(NamespaceAPIRequest, self).__init__(api_request.site, path, url_args, url_kwargs)
-        for key, val in kwargs.iteritems():
-            setattr(self, key, val)
+        super(NamespaceAPIRequest, self).__init__(api_request.site, path, url_args, url_kwargs, **kwargs)
         self.session_state.update(api_request.session_state)
-    
-    @property
-    def payload(self):
-        return {}
-    
-    @property
-    def method(self):
-        return 'GET'
     
     def get_full_path(self):
         #TODO
@@ -162,12 +167,6 @@ class NamespaceAPIRequest(APIRequest):
     @property
     def user(self):
         return self.original_api_request.user
-    
-    @property
-    def params(self):
-        if not hasattr(self, '_params'):
-            self._params = dict()
-        return self._params
 
 class Namespace(object):
     """

@@ -8,7 +8,7 @@ from django.core.files.base import ContentFile
 
 from hyperadmin.resources.models.models import ModelResource, InlineModelResource
 from hyperadmin.sites import ResourceSite
-from hyperadmin.apirequests import APIRequest
+from hyperadmin.apirequests import InternalAPIRequest
 
 from common import GenericURLResolver, SuperUserRequestFactory
 
@@ -25,15 +25,6 @@ class UserResource(ModelResource):
     list_filter = ['is_active', 'is_staff', 'is_superuser']
     date_hierarchy = 'date_joined'
     search_fields = ['email', 'username']
-
-class MockAPIRequest(APIRequest):
-    def __init__(self, site, path='/', url_args=[], url_kwargs={}, **kwargs):
-        super(MockAPIRequest, self).__init__(site, path, url_args, url_kwargs)
-        for key, val in kwargs.iteritems():
-            setattr(self, key, val)
-    
-    def get_full_path(self):
-        return self.path
 
 class ResourceTestCase(unittest.TestCase):
     def setUp(self):
@@ -68,7 +59,7 @@ class ResourceTestCase(unittest.TestCase):
         kwargs.setdefault('method', 'GET')
         kwargs.setdefault('payload', {})
         kwargs.setdefault('request', self.factory.get('/'))
-        api_request = MockAPIRequest(**kwargs)
+        api_request = InternalAPIRequest(**kwargs)
         
         api_request.generate_response = MagicMock(return_value=HttpResponse())
         
