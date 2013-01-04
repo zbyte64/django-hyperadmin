@@ -1,11 +1,39 @@
 import os
 
+from django.core.exceptions import ObjectDoesNotExist
+
 from hyperadmin.hyperobjects import Link
 from hyperadmin.resources.crud.crud import CRUDResource
 from hyperadmin.resources.storages.forms import UploadForm, UploadLinkForm
 from hyperadmin.resources.storages.indexes import StorageIndex
 from hyperadmin.resources.storages.endpoints import ListEndpoint, CreateEndpoint, CreateUploadEndpoint, DetailEndpoint, DeleteEndpoint, BoundFile
 
+
+class StorageQuery(object):
+    def __init__(self, storage, path=''):
+        self.storage = storage
+        self.path = path
+    
+    def filter(self, path):
+        if self.path:
+            path = os.path.join(self.path, path)
+        return StorageQuery(self.storage, path)
+    
+    def get_dirs_and_files(self):
+        try:
+            dirs, files = self.storage.listdir(self.path)
+        except NotImplementedError:
+            return [], []
+        if self.path:
+            files = [os.path.join(self.path, filename) for filename in files]
+        return dirs, [BoundFile(self.storage, filename) for filename in files]
+    
+    def get(self, path):
+        if self.path:
+            path = os.path.join(self.path, path)
+        if not self.storage.exists(path):
+            raise ObjectDoesNotExist
+        return BoundFile(self.storage, path)
 
 class StorageResource(CRUDResource):
     #resource_adaptor = storage object
@@ -51,20 +79,11 @@ class StorageResource(CRUDResource):
         ])
         return endpoints
     
-    def get_listing(self, path):
-        try:
-            dirs, files = self.resource_adaptor.listdir(path)
-            if path:
-                files = [os.path.join(path, filename) for filename in files]
-            return dirs, files
-        except NotImplementedError:
-            return [], [] #dirs, files
-    
     def get_indexes(self):
         return {'primary':StorageIndex('primary', self, self.get_index_query('primary'))}
     
     def get_primary_query(self):
-        return self.get_listing
+        return StorageQuery(self.storage)
     
     def get_instances(self):
         '''

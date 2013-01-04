@@ -61,21 +61,13 @@ class CreateUploadEndpoint(Endpoint):
         return {'GET':CreateUploadLinkPrototype(endpoint=self, name='upload'),
                 'POST':CreateUploadLinkPrototype(endpoint=self, name='upload')}
 
-class DetailMixin(object):
-    def get_object(self):
-        if not hasattr(self, 'object'):
-            self.object = BoundFile(self.resource.resource_adaptor, self.kwargs['path'])
-            if not self.object.exists():
-                raise http.Http404
-        return self.object
-
-class DetailEndpoint(DetailMixin, BaseDetailEndpoint):
+class DetailEndpoint(BaseDetailEndpoint):
     url_suffix = r'^(?P<path>.+)/$'
     
     def get_url(self, item):
         return super(BaseDetailEndpoint, self).get_url(path=item.instance.name)
 
-class DeleteEndpoint(DetailMixin, BaseDeleteEndpoint):
+class DeleteEndpoint(BaseDeleteEndpoint):
     url_suffix = r'^(?P<path>.+)/delete/$'
     
     def get_url(self, item):

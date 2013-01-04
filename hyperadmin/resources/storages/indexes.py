@@ -2,6 +2,7 @@ from hyperadmin.indexes import Index
 from hyperadmin.resources.storages.endpoints import BoundFile
 
 from django.core.paginator import Page
+from django.core.exceptions import ObjectDoesNotExist
 
 
 class StoragePaginator(object):
@@ -28,8 +29,8 @@ class StorageIndex(Index):
     
     def populate_state(self):
         self.path = self.state.params.get('path', '')
-        self.dirs, self.files = self.query(self.path)
-        self.instances = [BoundFile(self.storage, file_name) for file_name in self.files]
+        query = self.get_index_query().filter(self.path)
+        self.dirs, self.instances = query.get_dirs_and_files()
     
     def get_filtered_index(self):
         return self.instances
@@ -70,3 +71,4 @@ class StorageIndex(Index):
             link = self.get_link(**kwargs)
             links.append(link)
         return links
+
