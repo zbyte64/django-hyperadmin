@@ -14,9 +14,7 @@ class Link(object):
                  descriptors=None, prompt=None, cu_headers=None, cr_headers=None, on_submit=None, **cl_headers):
         self._url = url
         self._method = str(method).upper() #CM
-        #TODO pass in endpoint state
         self.endpoint = endpoint
-        #self.state = resource.state.get('endpoint_state', resource.state) #TODO endpoint state would be better
         self._form = form
         self.form_class = form_class
         self.form_kwargs = form_kwargs
