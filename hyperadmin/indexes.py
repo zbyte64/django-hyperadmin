@@ -23,6 +23,12 @@ class Index(object):
     def get_index_query(self):
         return self.query
     
+    def get(self, **kwargs):
+        return self.get_index_query().get(**kwargs)
+    
+    def get_resource_item(self, **kwargs):
+        return self.resource.get_resource_item(self.get(**kwargs))
+    
     def get_filtered_index(self):
         active_index = self.get_index_query()
         for a_filter in self.filters:

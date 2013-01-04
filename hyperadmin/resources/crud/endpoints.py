@@ -1,3 +1,6 @@
+from django.core.exceptions import ObjectDoesNotExist
+from django.http import Http404
+
 from hyperadmin.endpoints import LinkPrototype, Endpoint
 
 
@@ -66,20 +69,22 @@ class DeleteLinkPrototype(LinkPrototype):
         instance.delete()
         return self.on_success()
 
-class ListEndpoint(Endpoint):
-    endpoint_class = 'change_list'
-    name_suffix = 'list'
-    url_suffix = r'^$'
+class IndexMixin(object):
     index_name = 'primary'
-    
-    list_prototype = ListLinkPrototype
-    create_prototype = CreateLinkPrototype
     
     def get_index(self):
         if 'index' not in self.state:
             self.state['index'] = self.resource.get_index(self.index_name)
             self.state['index'].populate_state()
         return self.state['index']
+
+class ListEndpoint(IndexMixin, Endpoint):
+    endpoint_class = 'change_list'
+    name_suffix = 'list'
+    url_suffix = r'^$'
+    
+    list_prototype = ListLinkPrototype
+    create_prototype = CreateLinkPrototype
     
     def get_link_prototypes(self):
         return {'GET':self.list_prototype(endpoint=self, name='list'),
@@ -150,14 +155,17 @@ class CreateEndpoint(Endpoint):
     def get_resource_items(self):
         return []
 
-class DetailMixin(object):
+class DetailMixin(IndexMixin):
     def get_object(self):
-        raise NotImplementedError
+        if not hasattr(self, 'object'):
+            try:
+                self.object = self.get_index().get(**self.kwargs)
+            except ObjectDoesNotExist as error:
+                raise Http404(str(error))
+        return self.object
     
     def get_item(self):
-        if not getattr(self, 'object', None):
-            self.object = self.get_object()
-        return self.get_resource_item(self.object)
+        return self.get_resource_item(self.get_object())
     
     def get_common_state_data(self):
         data = super(DetailMixin, self).get_common_state_data()

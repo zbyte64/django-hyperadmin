@@ -4,8 +4,6 @@ from django.utils.decorators import method_decorator
 from django.utils.cache import add_never_cache_headers
 from django.utils.translation import ugettext_lazy as _
 
-import mimeparse
-
 from hyperadmin.hyperobjects import Link
 from hyperadmin.apirequests import HTTPAPIRequest
 
@@ -22,9 +20,6 @@ class ConditionalAccessMixin(object):
         if self.request.META.get('HTTP_IF_MATCH', new_etag) != new_etag:
             raise http.HttpResponse(status=412) # Precondition Failed
         
-    # def dispatch(self, request, *args, **kwargs):
-    #     return super(ConditionalAccessMixin, self).dispatch(request, *args, **kwargs)
-
 class EndpointViewMixin(ConditionalAccessMixin):
     state = None
     global_state = None
@@ -74,13 +69,12 @@ class EndpointViewMixin(ConditionalAccessMixin):
         else:
             response_or_link = handler(api_request)
         if isinstance(response_or_link, Link):
+            #TODO TemplateResponse with a link
             response = self.generate_response(response_or_link)
         else:
             response = response_or_link
         if not self.cacheable:
             add_never_cache_headers(response)
-        if hasattr(response, 'render'):
-            response.render()
         return response
     
     def get_common_state_data(self):
