@@ -2,7 +2,7 @@ from django import forms
 from django.conf.urls.defaults import patterns
 from django.utils.datastructures import SortedDict
 
-from hyperadmin.hyperobjects import Link, ResourceItem, LinkCollectionProvider
+from hyperadmin.hyperobjects import Link, ResourceItem
 from hyperadmin.endpoints import BaseEndpoint
 
 
@@ -19,7 +19,6 @@ class BaseResource(BaseEndpoint):
     
     def __init__(self, **kwargs):
         assert 'resource_adaptor' in kwargs
-        self.links = LinkCollectionProvider(self)
         super(BaseResource, self).__init__(**kwargs)
         
         self.link_prototypes = dict()

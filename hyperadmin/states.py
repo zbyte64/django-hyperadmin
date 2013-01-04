@@ -4,7 +4,7 @@ from django.utils.http import urlencode
 from django.utils.datastructures import MergeDict
 from django.http import QueryDict
 
-from hyperadmin.hyperobjects import LinkCollectionProvider
+from hyperadmin.hyperobjects import LinkCollectionProvider, LinkCollectorMixin
 
 
 class State(MergeDict):
@@ -46,20 +46,27 @@ class EndpointStateLinkCollectionProvider(LinkCollectionProvider):
         self.container['state_links'].setdefault(key, list())
         self.container['state_links'][key].append(link)
 
-class EndpointState(State):
+class EndpointState(LinkCollectorMixin, State):
     """
     Used by resources to determine what links and items are available in the response.
     """
+    link_collector_class = EndpointStateLinkCollectionProvider
+    
     def __init__(self, endpoint, meta, substates=[], data={}):
         self.endpoint = endpoint
         super(EndpointState, self).__init__(substates=substates, data=data)
         self.meta = meta
-        self.links = EndpointStateLinkCollectionProvider(self, self.endpoint.links)
+        self.links = self.get_link_collector()
         
         #nuke previous state links
         self.update({'state_links': {},
                      'extra_get_params':{},
                      'endpoint': self.endpoint,})
+    
+    def get_link_collector_kwargs(self, **kwargs):
+        params = super(EndpointState, self).get_link_collector_kwargs(**kwargs)
+        params['parent'] = self.endpoint.links
+        return params
     
     def get_dictionaries(self):
         return [self.active_dictionary] + self.substates + [self.endpoint.api_request.session_state]

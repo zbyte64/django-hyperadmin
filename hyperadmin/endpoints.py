@@ -1,7 +1,7 @@
 from django.conf.urls.defaults import url
 from django.views.generic import View
 
-from hyperadmin.hyperobjects import Link, LinkCollection, LinkCollectionProvider, ResourceItem
+from hyperadmin.hyperobjects import Link, LinkCollection, LinkCollectorMixin, ResourceItem
 from hyperadmin.states import EndpointState
 from hyperadmin.views import EndpointViewMixin
 
@@ -89,7 +89,7 @@ class LinkPrototype(object):
     def get_url_name(self):
         return self.endpoint.get_url_name()
 
-class BaseEndpoint(EndpointViewMixin, View):
+class BaseEndpoint(LinkCollectorMixin, EndpointViewMixin, View):
     """
     Represents an API Endpoint
     """
@@ -111,6 +111,7 @@ class BaseEndpoint(EndpointViewMixin, View):
     
     def __init__(self, **kwargs):
         self._init_kwargs = kwargs
+        self.links = self.get_link_collector()
         super(BaseEndpoint, self).__init__(**kwargs)
     
     def get_site(self):
@@ -296,10 +297,6 @@ class Endpoint(BaseEndpoint):
     """
     name_suffix = None
     url_suffix = None
-    
-    def __init__(self, **kwargs):
-        self.links = LinkCollectionProvider(self)
-        super(Endpoint, self).__init__(**kwargs)
     
     @property
     def resource(self):

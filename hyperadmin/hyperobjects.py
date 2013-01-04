@@ -273,17 +273,28 @@ class ResourceItemLinkCollectionProvider(LinkCollectionProvider):
     def _get_link_kwargs(self):
         return {'item':self.container}
 
-#CONSIDER, this is more of an endpoint item
-class ResourceItem(object):
+class LinkCollectorMixin(object):
+    link_collector_class = LinkCollectionProvider
+    
+    def get_link_collector_kwargs(self, **kwargs):
+        params = {'container':self}
+        params.update(kwargs)
+        return params
+    
+    def get_link_collector(self, **kwargs):
+        return self.link_collector_class(**self.get_link_collector_kwargs(**kwargs))
+
+class ResourceItem(LinkCollectorMixin):
     '''
     Represents an instance that is bound to a resource
     '''
     form_class = None
+    link_collector_class = ResourceItemLinkCollectionProvider
     
     def __init__(self, endpoint, instance):
         self.endpoint = endpoint
         self.instance = instance
-        self.links = ResourceItemLinkCollectionProvider(self)
+        self.links = self.get_link_collector()
     
     @property
     def resource(self):
