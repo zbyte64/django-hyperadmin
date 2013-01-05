@@ -11,11 +11,10 @@ class Index(object):
     paginator_class = None
     page_var = 'p'
     
-    def __init__(self, name, resource, query):
+    def __init__(self, name, resource):
         self.name = name
         self.resource = resource
         self.filters = list()
-        self.query = query
     
     @property
     def state(self):
@@ -30,7 +29,7 @@ class Index(object):
             a_filter.populate_state()
     
     def get_index_query(self):
-        return self.query
+        return self.resource.get_index_query(self.name)
     
     #TODO detail endpoints to consult this
     #TODO get_item_url and their ilk to be powered by this

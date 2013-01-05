@@ -1,55 +1,83 @@
-from django.core.exceptions import ObjectDoesNotExist
-from django.http import Http404
-
-from hyperadmin.resources.crud.endpoints import ListEndpoint, CreateEndpoint, DetailEndpoint, DeleteEndpoint
+from hyperadmin.resources.crud.endpoints import ListEndpoint, CreateEndpoint, DetailMixin, DetailEndpoint, DeleteEndpoint
 
 
 class InlineModelMixin(object):
     parent_index_name = 'primary'
+    parent_url_param_map = {}
     
     def get_parent_index(self):
+        if not self.api_request:
+            return self.resource.parent.get_index(self.parent_index_name)
         if 'parent_index' not in self.state:
             self.state['parent_index'] = self.resource.parent.get_index(self.parent_index_name)
             self.state['parent_index'].populate_state()
         return self.state['parent_index']
     
+    def get_parent_url_param_map(self):
+        return dict(self.parent_url_param_map)
+    
+    def get_url_suffix_parts(self):
+        param_map = self.get_parent_url_param_map()
+        parts = self.get_parent_index().get_url_params(param_map)
+        parts.append(self.resource.rel_name)
+        return parts
+    
+    def get_url_suffix(self):
+        #CONSIDER: the parent endpoint is both a resource and a detail endpoint of another resource
+        #if we roll the url then we should lookup the details from the parent endpoint/resource
+        parts = self.get_url_suffix_parts()
+        url_suffix = '/'.join(parts)
+        url_suffix = '^%s%s' % (url_suffix, self.url_suffix)
+        return url_suffix
+    
     def get_common_state_data(self):
-        self.common_state['parent'] = self.get_parent_instance()
+        self.common_state['parent'] = self.get_parent_item()
         return super(InlineModelMixin, self).get_common_state_data()
     
     def get_parent_instance(self):
-        if not hasattr(self, '_parent_instance'):
-            #todo pick kwargs based on index params
-            self._parent_instance = self.get_parent_index().get(pk=self.kwargs['pk'])
-        return self._parent_instance
+        if 'parent' in self.common_state:
+            return self.common_state['parent'].instance
+        return self.get_parent_index().get(pk=self.kwargs['pk'])
     
-    def get_queryset(self):
-        return self.resource.get_queryset(self.get_parent_instance())
+    def get_parent_item(self):
+        return self.resource.parent.get_resource_item(self.get_parent_instance())
+    
+    def get_url_params_from_parent(self, item):
+        param_map = self.get_parent_url_param_map()
+        return self.get_parent_index().get_url_params_from_item(item, param_map)
     
     def get_url(self):
-        return self.reverse(self.get_url_name(), pk=self.common_state['parent'].pk)
+        item = self.get_parent_item()
+        params = self.get_url_params_from_parent(item)
+        return self.reverse(self.get_url_name(), **params)
 
-class InlineDetailMixin(InlineModelMixin):
-    def get_object(self):
-        if not hasattr(self, 'object'):
-            queryset = self.get_queryset()
-            try:
-                self.object = queryset.get(pk=self.kwargs['inline_pk'])
-            except ObjectDoesNotExist as error:
-                raise Http404(str(error))
-        return self.object
+class InlineDetailMixin(InlineModelMixin, DetailMixin):
+    url_param_map = {'pk':'inline_pk'}
+    
+    #TODO get_item includes parent in resource item
+    #TODO inline index
+    
+    def get_url_suffix_parts(self):
+        parts = InlineModelMixin.get_url_suffix_parts(self)
+        param_map = self.get_url_param_map()
+        parts.extend(self.get_index().get_url_params(param_map))
+        return parts
     
     def get_url(self, item):
-        return self.reverse(self.get_url_name(), pk=self.common_state['parent'].pk, inline_pk=item.instance.pk)
+        parent_item = self.get_parent_item()
+        params = self.get_url_params_from_parent(parent_item)
+        params.update(self.get_url_params_from_item(item))
+        return self.reverse(self.get_url_name(), **params)
 
 class InlineListEndpoint(InlineModelMixin, ListEndpoint):
-    pass
+    url_suffix = r'/$'
 
 class InlineCreateEndpoint(InlineModelMixin, CreateEndpoint):
     pass
 
 class InlineDetailEndpoint(InlineDetailMixin, DetailEndpoint):
-    url_suffix = r'^(?P<inline_pk>\w+)/$'
+    pass
 
 class InlineDeleteEndpoint(InlineDetailMixin, DeleteEndpoint):
-    url_suffix = r'^(?P<inline_pk>\w+)/delete/$'
+    pass
+

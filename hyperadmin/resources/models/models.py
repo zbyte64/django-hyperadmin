@@ -67,7 +67,7 @@ class BaseModelResource(CRUDResource):
         
         indexes = super(BaseModelResource, self).get_indexes()
         
-        index = ModelIndex('filter', self, self.get_index_query('filter'))
+        index = ModelIndex('filter', self)
         indexes['filter'] = index
         
         if self.list_filter:
@@ -110,7 +110,7 @@ class BaseModelResource(CRUDResource):
         return True #TODO
     
     def get_queryset(self):
-        return self.resource_adaptor.objects.all()
+        queryset = self.resource_adaptor.objects.all()
         if not self.has_change_permission():
             queryset = queryset.none()
         return queryset
@@ -202,8 +202,7 @@ class ModelResource(BaseModelResource):
         urlpatterns = super(ModelResource, self).get_urls()
         for inline in self.inline_instances:
             urlpatterns += patterns('',
-                url(r'^(?P<pk>\w+)/%s/' % inline.rel_name,
-                    include(inline.urls),),
+                url('', include(inline.urls))
             )
         return urlpatterns
     
@@ -216,7 +215,7 @@ class ModelResource(BaseModelResource):
             
             assert inline.api_request
             
-            namespace = Namespace(name=name, endpoint=inline, state_data={'parent':item.instance})
+            namespace = Namespace(name=name, endpoint=inline, state_data={'parent':item})
             namespaces[name] = namespace
         return namespaces
 
@@ -245,7 +244,7 @@ class InlineModelResource(BaseModelResource):
         return queryset
     
     def get_primary_query(self, **kwargs):
-        return self.get_queryset(parent=self.state['parent'])
+        return self.get_queryset(parent=self.state['parent'].instance)
     
     def get_changelist(self, **kwargs):
         return None
@@ -271,7 +270,7 @@ class InlineModelResource(BaseModelResource):
     
     def get_breadcrumbs(self):
         breadcrumbs = self.parent.get_breadcrumbs()
-        parent_item = self.parent.get_resource_item(self.state['parent'])
+        parent_item = self.state['parent']
         breadcrumbs.append(self.parent.get_item_breadcrumb(parent_item))
         breadcrumbs.append(self.get_breadcrumb())
         if self.state.item:
@@ -289,7 +288,7 @@ class InlineModelResource(BaseModelResource):
             
             def save(self, commit=True):
                 instance = super(AdminForm, self).save(commit=False)
-                setattr(instance, resource.fk.name, self.state['parent'])
+                setattr(instance, resource.fk.name, self.state['parent'].instance)
                 if commit:
                     instance.save()
                 return instance

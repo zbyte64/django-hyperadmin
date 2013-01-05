@@ -59,7 +59,7 @@ class CRUDResource(BaseResource):
         return True
     
     def get_indexes(self):
-        return {'primary':PrimaryIndex('primary', self, self.get_index_query('primary'))}
+        return {'primary':PrimaryIndex('primary', self)}
     
     def get_index_query(self, name):
         return self.get_primary_query()

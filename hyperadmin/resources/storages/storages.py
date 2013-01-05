@@ -80,7 +80,7 @@ class StorageResource(CRUDResource):
         return endpoints
     
     def get_indexes(self):
-        return {'primary':StorageIndex('primary', self, self.get_index_query('primary'))}
+        return {'primary':StorageIndex('primary', self)}
     
     def get_primary_query(self):
         return StorageQuery(self.storage)

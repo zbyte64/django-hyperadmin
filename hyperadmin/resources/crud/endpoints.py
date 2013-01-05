@@ -191,6 +191,10 @@ class DetailMixin(IndexMixin):
     def get_url_param_map(self):
         return dict(self.url_param_map)
     
+    def get_url_params_from_item(self, item):
+        param_map = self.get_url_param_map()
+        return self.get_index().get_url_params_from_item(item, param_map)
+    
     def get_url_suffix(self):
         param_map = self.get_url_param_map()
         url_suffix = '/'.join(self.get_index().get_url_params(param_map))
@@ -198,8 +202,7 @@ class DetailMixin(IndexMixin):
         return url_suffix
     
     def get_url(self, item):
-        param_map = self.get_url_param_map()
-        params = self.get_index().get_url_params_from_item(item, param_map)
+        params = self.get_url_params_from_item(item)
         return super(DetailMixin, self).get_url(**params)
 
 class DetailEndpoint(DetailMixin, Endpoint):
