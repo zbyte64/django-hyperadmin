@@ -1,4 +1,13 @@
+#TODO pagination should be a mixin
 class Index(object):
+    """
+    Encapsulates logic for doing lookups & filters on a resource
+    
+    * provide links for filtering
+    * method for item lookup
+    * url params for item lookup
+    
+    """
     paginator_class = None
     page_var = 'p'
     
@@ -22,6 +31,19 @@ class Index(object):
     
     def get_index_query(self):
         return self.query
+    
+    #TODO detail endpoints to consult this
+    #TODO get_item_url and their ilk to be powered by this
+    def get_url_params(self, param_map={}):
+        """
+        returns url parts for use in the url regexp for conducting item lookups
+        """
+        param_map.setdefault('pk', 'pk')
+        return [r'(?P<{pk}>\d+)'.format(param_map)]
+    
+    def get_url_params_from_item(self, item, param_map={}):
+        param_map.setdefault('pk', 'pk')
+        return {param_map['pk']: item.instance.pk}
     
     def get(self, **kwargs):
         return self.get_index_query().get(**kwargs)
