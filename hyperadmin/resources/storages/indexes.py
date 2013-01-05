@@ -27,6 +27,17 @@ class StorageIndex(Index):
     def storage(self):
         return self.resource.storage
     
+    def get_url_params(self, param_map={}):
+        """
+        returns url parts for use in the url regexp for conducting item lookups
+        """
+        param_map.setdefault('path', 'path')
+        return [r'(?P<{path}>.+)'.format(**param_map)]
+    
+    def get_url_params_from_item(self, item, param_map={}):
+        param_map.setdefault('path', 'path')
+        return {param_map['path']: item.instance.name}
+    
     def populate_state(self):
         self.path = self.state.params.get('path', '')
         query = self.get_index_query().filter(self.path)

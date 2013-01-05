@@ -1,5 +1,5 @@
 from hyperadmin.endpoints import LinkPrototype, Endpoint
-from hyperadmin.resources.crud.endpoints import ListEndpoint as BaseListEndpoint, CreateEndpoint, DetailEndpoint as BaseDetailEndpoint, DeleteEndpoint as BaseDeleteEndpoint
+from hyperadmin.resources.crud.endpoints import ListEndpoint as BaseListEndpoint, CreateEndpoint, DetailEndpoint, DeleteEndpoint
 
 
 class BoundFile(object):
@@ -49,7 +49,8 @@ class CreateUploadLinkPrototype(LinkPrototype):
 
 class ListEndpoint(BaseListEndpoint):
     def get_outbound_links(self):
-        links = self.create_link_collection()
+        #links = self.create_link_collection()
+        links = super(ListEndpoint, self).get_outbound_links()
         links.add_link('upload', link_factor='LO')
         return links
 
@@ -67,16 +68,3 @@ class CreateUploadEndpoint(Endpoint):
     def get_link_prototypes_per_method(self):
         return {'GET': self.link_prototypes['upload'],
                 'POST': self.link_prototypes['upload'],}
-
-class DetailEndpoint(BaseDetailEndpoint):
-    url_suffix = r'^(?P<path>.+)/$'
-    
-    def get_url(self, item):
-        return super(BaseDetailEndpoint, self).get_url(path=item.instance.name)
-
-class DeleteEndpoint(BaseDeleteEndpoint):
-    url_suffix = r'^(?P<path>.+)/delete/$'
-    
-    def get_url(self, item):
-        return super(BaseDeleteEndpoint, self).get_url(path=item.instance.name)
-

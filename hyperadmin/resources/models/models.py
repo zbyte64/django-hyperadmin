@@ -110,7 +110,7 @@ class BaseModelResource(CRUDResource):
         return True #TODO
     
     def get_queryset(self):
-        queryset = self.resource_adaptor.objects.all()
+        return self.resource_adaptor.objects.all()
         if not self.has_change_permission():
             queryset = queryset.none()
         return queryset

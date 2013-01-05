@@ -73,10 +73,13 @@ class IndexMixin(object):
     index_name = 'primary'
     
     def get_index(self):
-        if 'index' not in self.state:
-            self.state['index'] = self.resource.get_index(self.index_name)
-            self.state['index'].populate_state()
-        return self.state['index']
+        if self.api_request:
+            if 'index' not in self.state:
+                self.state['index'] = self.resource.get_index(self.index_name)
+                self.state['index'].populate_state()
+            return self.state['index']
+        else:
+            return self.resource.get_index(self.index_name)
 
 class ListEndpoint(IndexMixin, Endpoint):
     endpoint_class = 'change_list'
@@ -167,6 +170,8 @@ class CreateEndpoint(Endpoint):
         return []
 
 class DetailMixin(IndexMixin):
+    url_param_map = {}
+    
     def get_object(self):
         if not hasattr(self, 'object'):
             try:
@@ -182,14 +187,29 @@ class DetailMixin(IndexMixin):
         data = super(DetailMixin, self).get_common_state_data()
         data['item'] = self.get_item()
         return data
+    
+    def get_url_param_map(self):
+        return dict(self.url_param_map)
+    
+    def get_url_suffix(self):
+        param_map = self.get_url_param_map()
+        url_suffix = '/'.join(self.get_index().get_url_params(param_map))
+        url_suffix = '^%s%s' % (url_suffix, self.url_suffix)
+        return url_suffix
+    
+    def get_url(self, item):
+        param_map = self.get_url_param_map()
+        params = self.get_index().get_url_params_from_item(item, param_map)
+        return super(DetailMixin, self).get_url(**params)
 
 class DetailEndpoint(DetailMixin, Endpoint):
     endpoint_class = 'change_form'
     name_suffix = 'detail'
-    url_suffix = r'^(?P<pk>\w+)/$'
+    url_suffix = r'/$'
     
     update_prototype = UpdateLinkPrototype
     delete_prototype = DeleteLinkPrototype
+    
     
     def get_link_prototypes(self):
         return [
@@ -209,9 +229,6 @@ class DetailEndpoint(DetailMixin, Endpoint):
         links.add_link('delete', item=item, link_factor='LO')
         return links
     
-    def get_url(self, item):
-        return super(DetailEndpoint, self).get_url(pk=item.instance.pk)
-    
     def get_breadcrumbs(self):
         breadcrumbs = super(DetailEndpoint, self).get_breadcrumbs()
         breadcrumbs.add_link('update', item=self.common_state.item, rel='breadcrumb', link_factor='LO')
@@ -220,7 +237,7 @@ class DetailEndpoint(DetailMixin, Endpoint):
 class DeleteEndpoint(DetailMixin, Endpoint):
     endpoint_class = 'delete_confirmation'
     name_suffix = 'delete'
-    url_suffix = r'^(?P<pk>\w+)/delete/$'
+    url_suffix = r'/delete/$'
     
     delete_prototype = DeleteLinkPrototype
     
@@ -232,9 +249,6 @@ class DeleteEndpoint(DetailMixin, Endpoint):
     def get_link_prototypes_per_method(self):
         return {'GET': self.link_prototypes['delete'],
                 'POST': self.link_prototypes['delete'],}
-    
-    def get_url(self, item):
-        return super(DeleteEndpoint, self).get_url(pk=item.instance.pk)
     
     def get_breadcrumbs(self):
         breadcrumbs = super(DeleteEndpoint, self).get_breadcrumbs()

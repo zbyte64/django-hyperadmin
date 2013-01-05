@@ -8,11 +8,14 @@ class BaseFilter(object):
     def __init__(self, index):
         self.index = index
         self.resource = index.resource
-        self.state = index.state
         if self.title is None:
             raise ImproperlyConfigured(
                 "The filter '%s' does not specify "
                 "a 'title'." % self.__class__.__name__)
+    
+    @property
+    def state(self):
+        return self.resource.state
     
     def make_link(self, **kwargs):
         return self.index.get_link(**kwargs)

@@ -39,7 +39,7 @@ class Index(object):
         returns url parts for use in the url regexp for conducting item lookups
         """
         param_map.setdefault('pk', 'pk')
-        return [r'(?P<{pk}>\d+)'.format(param_map)]
+        return [r'(?P<{pk}>\d+)'.format(**param_map)]
     
     def get_url_params_from_item(self, item, param_map={}):
         param_map.setdefault('pk', 'pk')
