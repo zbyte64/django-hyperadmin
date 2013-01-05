@@ -112,6 +112,7 @@ class BaseEndpoint(LinkCollectorMixin, EndpointViewMixin, View):
     def __init__(self, **kwargs):
         self._init_kwargs = kwargs
         self.links = self.get_link_collector()
+        self.link_prototypes = dict()
         super(BaseEndpoint, self).__init__(**kwargs)
     
     def get_site(self):
@@ -203,6 +204,26 @@ class BaseEndpoint(LinkCollectorMixin, EndpointViewMixin, View):
         return LinkCollection(endpoint=self)
     
     #link_prototypes
+    def get_link_prototypes(self):
+        """
+        return a list of tuples containing link prototype class and kwargs
+        """
+        return []
+    
+    def register_link_prototypes(self):
+        for proto, kwargs in self.get_link_prototypes():
+            self.register_link_prototype(proto, **kwargs)
+    
+    def get_link_prototype_kwargs(self, **kwargs):
+        params = {'endpoint':self}
+        params.update(kwargs)
+        return params
+    
+    def register_link_prototype(self, klass, **kwargs):
+        kwargs = self.get_link_prototype_kwargs(**kwargs)
+        proto = klass(**kwargs)
+        self.link_prototypes[proto.name] = proto
+        return proto
     
     def get_view(self, **kwargs):
         kwargs.update(self._init_kwargs)
@@ -298,13 +319,22 @@ class Endpoint(BaseEndpoint):
     name_suffix = None
     url_suffix = None
     
+    def __init__(self, **kwargs):
+        super(Endpoint, self).__init__(**kwargs)
+        self.register_link_prototypes()
+    
     @property
     def resource(self):
         return self.parent
     
-    @property
-    def link_prototypes(self):
-        return self.resource.link_prototypes
+    def get_link_prototypes_per_method(self):
+        """
+        return a dictionary where the keys are the HTTP method and the value in the link prototype
+        """
+        return {}
+    
+    def create_link_collection(self):
+        return LinkCollection(endpoint=self.resource)
     
     def get_view_kwargs(self):
         return self.resource.get_view_kwargs()
@@ -325,14 +355,8 @@ class Endpoint(BaseEndpoint):
         view = self.get_view()
         return url(self.get_url_suffix(), view, name=self.get_url_name(),)
     
-    def get_link_prototypes(self):
-        """
-        return a dictionary of link prototypes where the key is the accepted HTTP Method
-        """
-        return {}
-    
     def get_main_link_name(self):
-        return self.get_link_prototypes()['GET'].name
+        return self.get_link_prototypes_per_method()['GET'].name
     
     def get_resource_item(self, instance, **kwargs):
         kwargs.setdefault('endpoint', self)

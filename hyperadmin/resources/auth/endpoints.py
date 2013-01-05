@@ -60,7 +60,7 @@ class LogoutLinkPrototype(LinkPrototype):
         return self.on_success()
     
     def on_success(self):
-        return self.endpoint.link_prototypes['login'].get_link()
+        return self.endpoint.resource.link_prototypes['login'].get_link()
 
 
 class AuthMixin(object):
@@ -77,10 +77,19 @@ class LoginEndpoint(AuthMixin, Endpoint):
     name_suffix = 'login'
     url_suffix = r'^$'
     
+    login_prototype = LoginLinkPrototype
+    logout_prototype = LogoutLinkPrototype
+    
     def get_link_prototypes(self):
-        return {'GET':LoginLinkPrototype(endpoint=self, name='login'),
-                'POST':LoginLinkPrototype(endpoint=self, name='login'),
-                'DELETE':LogoutLinkPrototype(endpoint=self, name='rest-logout', link_kwargs={'method':'DELETE'}),}
+        return [
+            (self.login_prototype, {'name':'login'}),
+            (self.logout_prototype, {'name':'rest-logout', 'link_kwargs':{'method':'DELETE'}}),
+        ]
+    
+    def get_link_prototypes_per_method(self):
+        return {'GET': self.link_prototypes['login'],
+                'POST': self.link_prototypes['login'],
+                'DELETE': self.link_prototypes['rest-logout'],}
     
     def get_outbound_links(self):
         links = self.create_link_collection()
@@ -91,7 +100,13 @@ class LogoutEndpoint(AuthMixin, Endpoint):
     name_suffix = 'logout'
     url_suffix = r'^logout/$'
     
+    logout_prototype = LogoutLinkPrototype
+    
     def get_link_prototypes(self):
-        return {'GET':LogoutLinkPrototype(endpoint=self, name='logout'),
-                'POST':LogoutLinkPrototype(endpoint=self, name='logout'),}
-
+        return [
+            (self.logout_prototype, {'name':'logout'}),
+        ]
+    
+    def get_link_prototypes_per_method(self):
+        return {'GET': self.link_prototypes['logout'],
+                'POST': self.link_prototypes['logout'],}

@@ -91,7 +91,7 @@ class EndpointViewMixin(ConditionalAccessMixin):
         pass
     
     def handle_link_submission(self, api_request):
-        prototypes = self.get_link_prototypes()
+        prototypes = self.get_link_prototypes_per_method()
         method = api_request.method.upper()
         if method in prototypes:
             proto = prototypes[method]

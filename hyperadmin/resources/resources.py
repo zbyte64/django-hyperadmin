@@ -21,7 +21,6 @@ class BaseResource(BaseEndpoint):
         assert 'resource_adaptor' in kwargs
         super(BaseResource, self).__init__(**kwargs)
         
-        self.link_prototypes = dict()
         self.register_endpoints()
     
     @property
@@ -45,9 +44,7 @@ class BaseResource(BaseEndpoint):
         kwargs = self.get_endpoint_kwargs(**kwargs)
         endpoint = endpoint_cls(**kwargs)
         self.endpoints[endpoint.get_name_suffix()] = endpoint
-        
-        for prototype in endpoint.get_link_prototypes().itervalues():
-            self.link_prototypes[prototype.name] = prototype
+        self.link_prototypes.update(endpoint.link_prototypes)
     
     def get_endpoint_kwargs(self, **kwargs):
         kwargs.setdefault('parent', self)

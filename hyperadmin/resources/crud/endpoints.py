@@ -87,8 +87,14 @@ class ListEndpoint(IndexMixin, Endpoint):
     create_prototype = CreateLinkPrototype
     
     def get_link_prototypes(self):
-        return {'GET':self.list_prototype(endpoint=self, name='list'),
-                'POST':self.create_prototype(endpoint=self, name='rest-create'), }
+        return [
+            (self.list_prototype, {'name':'list'}),
+            (self.create_prototype, {'name':'rest-create'}),
+        ]
+    
+    def get_link_prototypes_per_method(self):
+        return {'GET': self.link_prototypes['list'],
+                'POST': self.link_prototypes['rest-create']}
     
     def get_outbound_links(self):
         links = self.create_link_collection()
@@ -144,8 +150,13 @@ class CreateEndpoint(Endpoint):
     create_prototype = CreateLinkPrototype
     
     def get_link_prototypes(self):
-        return {'GET':self.create_prototype(endpoint=self, name='create'),
-                'POST':self.create_prototype(endpoint=self, name='create'),}
+        return [
+            (self.create_prototype, {'name':'create'}),
+        ]
+    
+    def get_link_prototypes_per_method(self):
+        return {'GET': self.link_prototypes['create'],
+                'POST': self.link_prototypes['create']}
     
     def get_breadcrumbs(self):
         breadcrumbs = super(CreateEndpoint, self).get_breadcrumbs()
@@ -181,10 +192,17 @@ class DetailEndpoint(DetailMixin, Endpoint):
     delete_prototype = DeleteLinkPrototype
     
     def get_link_prototypes(self):
-        return {'GET':self.update_prototype(endpoint=self, name='update'),
-                'POST':self.update_prototype(endpoint=self, name='update'),
-                'PUT':self.update_prototype(endpoint=self, name='rest-update', link_kwargs={'method':'PUT'}),
-                'DELETE':self.delete_prototype(endpoint=self, name='rest-delete', link_kwargs={'method':'DELETE'}),}
+        return [
+            (self.update_prototype, {'name':'update'}),
+            (self.update_prototype, {'name':'rest-update', 'link_kwargs':{'method':'PUT'}}),
+            (self.delete_prototype, {'name':'rest-delete', 'link_kwargs':{'method':'DELETE'}}),
+        ]
+    
+    def get_link_prototypes_per_method(self):
+        return {'GET': self.link_prototypes['update'],
+                'POST': self.link_prototypes['update'],
+                'PUT': self.link_prototypes['rest-update'],
+                'DELETE': self.link_prototypes['rest-delete'],}
     
     def get_item_outbound_links(self, item):
         links = self.create_link_collection()
@@ -207,8 +225,13 @@ class DeleteEndpoint(DetailMixin, Endpoint):
     delete_prototype = DeleteLinkPrototype
     
     def get_link_prototypes(self):
-        return {'GET':self.delete_prototype(endpoint=self, name='delete'),
-                'POST':self.delete_prototype(endpoint=self, name='delete'),}
+        return [
+            (self.delete_prototype, {'name':'delete'}),
+        ]
+    
+    def get_link_prototypes_per_method(self):
+        return {'GET': self.link_prototypes['delete'],
+                'POST': self.link_prototypes['delete'],}
     
     def get_url(self, item):
         return super(DeleteEndpoint, self).get_url(pk=item.instance.pk)
