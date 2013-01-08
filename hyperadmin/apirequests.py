@@ -17,6 +17,7 @@ class APIRequest(object):
         self.endpoint_state = State()
         self.endpoint_state['resources'] = dict()
         self.endpoint_state['endpoints'] = dict()
+        self.endpoint_state['link_prototypes'] = dict()
         super(APIRequest, self).__init__()
     
     @property
@@ -54,18 +55,50 @@ class APIRequest(object):
     def get_resource(self, urlname):
         if urlname not in self.endpoint_state['resources']:
             resource = self.site.get_resource_from_urlname(urlname)
-            self.endpoint_state['resources'][urlname] = resource.fork(api_request=self)
+            if resource is None:
+                raise KeyError, urlname
+            bound_resource = resource.fork(api_request=self)
         return self.endpoint_state['resources'][urlname]
+    
+    def record_resource(self, resource):
+        assert resource.api_request == self
+        urlname = resource.get_url_name()
+        self.endpoint_state['resources'][urlname] = resource
+        #if urlname not in self.endpoint_state['link_prototypes']:
+        #    self.endpoint_state['link_prototypes'][urlname] = resource
+        
+        #useful for inline resources
+        if urlname not in self.site.resources_by_urlname:
+            self.site.resources_by_urlname[urlname] = resource
     
     def get_endpoint(self, urlname):
         if urlname not in self.endpoint_state['endpoints']:
             endpoint = self.site.get_endpoint_from_urlname(urlname)
-            self.endpoint_state['endpoints'][urlname] = endpoint.fork(api_request=self)
+            if endpoint is None:
+                raise KeyError, urlname
+            bound_endpoint = endpoint.fork(api_request=self)
+            #fork => __init__ => post_register => record_endpoint
         return self.endpoint_state['endpoints'][urlname]
+    
+    def record_endpoint(self, endpoint):
+        assert endpoint.api_request == self
+        urlname = endpoint.get_url_name()
+        self.endpoint_state['endpoints'][urlname] = endpoint
+        #if urlname not in self.endpoint_state['link_prototypes']:
+        #    self.endpoint_state['link_prototypes'][urlname] = endpoint
+    
+    def get_link_prototypes(self, endpoint):
+        urlname = endpoint.get_url_name()
+        if urlname not in self.endpoint_state['link_prototypes']:
+            link_prototypes = endpoint.create_link_prototypes()
+            self.endpoint_state['link_prototypes'][urlname] = link_prototypes
+        return self.endpoint_state['link_prototypes'][urlname]
     
     def get_site(self):
         if 'site' not in self.endpoint_state:
-            self.endpoint_state['site'] = self.site.fork(api_request=self)
+            bound_site = self.site.fork(api_request=self)
+            self.endpoint_state['site'] = bound_site
+            bound_site.post_register()
         return self.endpoint_state['site']
     
     def generate_response(self, link, state):

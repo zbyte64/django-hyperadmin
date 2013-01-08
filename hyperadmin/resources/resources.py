@@ -20,8 +20,12 @@ class BaseResource(BaseEndpoint):
     def __init__(self, **kwargs):
         assert 'resource_adaptor' in kwargs
         super(BaseResource, self).__init__(**kwargs)
+    
+    def post_register(self):
+        if self.api_request:
+            self.api_request.record_resource(self)
         
-        self.register_endpoints()
+        super(BaseResource, self).post_register()
     
     @property
     def resource(self):
@@ -33,7 +37,17 @@ class BaseResource(BaseEndpoint):
     app_name = property(get_app_name)
     
     def get_base_url_name(self):
-        return self.app_name
+        return self.app_name + '_'
+    
+    def create_link_prototypes(self):
+        link_prototypes = super(BaseResource, self).create_link_prototypes()
+        
+        self.register_endpoints()
+        
+        for endpoint in self.endpoints.itervalues():
+            link_prototypes.update(endpoint.link_prototypes)
+        
+        return link_prototypes
     
     def register_endpoints(self):
         self.endpoints = SortedDict()
@@ -44,7 +58,6 @@ class BaseResource(BaseEndpoint):
         kwargs = self.get_endpoint_kwargs(**kwargs)
         endpoint = endpoint_cls(**kwargs)
         self.endpoints[endpoint.get_name_suffix()] = endpoint
-        self.link_prototypes.update(endpoint.link_prototypes)
     
     def get_endpoint_kwargs(self, **kwargs):
         kwargs.setdefault('parent', self)
@@ -109,20 +122,22 @@ class BaseResource(BaseEndpoint):
         return None
     
     def get_url_name(self):
-        return self.get_main_link_prototype().get_url_name()
+        return self.get_base_url_name() + 'resource'
     
     def get_main_link_name(self):
         return 'list'
     
     def get_breadcrumb(self):
-        return self.get_link(rel='breadcrumb', link_factor='LO')
+        bread = self.create_link_collection()
+        bread.add_link('list', rel='breadcrumb', link_factor='LO', prompt=self.get_prompt())
+        return bread
     
     def get_breadcrumbs(self):
         if self.parent:
             breadcrumbs = self.parent.get_breadcrumbs()
         else:
             breadcrumbs = self.create_link_collection()
-        breadcrumbs.append(self.get_breadcrumb())
+        breadcrumbs.extend(self.get_breadcrumb())
         return breadcrumbs
     
     def get_paginator_kwargs(self):

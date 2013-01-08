@@ -19,10 +19,10 @@ class SiteResource(BaseResource):
         return self.site.auth_resource
     
     def get_prompt(self):
-        return self.site.name
+        return self._site.name
     
     def get_app_name(self):
-        return self.site.name
+        return self._site.name
     app_name = property(get_app_name)
     
     def get_view_endpoints(self):

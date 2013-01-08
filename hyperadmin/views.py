@@ -41,7 +41,8 @@ class EndpointViewMixin(ConditionalAccessMixin):
         api_request.populate_session_data_from_request(request)
         if self.global_state is not None:
             api_request.session_state.update(self.global_state)
-        return self.dispatch_api(api_request)
+        endpoint = api_request.get_endpoint(self.get_url_name())
+        return endpoint.dispatch_api(api_request)
     
     def dispatch_api(self, api_request):
         if api_request.method.lower() in self.http_method_names:
@@ -108,4 +109,4 @@ class EndpointViewMixin(ConditionalAccessMixin):
                 return link
             else:
                 return http.HttpResponseForbidden(_(u"You may not access this endpoint"))
-        return http.HtppResponseBadRequest(_(u"Method %s is not allowed") % method)
+        return http.HttpResponseBadRequest(_(u"Method %s is not allowed") % method)

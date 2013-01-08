@@ -112,8 +112,12 @@ class BaseEndpoint(LinkCollectorMixin, EndpointViewMixin, View):
     def __init__(self, **kwargs):
         self._init_kwargs = kwargs
         self.links = self.get_link_collector()
-        self.link_prototypes = dict()
         super(BaseEndpoint, self).__init__(**kwargs)
+        
+        self.post_register()
+    
+    def post_register(self):
+        self.register_link_prototypes()
     
     def get_site(self):
         if self.api_request:
@@ -211,18 +215,26 @@ class BaseEndpoint(LinkCollectorMixin, EndpointViewMixin, View):
         return []
     
     def register_link_prototypes(self):
-        for proto, kwargs in self.get_link_prototypes():
-            self.register_link_prototype(proto, **kwargs)
+        if self.api_request:
+            self.link_prototypes = self.api_request.get_link_prototypes(self)
+        else:
+            self.link_prototypes = self.create_link_prototypes()
+    
+    def create_link_prototypes(self):
+        link_prototypes = dict()
+        for proto_klass, kwargs in self.get_link_prototypes():
+            proto = self.create_link_prototype(proto_klass, **kwargs)
+            link_prototypes[proto.name] = proto
+        return link_prototypes
     
     def get_link_prototype_kwargs(self, **kwargs):
         params = {'endpoint':self}
         params.update(kwargs)
         return params
     
-    def register_link_prototype(self, klass, **kwargs):
+    def create_link_prototype(self, klass, **kwargs):
         kwargs = self.get_link_prototype_kwargs(**kwargs)
         proto = klass(**kwargs)
-        self.link_prototypes[proto.name] = proto
         return proto
     
     def get_view(self, **kwargs):
@@ -319,9 +331,10 @@ class Endpoint(BaseEndpoint):
     name_suffix = None
     url_suffix = None
     
-    def __init__(self, **kwargs):
-        super(Endpoint, self).__init__(**kwargs)
-        self.register_link_prototypes()
+    def post_register(self):
+        if self.api_request:
+            self.api_request.record_endpoint(self)
+        super(Endpoint, self).post_register()
     
     @property
     def resource(self):

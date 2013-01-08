@@ -37,10 +37,20 @@ class ResourceSite(BaseEndpoint):
     def __init__(self, **kwargs):
         self.applications = Registry(self)
         self.registry = Registry(self)
+        self.resources_by_urlname = dict()#Registry(self)
         self.media_types = dict()
         super(ResourceSite, self).__init__(**kwargs)
+    
+    def get_url_name(self):
+        return None
+    
+    def post_register(self):
         self.site_resource = self.site_resource_class(**self.get_resource_kwargs())
         self.auth_resource = self.auth_resource_class(**self.get_resource_kwargs())
+        
+        self.resources_by_urlname[self.site_resource.get_url_name()] = self.site_resource
+        self.resources_by_urlname[self.auth_resource.get_url_name()] = self.auth_resource
+        super(ResourceSite, self).post_register()
     
     def register(self, model_or_iterable, admin_class, **options):
         if isinstance(model_or_iterable, collections.Iterable):
@@ -56,12 +66,14 @@ class ResourceSite(BaseEndpoint):
         resource._init_kwargs['parent'] = resource.parent
         self.applications[app_name].register_resource(resource)
         self.registry[model] = resource
+        self.resources_by_urlname[resource.get_url_name()] = resource
         return resource
     
     def fork(self, **kwargs):
         ret = super(ResourceSite, self).fork(**kwargs)
         ret.applications.update(self.applications)
         ret.registry.update(self.registry)
+        ret.resources_by_urlname.update(self.resources_by_urlname)
         return ret
     
     def get_resource_kwargs(self, **kwargs):
@@ -84,6 +96,7 @@ class ResourceSite(BaseEndpoint):
             kwargs = self.get_application_resource_kwargs(app_name=app_name, **options)
             app_resource = app_class(**kwargs)
             self.applications[app_name] = app_resource
+            self.resources_by_urlname[app_resource.get_url_name()] = app_resource
         return self.applications[app_name]
     
     def register_media_type(self, media_type, media_type_handler):
@@ -176,7 +189,7 @@ class ResourceSite(BaseEndpoint):
         return media_type.serialize(request=request, content_type=content_type, link=link, state=state)
     
     def get_resource_from_urlname(self, urlname):
-        return self.get_endpoint_from_urlname(urlname).resource
+        return self.resources_by_urlname.get(urlname, None)
     
     def get_endpoint_from_urlname(self, urlname):
         urlconf_module, app_name, namespace = self.urls

@@ -229,12 +229,14 @@ class InlineModelResource(BaseModelResource):
         kwargs['resource_adaptor'] = self.model
         kwargs['parent'] = parent
         super(InlineModelResource, self).__init__(**kwargs)
-        
+    
+    def post_register(self):
         from django.db.models.fields.related import RelatedObject
         from django.forms.models import _get_foreign_key
         self.fk = _get_foreign_key(self._parent.resource_adaptor, self.model, self.fk_name)
         if self.rel_name is None:
             self.rel_name = RelatedObject(self.fk.rel.to, self.model, self.fk).get_accessor_name()
+        super(InlineModelResource, self).post_register()
     
     def get_queryset(self, parent):
         queryset = self.resource_adaptor.objects.all()
@@ -245,9 +247,6 @@ class InlineModelResource(BaseModelResource):
     
     def get_primary_query(self, **kwargs):
         return self.get_queryset(parent=self.state['parent'].instance)
-    
-    def get_changelist(self, **kwargs):
-        return None
     
     def get_base_url_name(self):
         return '%s_%s_%s_' % (self.parent.app_name, self.parent.resource_name, self.rel_name)
