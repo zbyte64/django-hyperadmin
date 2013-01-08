@@ -122,8 +122,9 @@ class ListEndpoint(IndexMixin, Endpoint):
         page = index.get_page()
         return page.object_list
     
-    def get_resource_item(self, instance):
-        return self.resource.get_list_resource_item(instance, endpoint=self)
+    def get_resource_item(self, instance, **kwargs):
+        kwargs.setdefault('endpoint', self)
+        return self.resource.get_list_resource_item(instance, **kwargs)
     
     def get_meta(self):
         resource_item = self.resource.get_list_resource_item(instance=None)

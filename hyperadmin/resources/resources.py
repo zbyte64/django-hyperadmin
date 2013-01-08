@@ -118,6 +118,9 @@ class BaseResource(BaseEndpoint):
     def get_absolute_url(self):
         return self.get_url()
     
+    def get_url(self, **kwargs):
+        return self.get_main_link_prototype().get_url(**kwargs)
+    
     def get_resource_link_item(self):
         return None
     

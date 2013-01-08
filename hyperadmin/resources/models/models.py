@@ -236,6 +236,7 @@ class InlineModelResource(BaseModelResource):
         self.fk = _get_foreign_key(self._parent.resource_adaptor, self.model, self.fk_name)
         if self.rel_name is None:
             self.rel_name = RelatedObject(self.fk.rel.to, self.model, self.fk).get_accessor_name()
+        self._site.record_resource(self)
         super(InlineModelResource, self).post_register()
     
     def get_queryset(self, parent):

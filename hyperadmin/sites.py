@@ -47,9 +47,9 @@ class ResourceSite(BaseEndpoint):
     def post_register(self):
         self.site_resource = self.site_resource_class(**self.get_resource_kwargs())
         self.auth_resource = self.auth_resource_class(**self.get_resource_kwargs())
+        self.record_resource(self.site_resource)
+        self.record_resource(self.auth_resource)
         
-        self.resources_by_urlname[self.site_resource.get_url_name()] = self.site_resource
-        self.resources_by_urlname[self.auth_resource.get_url_name()] = self.auth_resource
         super(ResourceSite, self).post_register()
     
     def register(self, model_or_iterable, admin_class, **options):
@@ -66,7 +66,7 @@ class ResourceSite(BaseEndpoint):
         resource._init_kwargs['parent'] = resource.parent
         self.applications[app_name].register_resource(resource)
         self.registry[model] = resource
-        self.resources_by_urlname[resource.get_url_name()] = resource
+        self.record_resource(resource)
         return resource
     
     def fork(self, **kwargs):
@@ -96,8 +96,11 @@ class ResourceSite(BaseEndpoint):
             kwargs = self.get_application_resource_kwargs(app_name=app_name, **options)
             app_resource = app_class(**kwargs)
             self.applications[app_name] = app_resource
-            self.resources_by_urlname[app_resource.get_url_name()] = app_resource
+            self.record_resource(app_resource)
         return self.applications[app_name]
+    
+    def record_resource(self, resource):
+        self.resources_by_urlname[resource.get_url_name()] = resource
     
     def register_media_type(self, media_type, media_type_handler):
         self.media_types[media_type] = media_type_handler
