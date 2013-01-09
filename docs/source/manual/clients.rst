@@ -2,18 +2,29 @@
 Clients
 =======
 
-Visiting the api endpoint in a browser will let you browse the various hyberobjects made available through the resource.
+Visiting the api endpoint in a browser will let you browse the various hyberobjects made available through the resource. Clients may be installed on a different url.
 
-----------------
-Django Templates
-----------------
+----------------------
+Django Template Client
+----------------------
 
 https://github.com/zbyte64/django-hyperadmin-client
 
--------
-Emberjs
--------
+Uses django templates to render an admin interface. Responsive design out of the box.
+
+-------------------
+Emberjs REST Client
+-------------------
 
 https://github.com/zbyte64/django-hyperadmin-emberclient
 
+Uses REST calls and emberjs to render an admin interface.
+
+----------
+Dockit CMS
+----------
+
+https://github.com/zbyte64/django-dockitcms (endpoints branch)
+
+A dynamic API builder with a public HTML (template driven) client.
 

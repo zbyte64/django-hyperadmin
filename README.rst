@@ -5,7 +5,7 @@
 Introduction
 ============
 
-django-hyperadmin is an API driven Admin interface for resources in Django. Resources tend to be anything you can manipulate with a form (including models) and you configure your API resource like you would an Admin Model. Clients may be installed seperately to provide additional functionality.
+django-hyperadmin is an API framework for building RESTful resources in Django. Resources tend to be anything you can manipulate with forms (including models) and configuration of an API resource is similar to an Admin Model. APIs support REST out of the box and clients may be installed seperately to provide additional functionality.
 
 This is BETA
 
@@ -18,6 +18,7 @@ Features
 --------
 * ModelResource works like AdminModel
 * StorageResource powers file uploads in client
+* Data store agnostic
 * Supported Media Formats:
  * application/text-html, text/html - provides HTML responses
  * application/vnd.Collection+JSON
@@ -58,10 +59,35 @@ Add to root url patterns::
     url(r'^hyperapi/', include(hyperadmin.site.urls)),
 
 
-(Optional) Install a client:
+=======
+Clients
+=======
 
-* https://github.com/zbyte64/django-hyperadmin-client - Recommended
-* https://github.com/zbyte64/django-hyperadmin-emberclient
+Visiting the api endpoint in a browser will let you browse the various hyberobjects made available through the resource. Clients may be installed on a different url.
+
+----------------------
+Django Template Client
+----------------------
+
+https://github.com/zbyte64/django-hyperadmin-client
+
+Uses django templates to render an admin interface. Responsive design out of the box.
+
+-------------------
+Emberjs REST Client
+-------------------
+
+https://github.com/zbyte64/django-hyperadmin-emberclient
+
+Uses REST calls and emberjs to render an admin interface.
+
+----------
+Dockit CMS
+----------
+
+https://github.com/zbyte64/django-dockitcms (endpoints branch)
+
+A dynamic API builder with a public HTML (template driven) client.
 
 
 =============
@@ -98,16 +124,6 @@ Registering a model with hyperadmin::
         list_filter = ['timestamp', 'category']
     
     hyperadmin.site.register(MyModel, MyModelResource)
-
-
-=======
-Clients
-=======
-
-* Django Template Client (Recommended): https://github.com/zbyte64/django-hyperadmin-client
-* Emberjs Client: https://github.com/zbyte64/django-hyperadmin-emberclient
-
-Visiting the api endpoint in a browser will let you browse the various hyberobjects made available through the resource.
 
 
 =============================
