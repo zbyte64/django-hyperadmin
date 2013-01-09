@@ -1,10 +1,20 @@
+from django.utils.functional import Promise
+try:
+    from django.utils.encoding import force_text
+except ImportError:
+    from django.utils.encoding import force_unicode as force_text
 from django.core.serializers.json import DjangoJSONEncoder
 from django.utils import simplejson as json
-from django.utils.encoding import force_unicode
 from django import http
 
 from hyperadmin.mediatypes.common import MediaType
 
+
+class LazyEncoder(DjangoJSONEncoder):
+    def default(self, obj):
+        if isinstance(obj, Promise):
+            return force_text(obj)
+        return super(LazyEncoder, self).default(obj)
 
 class CollectionJSON(MediaType):
     recognized_media_types = [
@@ -12,8 +22,8 @@ class CollectionJSON(MediaType):
     ]
     
     def convert_field(self, field):
-        entry = {"name": force_unicode(field.name),
-                 "prompt": force_unicode(field.label)}
+        entry = {"name": force_text(field.name),
+                 "prompt": force_text(field.label)}
         return entry
     
     def links_for_item(self, item):
@@ -82,14 +92,14 @@ class CollectionJSON(MediaType):
         if form_link.form:
             data['template'] = self.convert_link(form_link)
         
-        data.update(href=form_link.get_absolute_url(), version="1.0", meta=state.meta)
+        data.update(href=form_link.get_absolute_url(), version="1.0", meta=state.meta, prompt=state.resource.get_prompt())
         return data
     
     def serialize(self, request, content_type, link, state):
         if self.detect_redirect(link):
             return self.handle_redirect(link)
         data = self.prepare_collection(link, state)
-        content = json.dumps({"collection":data}, cls=DjangoJSONEncoder)
+        content = json.dumps({"collection":data}, cls=LazyEncoder)
         assert content_type in self.recognized_media_types, "%s no in %s" % (content_type, self.recognized_media_types)
         return http.HttpResponse(content, content_type)
     
