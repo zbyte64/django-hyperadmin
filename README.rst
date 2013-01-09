@@ -11,8 +11,6 @@ This is BETA
 
 Documentation: http://django-hyperadmin.readthedocs.org/
 
-Demo site: http://hyperadmindemo.herokuapp.com/
-
 --------
 Features
 --------
