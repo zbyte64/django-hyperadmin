@@ -1,13 +1,13 @@
-.. image:: https://secure.travis-ci.org/zbyte64/django-hyperadmin.png?branch=master
+.. image:: https://secure.travis-ci.org/zbyte64/django-hyperadmin.png
    :target: http://travis-ci.org/zbyte64/django-hyperadmin
 
 ============
 Introduction
 ============
 
-django-hyperadmin is an API driven Admin interface for resources in Django. Resources tend to be anything you can manipulate with a form (including models) and you configure your API resource like you would an Admin Model. The current client is written in emberjs and is powered by a Hypermedia REST API.
+django-hyperadmin is an API driven Admin interface for resources in Django. Resources tend to be anything you can manipulate with a form (including models) and you configure your API resource like you would an Admin Model. Clients may be installed seperately to provide additional functionality.
 
-This is (mostly) ALPHA
+This is BETA
 
 Documentation: http://django-hyperadmin.readthedocs.org/
 
@@ -19,10 +19,10 @@ Features
 * ModelResource works like AdminModel
 * StorageResource powers file uploads in client
 * Supported Media Formats:
+ * application/text-html, text/html - provides HTML responses
  * application/vnd.Collection+JSON
  * application/vnd.Collection.next+JSON
  * application/vnd.Collection.hyperadmin+JSON - for the emberjs client
- * application/text-html - for browsing
  * application/json - plain json serialization
  * text/javascript - for jsonp
  * TODO: xml, yaml, ???
@@ -60,8 +60,9 @@ Add to root url patterns::
 
 (Optional) Install a client:
 
+* https://github.com/zbyte64/django-hyperadmin-client - Recommended
 * https://github.com/zbyte64/django-hyperadmin-emberclient
-* https://github.com/zbyte64/django-hyperadmin-client
+
 
 =============
 Configuration
@@ -103,8 +104,8 @@ Registering a model with hyperadmin::
 Clients
 =======
 
-Emberjs Client: https://github.com/zbyte64/django-hyperadmin-emberclient
-Django Template Client: https://github.com/zbyte64/django-hyperadmin-client
+* Django Template Client (Recommended): https://github.com/zbyte64/django-hyperadmin-client
+* Emberjs Client: https://github.com/zbyte64/django-hyperadmin-emberclient
 
 Visiting the api endpoint in a browser will let you browse the various hyberobjects made available through the resource.
 

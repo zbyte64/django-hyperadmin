@@ -5,8 +5,9 @@ try:
 except ImportError:
     from distutils.core import setup, find_packages
 
-VERSION = '0.0.1'
-LONG_DESC = """\
+VERSION = '0.8.0'
+LONG_DESC = """
+django-hyperadmin is an API driven Admin interface for resources in Django. Resources tend to be anything you can manipulate with a form (including models) and you configure your API resource like you would an Admin Model.
 """
 
 setup(name='django-hyperadmin',
@@ -17,7 +18,7 @@ setup(name='django-hyperadmin',
           'Programming Language :: Python',
           'Operating System :: OS Independent',
           'Natural Language :: English',
-          'Development Status :: 3 - Alpha',
+          'Development Status :: 4 - Beta',
           'Intended Audience :: Developers',
           'Topic :: Internet :: WWW/HTTP :: Dynamic Content',
       ],
