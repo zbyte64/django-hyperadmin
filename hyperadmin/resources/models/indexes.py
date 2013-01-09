@@ -37,5 +37,3 @@ class ModelIndex(Index):
                     links.append(self.get_link(url=header["url_toggle"], prompt=prompt, classes=classes+["toggle"], rel="sortby"))
         return links
 
-class InlineModelIndex(ModelIndex):
-    pass
