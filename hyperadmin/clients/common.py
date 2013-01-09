@@ -5,6 +5,9 @@ except ImportError:
 from django.views.generic import TemplateView
 from django.core.urlresolvers import reverse
 
+from hyperadmin.apirequests import InternalAPIRequest
+
+
 class Client(object):
     default_namespace = 'hyper-client'
     default_app_name = 'client'
@@ -46,6 +49,8 @@ class SimpleTemplateClient(Client):
     def get_context_data(self):
         api_endpoint = self.api_endpoint
         if hasattr(api_endpoint, 'get_absolute_url'):
+            api_request = InternalAPIRequest(site=api_endpoint)
+            api_endpoint = api_endpoint.fork(api_request=api_request)
             api_endpoint = api_endpoint.get_absolute_url()
         return {'media':self.get_media(),
                 'api_endpoint':api_endpoint,
