@@ -77,6 +77,12 @@ class LoginEndpoint(AuthMixin, Endpoint):
     name_suffix = 'login'
     url_suffix = r'^$'
     
+    prototype_method_map = {
+        'GET': 'login',
+        'POST': 'login',
+        'DELETE': 'rest-logout',
+    }
+    
     login_prototype = LoginLinkPrototype
     logout_prototype = LogoutLinkPrototype
     
@@ -85,11 +91,6 @@ class LoginEndpoint(AuthMixin, Endpoint):
             (self.login_prototype, {'name':'login'}),
             (self.logout_prototype, {'name':'rest-logout', 'link_kwargs':{'method':'DELETE'}}),
         ]
-    
-    def get_link_prototypes_per_method(self):
-        return {'GET': self.link_prototypes['login'],
-                'POST': self.link_prototypes['login'],
-                'DELETE': self.link_prototypes['rest-logout'],}
     
     def get_outbound_links(self):
         links = self.create_link_collection()
@@ -100,13 +101,15 @@ class LogoutEndpoint(AuthMixin, Endpoint):
     name_suffix = 'logout'
     url_suffix = r'^logout/$'
     
+    prototype_method_map = {
+        'GET': 'logout',
+        'POST': 'logout',
+    }
+    
     logout_prototype = LogoutLinkPrototype
     
     def get_link_prototypes(self):
         return [
             (self.logout_prototype, {'name':'logout'}),
         ]
-    
-    def get_link_prototypes_per_method(self):
-        return {'GET': self.link_prototypes['logout'],
-                'POST': self.link_prototypes['logout'],}
+

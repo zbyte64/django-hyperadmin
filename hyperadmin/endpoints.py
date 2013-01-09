@@ -331,6 +331,8 @@ class Endpoint(BaseEndpoint):
     name_suffix = None
     url_suffix = None
     
+    prototype_method_map = {}
+    
     def post_register(self):
         if self.api_request:
             self.api_request.record_endpoint(self)
@@ -340,11 +342,13 @@ class Endpoint(BaseEndpoint):
     def resource(self):
         return self.parent
     
-    def get_link_prototypes_per_method(self):
+    def get_link_prototype_for_method(self, method):
         """
-        return a dictionary where the keys are the HTTP method and the value in the link prototype
+        Return the link prototype representing the action for the method
+        Consults prototype_method_map for the link name and returns the prototype from link_prototypes
         """
-        return {}
+        name = self.prototype_method_map.get(method)
+        return self.link_prototypes.get(name)
     
     def create_link_collection(self):
         return LinkCollection(endpoint=self.resource)

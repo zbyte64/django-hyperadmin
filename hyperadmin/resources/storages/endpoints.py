@@ -58,13 +58,15 @@ class CreateUploadEndpoint(Endpoint):
     name_suffix = 'upload'
     url_suffix = r'^upload/$'
     
+    prototype_method_map = {
+        'GET': 'upload',
+        'POST': 'upload',
+    }
+    
     create_upload_prototype = CreateUploadLinkPrototype
     
     def get_link_prototypes(self):
         return [
             (self.create_upload_prototype, {'name':'upload'}),
         ]
-    
-    def get_link_prototypes_per_method(self):
-        return {'GET': self.link_prototypes['upload'],
-                'POST': self.link_prototypes['upload'],}
+

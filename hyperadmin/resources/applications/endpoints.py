@@ -15,6 +15,10 @@ class ListEndpoint(Endpoint):
     endpoint_class = 'index'
     view_class = 'app_index'
     
+    prototype_method_map = {
+        'GET': 'list',
+    }
+    
     name_suffix = 'list'
     url_suffix = r'^$'
     
@@ -24,6 +28,4 @@ class ListEndpoint(Endpoint):
         return [
             (self.list_prototype, {'name':'list'}),
         ]
-    
-    def get_link_prototypes_per_method(self):
-        return {'GET': self.link_prototypes['list'],}
+
