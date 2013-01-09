@@ -103,8 +103,8 @@ class APIRequest(object):
     
     def generate_response(self, link, state):
         media_type = self.get_response_media_type()
-        content_type = self.get_request_type()
-        return state.generate_response(media_type, content_type, link)
+        response_type = self.get_response_type()
+        return state.generate_response(media_type=media_type, response_type=response_type, link=link)
 
 class InternalAPIRequest(APIRequest):
     """
