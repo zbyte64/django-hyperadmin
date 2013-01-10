@@ -45,16 +45,9 @@ Installation
 
 Put 'hyperadmin' into your ``INSTALLED_APPS`` section of your settings file.
 
-And the following to urls.py::
-
-    import hyperadmin
-    hyperadmin.autodiscover() #TODO this does nothing
-    hyperadmin.site.install_models_from_site(admin.site) #ports admin models to hyperadmin
-    hyperadmin.site.install_storage_resources() #enables the storage resource for media and static
-
 Add to root url patterns::
 
-    url(r'^hyperapi/', include(hyperadmin.site.urls)),
+    url(r'^hyperapi/', include('hyperadmin.urls')),
 
 
 =======
