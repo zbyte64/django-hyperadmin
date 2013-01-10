@@ -38,6 +38,8 @@ class LinkPrototype(object):
     def show_link(self, **kwargs):
         """
         Checks the state and returns False if the link is not active.
+        
+        :rtype: boolean
         """
         return True
     
@@ -45,9 +47,15 @@ class LinkPrototype(object):
         return self.endpoint.get_form_class()
     
     def get_form_kwargs(self, **kwargs):
+        """
+        :rtype: dict
+        """
         return self.endpoint.get_form_kwargs(**kwargs)
     
     def get_link_kwargs(self, **kwargs):
+        """
+        :rtype: dict
+        """
         kwargs.update(self.link_kwargs)
         kwargs['form_kwargs'] = self.get_form_kwargs(**kwargs.get('form_kwargs', {}))
         kwargs.setdefault('endpoint', self.endpoint)
@@ -59,6 +67,8 @@ class LinkPrototype(object):
     def get_link(self, **link_kwargs):
         """
         Creates and returns the link
+        
+        :rtype: Link
         """
         link_kwargs = self.get_link_kwargs(**link_kwargs)
         link = Link(**link_kwargs)
@@ -67,6 +77,8 @@ class LinkPrototype(object):
     def handle_submission(self, link, submit_kwargs):
         """
         Called when the link is submitted. Returns a link representing the response.
+        
+        :rtype: Link
         """
         form = link.get_form(**submit_kwargs)
         if form.is_valid():
@@ -78,6 +90,8 @@ class LinkPrototype(object):
     def on_success(self, item=None):
         """
         Returns a link for a successful submission
+        
+        :rtype: Link
         """
         if item is not None:
             return item.get_link()
@@ -157,20 +171,34 @@ class BaseEndpoint(LinkCollectorMixin, EndpointViewMixin, View):
     state = property(get_state, set_state)
     
     def get_meta(self):
+        """
+        :rtype: dict
+        """
         return {}
     
     def get_endpoint_classes(self):
+        """
+        Returns a list of functional identifiers
+        
+        :rtype: list of strings
+        """
         res_classes = list(self.endpoint_classes)
         res_classes.append(self.endpoint_class)
         return res_classes
     
     def get_state_data(self):
+        """
+        :rtype: dict
+        """
         data = {'endpoint_class':self.endpoint_class,
                 'endpoint_classes':self.get_endpoint_classes(),
                 'params':self.api_request.params,}
         return data
     
     def get_state_kwargs(self):
+        """
+        :rtype: dict
+        """
         kwargs = {
             'endpoint': self,
             'data':self.get_state_data(),
@@ -191,6 +219,11 @@ class BaseEndpoint(LinkCollectorMixin, EndpointViewMixin, View):
         return self.state
     
     def reverse(self, *args, **kwargs):
+        """
+        URL Reverse the given arguments
+        
+        :rtype: string
+        """
         return self.state.reverse(*args, **kwargs)
     
     #urls
@@ -205,6 +238,11 @@ class BaseEndpoint(LinkCollectorMixin, EndpointViewMixin, View):
         return self.reverse(self.get_url_name(), **kwargs)
     
     def create_link_collection(self):
+        """
+        Returns an instantiated LinkCollection object
+        
+        :rtype: LinkCollection
+        """
         return LinkCollection(endpoint=self)
     
     #link_prototypes
@@ -221,6 +259,11 @@ class BaseEndpoint(LinkCollectorMixin, EndpointViewMixin, View):
             self.link_prototypes = self.create_link_prototypes()
     
     def create_link_prototypes(self):
+        """
+        Instantiates the link prototypes from get_link_prototypes
+        
+        :rtype: list of link prototypes
+        """
         link_prototypes = dict()
         for proto_klass, kwargs in self.get_link_prototypes():
             proto = self.create_link_prototype(proto_klass, **kwargs)
@@ -228,6 +271,9 @@ class BaseEndpoint(LinkCollectorMixin, EndpointViewMixin, View):
         return link_prototypes
     
     def get_link_prototype_kwargs(self, **kwargs):
+        """
+        :rtype: dict
+        """
         params = {'endpoint':self}
         params.update(kwargs)
         return params
@@ -238,6 +284,9 @@ class BaseEndpoint(LinkCollectorMixin, EndpointViewMixin, View):
         return proto
     
     def get_view(self, **kwargs):
+        """
+        :rtype: view callable
+        """
         kwargs.update(self._init_kwargs)
         kwargs.update(self.get_view_kwargs())
         view = type(self).as_view(**kwargs)
@@ -247,11 +296,17 @@ class BaseEndpoint(LinkCollectorMixin, EndpointViewMixin, View):
         return view
     
     def fork(self, **kwargs):
+        """
+        :rtype: endpoint
+        """
         params = dict(self._init_kwargs)
         params.update(kwargs)
         return type(self)(**params)
     
     def fork_state(self, **kwargs):
+        """
+        :rtype: endpoint
+        """
         new_endpoint = self.fork()
         new_endpoint.state.update(kwargs)
         return new_endpoint
@@ -260,13 +315,28 @@ class BaseEndpoint(LinkCollectorMixin, EndpointViewMixin, View):
         return self.resource_item_class
     
     def get_resource_item(self, instance, **kwargs):
+        """
+        Wraps an object in a resource item
+        
+        :rtype: resource item
+        """
         kwargs.setdefault('endpoint', self)
         return self.get_resource_item_class()(instance=instance, **kwargs)
     
     def get_instances(self):
+        """
+        Returns the list of active objects available for this request
+        
+        :rtype: list of objects
+        """
         return []
     
     def get_resource_items(self):
+        """
+        Returns a list of resource items available for this request. Calls get_instances for the objects the items represent.
+        
+        :rtype: list of resource items
+        """
         instances = self.get_instances()
         return [self.get_resource_item(instance) for instance in instances]
     
@@ -277,19 +347,33 @@ class BaseEndpoint(LinkCollectorMixin, EndpointViewMixin, View):
         return self.form_class
     
     def get_form_kwargs(self, item=None, **kwargs):
+        """
+        :rtype: dict
+        """
         if item is not None:
             kwargs.setdefault('instance', item.instance)
         return kwargs
     
     def get_view_kwargs(self):
+        """
+        :rtype: dict
+        """
         return {}
     
     def get_namespaces(self):
+        """
+        :rtype: dictionary of namespaces
+        """
         return {}
     
     def get_item_namespaces(self, item):
+        """
+        :param item: resource item
+        :rtype: dictionary of namespaces
+        """
         return {}
     
+    #TODO review if this is needed anymore
     def get_item_link(self, item, **kwargs):
         link_kwargs = {'url':item.get_absolute_url(),
                        'endpoint':self,
@@ -299,9 +383,11 @@ class BaseEndpoint(LinkCollectorMixin, EndpointViewMixin, View):
         item_link = Link(**link_kwargs)
         return item_link
     
+    #TODO review if this is needed anymore
     def get_main_link_name(self):
         raise NotImplementedError
     
+    #TODO review if this is needed anymore
     def get_main_link_prototype(self):
         return self.link_prototypes[self.get_main_link_name()]
     
@@ -313,9 +399,15 @@ class BaseEndpoint(LinkCollectorMixin, EndpointViewMixin, View):
         return self.get_main_link_prototype().get_link(**link_kwargs)
     
     def get_item_prompt(self, item):
+        """
+        Returns a string representing the resource item
+        """
         return unicode(item.instance)
     
     def get_prompt(self):
+        """
+        Returns a string representing this endpoint
+        """
         return unicode(self)
     
     def api_permission_check(self, api_request):

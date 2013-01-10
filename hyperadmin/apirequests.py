@@ -2,6 +2,9 @@ import mimeparse
 
 
 class APIRequest(object):
+    """
+    An API Request
+    """
     def __init__(self, site, path, url_args, url_kwargs):
         self.site = site
         self.path = path
@@ -25,6 +28,11 @@ class APIRequest(object):
         return self.session_state['meta']
     
     def get_response_type(self):
+        """
+        Returns the active response type to be used
+        
+        :rtype: string
+        """
         val = self.META.get('HTTP_ACCEPT', '')
         media_types = self.site.media_types.keys()
         if not media_types:
@@ -32,6 +40,11 @@ class APIRequest(object):
         return mimeparse.best_match(media_types, val) or val
     
     def get_request_type(self):
+        """
+        Returns the active request type to be used
+        
+        :rtype: string
+        """
         val = self.META.get('CONTENT_TYPE', self.META.get('HTTP_ACCEPT', ''))
         media_types = self.site.media_types.keys()
         if not media_types:
@@ -39,6 +52,12 @@ class APIRequest(object):
         return mimeparse.best_match(media_types, val) or val
     
     def get_request_media_type(self):
+        """
+        Returns the request media type to be used or raises an error
+        
+        :raises ValueError: when the requested content type is unrecognized
+        :rtype: string
+        """
         content_type = self.get_request_type()
         media_type_cls = self.site.media_types.get(content_type, None)
         if media_type_cls is None:
@@ -46,6 +65,12 @@ class APIRequest(object):
         return media_type_cls(self)
     
     def get_response_media_type(self):
+        """
+        Returns the response media type to be used or raises an error
+        
+        :raises ValueError: when the requested content type is unrecognized
+        :rtype: string
+        """
         content_type = self.get_response_type()
         media_type_cls = self.site.media_types.get(content_type, None)
         if media_type_cls is None:
@@ -53,6 +78,14 @@ class APIRequest(object):
         return media_type_cls(self)
     
     def get_resource(self, urlname):
+        """
+        Returns a bound resource matching the urlname
+        
+        :param urlname: The urlname to find
+        :type urlname: string
+        :raises KeyError: when the urlname does not match any resources
+        :rtype: Resource
+        """
         if urlname not in self.endpoint_state['resources']:
             resource = self.site.get_resource_from_urlname(urlname)
             if resource is None:
@@ -61,17 +94,28 @@ class APIRequest(object):
         return self.endpoint_state['resources'][urlname]
     
     def record_resource(self, resource):
+        """
+        Record the resource in our urlname cache
+        
+        :param resource: Resource
+        """
         assert resource.api_request == self
         urlname = resource.get_url_name()
         self.endpoint_state['resources'][urlname] = resource
-        #if urlname not in self.endpoint_state['link_prototypes']:
-        #    self.endpoint_state['link_prototypes'][urlname] = resource
         
         #useful for inline resources
         if urlname not in self.site.resources_by_urlname:
             self.site.resources_by_urlname[urlname] = resource
     
     def get_endpoint(self, urlname):
+        """
+        Returns a bound endpoint matching the urlname
+        
+        :param urlname: The urlname to find
+        :type urlname: string
+        :raises KeyError: when the urlname does not match any endpoints
+        :rtype: Endpoint
+        """
         if urlname not in self.endpoint_state['endpoints']:
             endpoint = self.site.get_endpoint_from_urlname(urlname)
             if endpoint is None:
@@ -81,13 +125,22 @@ class APIRequest(object):
         return self.endpoint_state['endpoints'][urlname]
     
     def record_endpoint(self, endpoint):
+        """
+        Record the endpoint in our urlname cache
+        
+        :param resource: Endpoint
+        """
         assert endpoint.api_request == self
         urlname = endpoint.get_url_name()
         self.endpoint_state['endpoints'][urlname] = endpoint
-        #if urlname not in self.endpoint_state['link_prototypes']:
-        #    self.endpoint_state['link_prototypes'][urlname] = endpoint
     
     def get_link_prototypes(self, endpoint):
+        """
+        Returns the link prototypes to be used by the endpint
+        
+        :param endpoint: endpoint object
+        :rtype: list of link prototypes
+        """
         urlname = endpoint.get_url_name()
         if urlname not in self.endpoint_state['link_prototypes']:
             link_prototypes = endpoint.create_link_prototypes()
@@ -95,6 +148,11 @@ class APIRequest(object):
         return self.endpoint_state['link_prototypes'][urlname]
     
     def get_site(self):
+        """
+        Returns the bound site
+        
+        :rtype: SiteResource
+        """
         if 'site' not in self.endpoint_state:
             bound_site = self.site.fork(api_request=self)
             self.endpoint_state['site'] = bound_site
@@ -102,6 +160,13 @@ class APIRequest(object):
         return self.endpoint_state['site']
     
     def generate_response(self, link, state):
+        """
+        Returns a response generated from the response media type
+        
+        :param link: The active link representing the endpoint's response
+        :param state: The endpoint's state
+        :rtype: [Http]Response
+        """
         media_type = self.get_response_media_type()
         response_type = self.get_response_type()
         return state.generate_response(media_type=media_type, response_type=response_type, link=link)
