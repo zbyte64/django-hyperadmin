@@ -15,21 +15,24 @@ Documentation: http://django-hyperadmin.readthedocs.org/
 Features
 --------
 * ModelResource works like AdminModel
-* StorageResource powers file uploads in client
 * Data store agnostic
-* Supported Media Formats:
- * application/text-html, text/html - provides HTML responses
- * application/vnd.Collection+JSON
- * application/vnd.Collection.next+JSON
- * application/vnd.Collection.hyperadmin+JSON - for the emberjs client
- * application/json - plain json serialization
- * text/javascript - for jsonp
- * TODO: xml, yaml, ???
-* Architecture allows for more media formats
-* Internal resource representation based on hfactor and forms
-* Headers control media type; "Accepts" and "Content-Type" control response and request format
+* Media type agnostic
+* Index classes define search and filter capabilities through forms
+* Autoloads basic functionality from admin site
+* Internal resource representation based on hfactor, forms and endpoints
 * Clients packaged seperately
 
+Supported Media Formats:
+
+* application/text-html, text/html - provides HTML responses
+* application/json - plain json serialization
+* text/javascript - for jsonp
+* application/vnd.Collection+JSON
+* application/vnd.Collection.next+JSON
+* application/vnd.Collection.hyperadmin+JSON - for the emberjs client
+* TODO: xml, yaml, ???
+
+Headers control media type; "Accepts" and "Content-Type" control response and request format
 
 ------------
 Requirements
@@ -97,14 +100,6 @@ Configuration
 ModelResource
 -------------
 
-API Endpoints
--------------
-
-* "/" lists rows; POST to create
-* "/add/" POST to add
-* "/<id>/" displays a specific row; PUT/POST to update, DELETE to delete
-* "/<id>/delete/" POST to delete
-
 Registering models
 -------------------
 
@@ -123,6 +118,24 @@ Registering a model with hyperadmin::
         list_filter = ['timestamp', 'category']
     
     hyperadmin.site.register(MyModel, MyModelResource)
+
+
+Autoloading from Django Admin
+-----------------------------
+
+The following registers the models from admin site (this is already done if you import from ``hyperadmin.urls``)::
+
+    from django.contrib import admin
+    hyperadmin.site.install_models_from_site(admin.site)
+
+
+API Endpoints
+-------------
+
+* "/" lists rows; POST to create
+* "/add/" POST to add
+* "/<id>/" displays a specific row; PUT/POST to update, DELETE to delete
+* "/<id>/delete/" POST to delete
 
 
 =============================
