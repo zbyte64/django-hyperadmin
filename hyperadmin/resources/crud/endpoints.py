@@ -1,7 +1,8 @@
 from django.core.exceptions import ObjectDoesNotExist
 from django.http import Http404
 
-from hyperadmin.endpoints import LinkPrototype, Endpoint
+from hyperadmin.endpoints import LinkPrototype
+from hyperadmin.resources.endpoints import ResourceEndpoint
 
 
 class ListLinkPrototype(LinkPrototype):
@@ -81,7 +82,7 @@ class IndexMixin(object):
         else:
             return self.resource.get_index(self.index_name)
 
-class ListEndpoint(IndexMixin, Endpoint):
+class ListEndpoint(IndexMixin, ResourceEndpoint):
     endpoint_class = 'change_list'
     name_suffix = 'list'
     url_suffix = r'^$'
@@ -146,7 +147,7 @@ class ListEndpoint(IndexMixin, Endpoint):
         self.state.meta['number_of_pages'] = paginator.num_pages
         return data
 
-class CreateEndpoint(Endpoint):
+class CreateEndpoint(ResourceEndpoint):
     endpoint_class = 'change_form'
     endpoint_classes = ['add_form']
     name_suffix = 'add'
@@ -208,7 +209,7 @@ class DetailMixin(IndexMixin):
         params = self.get_url_params_from_item(item)
         return super(DetailMixin, self).get_url(**params)
 
-class DetailEndpoint(DetailMixin, Endpoint):
+class DetailEndpoint(DetailMixin, ResourceEndpoint):
     endpoint_class = 'change_form'
     name_suffix = 'detail'
     url_suffix = r'/$'
@@ -240,7 +241,7 @@ class DetailEndpoint(DetailMixin, Endpoint):
         breadcrumbs.add_link('update', item=self.common_state.item, rel='breadcrumb', link_factor='LO')
         return breadcrumbs
 
-class DeleteEndpoint(DetailMixin, Endpoint):
+class DeleteEndpoint(DetailMixin, ResourceEndpoint):
     endpoint_class = 'delete_confirmation'
     name_suffix = 'delete'
     url_suffix = r'/delete/$'

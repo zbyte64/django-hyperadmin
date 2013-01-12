@@ -1,7 +1,8 @@
 from django.contrib.auth import logout
 from django import forms
 
-from hyperadmin.endpoints import LinkPrototype, Endpoint
+from hyperadmin.endpoints import LinkPrototype
+from hyperadmin.resources.endpoints import ResourceEndpoint
 
 
 class LoginLinkPrototype(LinkPrototype):
@@ -73,7 +74,7 @@ class AuthMixin(object):
         defaults['request'] = self.api_request.request
         return defaults
 
-class LoginEndpoint(AuthMixin, Endpoint):
+class LoginEndpoint(AuthMixin, ResourceEndpoint):
     name_suffix = 'login'
     url_suffix = r'^$'
     
@@ -97,7 +98,7 @@ class LoginEndpoint(AuthMixin, Endpoint):
         links.add_link('logout', link_factor='LO')
         return links
 
-class LogoutEndpoint(AuthMixin, Endpoint):
+class LogoutEndpoint(AuthMixin, ResourceEndpoint):
     name_suffix = 'logout'
     url_suffix = r'^logout/$'
     

@@ -21,7 +21,7 @@ class ConditionalAccessMixin(object):
             raise http.HttpResponse(status=412) # Precondition Failed
         
 class EndpointViewMixin(ConditionalAccessMixin):
-    state = None
+    #state = None
     global_state = None
     cacheable = False
     

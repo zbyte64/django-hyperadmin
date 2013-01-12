@@ -1,4 +1,5 @@
-from hyperadmin.endpoints import LinkPrototype, Endpoint
+from hyperadmin.endpoints import LinkPrototype
+from hyperadmin.resources.endpoints import ResourceEndpoint
 from hyperadmin.resources.crud.endpoints import ListEndpoint as BaseListEndpoint, CreateEndpoint, DetailEndpoint, DeleteEndpoint
 
 
@@ -54,7 +55,7 @@ class ListEndpoint(BaseListEndpoint):
         links.add_link('upload', link_factor='LO')
         return links
 
-class CreateUploadEndpoint(Endpoint):
+class CreateUploadEndpoint(ResourceEndpoint):
     name_suffix = 'upload'
     url_suffix = r'^upload/$'
     

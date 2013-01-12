@@ -1,4 +1,5 @@
-from hyperadmin.endpoints import LinkPrototype, Endpoint
+from hyperadmin.endpoints import LinkPrototype
+from hyperadmin.resources.endpoints import ResourceEndpoint
 
 
 class ListLinkPrototype(LinkPrototype):
@@ -11,7 +12,7 @@ class ListLinkPrototype(LinkPrototype):
         return super(ListLinkPrototype, self).get_link_kwargs(**link_kwargs)
 
 
-class ListEndpoint(Endpoint):
+class ListEndpoint(ResourceEndpoint):
     endpoint_class = 'index'
     view_class = 'app_index'
     
