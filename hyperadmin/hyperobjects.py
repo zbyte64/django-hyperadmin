@@ -8,10 +8,26 @@ from django.http import QueryDict
 
 class Link(object):
     """
-    Represents an available action or state transition.
+    A link in the broad hypermedia sense
     """
-    def __init__(self, url, endpoint, method='GET', form=None, form_class=None, form_kwargs=None, link_factor=None, include_form_params_in_url=False,
-                 descriptors=None, prompt=None, cu_headers=None, cr_headers=None, on_submit=None, **cl_headers):
+    def __init__(self, url, endpoint, method='GET', prompt=None,
+                form=None, form_class=None, form_kwargs=None, on_submit=None,
+                link_factor=None, include_form_params_in_url=False,
+                mimetype=None, descriptors=None,
+                cu_headers=None, cr_headers=None, **cl_headers):
+        """
+        
+        :param url: target url
+        :param endpoint: the endpoint that generated this link
+        :param method: the HTTP method of the link
+        :param prompt: the link display
+        
+        :param form: a form instance
+        :param form_class: the form class to be used to instantiate the form
+        :param form_kwargs: keyword args to be passed into form class for instanting the form
+        :param on_submit: a callback that is passed this link and submit_kwargs and returns a link representing the result
+        :param mimetype: indicates the mimetype of the link. Useful for creating the proper embedded link tag.
+        """
         self._url = url
         self._method = str(method).upper() #CM
         self.endpoint = endpoint
@@ -20,6 +36,7 @@ class Link(object):
         self.form_kwargs = form_kwargs
         self.link_factor = link_factor
         self.include_form_params_in_url = include_form_params_in_url
+        self.mimetype = mimetype
         self.descriptors = descriptors #is this needed?
         self.cl_headers = cl_headers
         self.prompt = prompt
@@ -90,6 +107,15 @@ class Link(object):
         The url for this link
         """
         return self.state.get_link_url(self)
+    
+    def mimetype_is_audio(self):
+        return self.mimetype and self.mimetype.startswith('audio')
+    
+    def mimetype_is_image(self):
+        return self.mimetype and self.mimetype.startswith('image')
+    
+    def mimetype_is_video(self):
+        return self.mimetype and self.mimetype.startswith('video')
     
     def get_link_factor(self):
         """

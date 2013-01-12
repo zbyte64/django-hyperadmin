@@ -44,16 +44,20 @@ class MediaType(object):
         '''
         raise NotImplementedError
     
+    def prepare_field_value(self, val):
+        if isinstance(val, File):
+            if hasattr(val, 'name'):
+                val = val.name
+            else:
+                val = None
+        return val
+    
     def get_form_instance_values(self, form, include_initial=True):
         data = dict()
         if getattr(form, 'instance', None) or include_initial:
             for name, field in form.fields.iteritems():
                 val = form[name].value()
-                if isinstance(val, File):
-                    if hasattr(val, 'name'):
-                        val = val.name
-                    else:
-                        val = None
+                val = self.prepare_field_value(val)
                 data[name] = val
         return data
     

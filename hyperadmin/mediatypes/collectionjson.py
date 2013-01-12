@@ -8,6 +8,7 @@ from django.utils import simplejson as json
 from django import http
 
 from hyperadmin.mediatypes.common import MediaType
+from hyperadmin.hyperobjects import Link
 
 
 class LazyEncoder(DjangoJSONEncoder):
@@ -20,6 +21,12 @@ class CollectionJSON(MediaType):
     recognized_media_types = [
         'application/vnd.Collection+JSON'
     ]
+    
+    def prepare_field_value(self, val):
+        val = super(CollectionJSON, self).prepare_field_value(val)
+        if isinstance(val, Link):
+            val = Link.get_absolute_url()
+        return val
     
     def convert_field(self, field):
         entry = {"name": force_text(field.name),
@@ -47,6 +54,7 @@ class CollectionJSON(MediaType):
         entry_data = self.get_form_instance_values(form)
         for field in form:
             entry = self.convert_field(field)
+            #TODO handle link values
             entry['value'] = entry_data.get(field.name, None)
             data.append(entry)
         return data

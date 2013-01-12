@@ -12,7 +12,25 @@
 </form>
 {% else %}
 {% if link.method == "GET" %}
+{% if link.link_factor == "LE" and link.mimetype %}
+
+{% if link.mimetype_is_image %}
+<img src="{{link.get_absolute_url}}" class="{{link.class_attr}}" alt="{{link.prompt}}" rel="{{link.rel}}"/>
+{% else %}
+{% if link.mimetype_is_audio %}
+<audio src="{{link.get_absolute_url}}" class="{{link.class_attr}}" rel="{{link.rel}}" controls preload>{{link.prompt}}</audio>
+{% else %}
+{% if link.mimetype_is_video %}
+<video src="{{link.get_absolute_url}}" class="{{link.class_attr}}" rel="{{link.rel}}" width="320" height="200" controls preload>{{link.prompt}}</video>
+{% else %}
 <a href="{{link.get_absolute_url}}" class="{{link.class_attr}}" rel="{{link.rel}}">{{link.prompt}}</a>
+{% endif %}
+{% endif %}
+{% endif %}
+
+{% else %}
+<a href="{{link.get_absolute_url}}" class="{{link.class_attr}}" rel="{{link.rel}}">{{link.prompt}}</a>
+{% endif %}
 {% else %}
 <form method="{{link.method}}" action="{{link.get_absolute_url}}" class="{{link.class_attr}}" rel="{{link.rel}}">{% csrf_token %}
 <input type="submit" value="{{link.prompt}}" {% if link.method != "GET" and link.method != "POST" %}disabled{% endif %}/>

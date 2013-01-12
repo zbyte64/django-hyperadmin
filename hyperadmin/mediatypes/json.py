@@ -3,11 +3,19 @@ from django.utils import simplejson as json
 from django import http
 
 from hyperadmin.mediatypes.common import MediaType
+from hyperadmin.hyperobjects import Link
+
 
 class JSON(MediaType):
     recognized_media_types = [
         'application/json'
     ]
+    
+    def prepare_field_value(self, val):
+        val = super(JSON, self).prepare_field_value(val)
+        if isinstance(val, Link):
+            val = Link.get_absolute_url()
+        return val
     
     def convert_item(self, item):
         return self.get_form_instance_values(item.form)
