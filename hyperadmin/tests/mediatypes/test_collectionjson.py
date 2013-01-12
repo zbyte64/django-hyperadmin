@@ -1,11 +1,9 @@
 from django.contrib.contenttypes.models import ContentType
-from django.test.client import FakePayload
 from django.utils import simplejson as json
 from django.utils.translation import ugettext_lazy as _
 
 from hyperadmin.mediatypes.collectionjson import CollectionJSON, CollectionNextJSON
-from hyperadmin.resources.applications.site import SiteResource
-from hyperadmin.resources.applications.application import ApplicationResource
+from hyperadmin.resources.directory import ResourceDirectory
 from hyperadmin.sites import site
 
 from common import MediaTypeTestCase
@@ -41,8 +39,8 @@ class CollectionJsonTestCase(MediaTypeTestCase):
         json_items = data['collection']['items']
         self.assertEqual(len(json_items), 1)
     
-    def test_site_resource_serialize(self):
-        site_resource = SiteResource(site=site)
+    def test_directory_resource_serialize(self):
+        site_resource = site.directory_resource
         
         def get_prompt(*args):
             return _('lazy string')
@@ -57,18 +55,6 @@ class CollectionJsonTestCase(MediaTypeTestCase):
         data = json.loads(response.content)
         json_items = data['collection']['items']
         self.assertEqual(data['collection']['prompt'], 'lazy string')
-    
-    def test_application_resource_serialize(self):
-        app_resource = ApplicationResource(site=site, app_name='testapp')
-        return
-        #TODO patch reverse
-        link = app_resource.get_resource_link()
-        state = self.resource.state
-        
-        response = self.adaptor.serialize(request=self.factory.get('/'), content_type=self.content_type, link=link, state=state)
-        data = json.loads(response.content)
-        json_items = data['collection']['items']
-        #assert False, str(json_items)
     
     def test_model_instance_deserialize(self):
         pass

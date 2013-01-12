@@ -247,7 +247,7 @@ class InlineModelResourceTestCase(ResourceTestCase):
 class SiteResourceTestCase(ResourceTestCase):
     def register_resource(self):
         self.site.register(User, ModelResource)
-        return self.site.site_resource
+        return self.site.directory_resource
     
     '''
     def test_index(self):
@@ -372,7 +372,7 @@ class StorageResourceTestCase(ResourceTestCase):
 
 class AuthenticationResourceTestCase(ResourceTestCase):
     def register_resource(self):
-        return self.site.site_resource.auth_resource
+        return self.site.auth_resource
     
     def test_get_detail(self):
         api_request = self.get_api_request(request=self.factory.get('/'))

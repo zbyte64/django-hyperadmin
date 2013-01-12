@@ -106,7 +106,7 @@ Registering models
 Registering a model with hyperadmin::
 
     import hyperadmin
-    from hpyeradmin.resources.models imoprt ModelResource, InlineModelResource
+    from hpyeradmin.resources.models import ModelResource, InlineModelResource
     from myapp.models import MyModel, ChildModel
     
     class ChildModelResource(InlineModelResource):

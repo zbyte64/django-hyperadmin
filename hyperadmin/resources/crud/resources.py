@@ -23,13 +23,6 @@ class CRUDResource(BaseResource):
     delete_view = None
     form_class = None
     
-    def get_resource_name(self):
-        raise NotImplementedError
-    resource_name = property(get_resource_name)
-    
-    def get_base_url_name(self):
-        return '%s_%s_' % (self.app_name, self.resource_name)
-    
     def get_prompt(self):
         return self.resource_name
     

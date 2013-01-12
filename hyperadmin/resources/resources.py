@@ -34,11 +34,18 @@ class BaseResource(BaseEndpoint):
         return self
     
     def get_app_name(self):
-        raise NotImplementedError
+        return None
     app_name = property(get_app_name)
     
+    def get_resource_name(self):
+        raise NotImplementedError
+    resource_name = property(get_resource_name)
+    
     def get_base_url_name(self):
-        return self.app_name + '_'
+        if self.app_name:
+            return '%s_%s_' % (self.app_name, self.resource_name)
+        else:
+            return '%s_' % self.resource_name
     
     def create_link_prototypes(self):
         link_prototypes = super(BaseResource, self).create_link_prototypes()

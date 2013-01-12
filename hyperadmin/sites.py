@@ -3,8 +3,7 @@ from django.core.urlresolvers import reverse, RegexURLResolver
 from django.utils.datastructures import SortedDict
 
 from hyperadmin.endpoints import BaseEndpoint
-from hyperadmin.resources.applications.site import SiteResource
-from hyperadmin.resources.applications.application import ApplicationResource
+from hyperadmin.resources.directory import ResourceDirectory
 from hyperadmin.resources.auth import AuthResource
 
 import collections
@@ -27,8 +26,7 @@ class Registry(dict):
         return items
 
 class ResourceSite(BaseEndpoint):
-    site_resource_class = SiteResource
-    application_resource_class = ApplicationResource
+    directory_resource_class = ResourceDirectory
     auth_resource_class = AuthResource
     name = 'hyperadmin'
     
@@ -43,9 +41,10 @@ class ResourceSite(BaseEndpoint):
         return None
     
     def post_register(self):
-        self.site_resource = self.site_resource_class(**self.get_resource_kwargs())
+        self.directory_resource = self.directory_resource_class(**self.get_resource_kwargs(resource_name=self.name, resource_adaptor=self.applications))
         self.auth_resource = self.auth_resource_class(**self.get_resource_kwargs())
-        self.record_resource(self.site_resource)
+        self.directory_resource.register_resource(self.auth_resource, key='-authentication')
+        self.record_resource(self.directory_resource)
         self.record_resource(self.auth_resource)
         
         super(ResourceSite, self).post_register()
@@ -80,21 +79,14 @@ class ResourceSite(BaseEndpoint):
         params.update(kwargs)
         return params
     
-    def get_application_resource_class(self):
-        return self.application_resource_class
-    
-    def get_application_resource_kwargs(self, **kwargs):
-        params = self.get_resource_kwargs(**kwargs)
-        params['parent'] = self.site_resource
-        return params
-    
     def register_application(self, app_name, app_class=None, **options):
         if app_name not in self.applications:
-            app_class = app_class or self.get_application_resource_class()
-            kwargs = self.get_application_resource_kwargs(app_name=app_name, **options)
+            app_class = self.directory_resource_class
+            kwargs = self.get_resource_kwargs(app_name=self.name, resource_name=app_name, parent=self.directory_resource)
             app_resource = app_class(**kwargs)
-            self.applications[app_name] = app_resource
             self.record_resource(app_resource)
+            self.directory_resource.register_resource(app_resource)
+            self.applications[app_name] = app_resource
         return self.applications[app_name]
     
     def record_resource(self, resource):
@@ -114,7 +106,7 @@ class ResourceSite(BaseEndpoint):
     
     def get_urls(self):
         urlpatterns = self.get_extra_urls()
-        urlpatterns += self.site_resource.get_urls()
+        urlpatterns += self.directory_resource.get_urls()
         return urlpatterns
     
     @property
@@ -132,7 +124,7 @@ class ResourceSite(BaseEndpoint):
         return {'resource_site':self,}
     
     def get_login_link(self, api_request, **kwargs):
-        auth_resource = self.site_resource.auth_resource.fork(api_request=api_request)
+        auth_resource = self.auth_resource.fork(api_request=api_request)
         return auth_resource.get_link(**kwargs)
     
     def api_permission_check(self, api_request):

@@ -8,7 +8,7 @@ class AuthResource(BaseResource):
     
     def __init__(self, **kwargs):
         kwargs.setdefault('app_name', '-authentication')
-        kwargs.setdefault('resource_name', 'auth')
+        kwargs.setdefault('resource_name', 'authentication')
         kwargs.setdefault('resource_adaptor', None)
         super(AuthResource, self).__init__(**kwargs)
     
