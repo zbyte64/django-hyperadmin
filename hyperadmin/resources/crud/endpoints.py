@@ -1,7 +1,7 @@
 from django.core.exceptions import ObjectDoesNotExist
 from django.http import Http404
 
-from hyperadmin.endpoints import LinkPrototype
+from hyperadmin.links import LinkPrototype
 from hyperadmin.resources.endpoints import ResourceEndpoint
 
 

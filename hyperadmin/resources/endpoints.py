@@ -1,5 +1,5 @@
 from hyperadmin.endpoints import Endpoint
-from hyperadmin.hyperobjects import LinkCollection
+from hyperadmin.links import LinkCollection
 
 
 class ResourceEndpoint(Endpoint):

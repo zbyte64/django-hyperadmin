@@ -2,8 +2,8 @@ import os
 
 from django.core.exceptions import ObjectDoesNotExist
 
-from hyperadmin.hyperobjects import Link
-from hyperadmin.resources.crud.crud import CRUDResource
+from hyperadmin.links import Link
+from hyperadmin.resources.crud import CRUDResource
 from hyperadmin.resources.storages.forms import UploadForm, UploadLinkForm
 from hyperadmin.resources.storages.indexes import StorageIndex
 from hyperadmin.resources.storages.endpoints import ListEndpoint, CreateEndpoint, CreateUploadEndpoint, DetailEndpoint, DeleteEndpoint, BoundFile

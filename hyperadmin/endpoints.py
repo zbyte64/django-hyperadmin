@@ -1,107 +1,11 @@
 from django.conf.urls.defaults import url
 from django.views.generic import View
 
-from hyperadmin.hyperobjects import Link, LinkCollection, LinkCollectorMixin, ResourceItem
+from hyperadmin.links import Link, LinkCollection, LinkCollectorMixin
+from hyperadmin.hyperobjects import Item
 from hyperadmin.states import EndpointState
 from hyperadmin.views import EndpointViewMixin
 
-
-class LinkPrototype(object):
-    """
-    Incapsulates logic related to a link. This class is responsible for:
-    
-    * creating link
-    * handling link submission
-    * controlling link visibility
-    """
-    def __init__(self, endpoint, name, link_kwargs={}):
-        self.endpoint = endpoint
-        self.name = name
-        self.link_kwargs = link_kwargs
-    
-    @property
-    def resource(self):
-        return self.endpoint.resource
-    
-    @property
-    def state(self):
-        return self.endpoint.state
-    
-    @property
-    def common_state(self):
-        return self.endpoint.common_state
-    
-    @property
-    def api_request(self):
-        return self.endpoint.api_request
-    
-    def show_link(self, **kwargs):
-        """
-        Checks the state and returns False if the link is not active.
-        
-        :rtype: boolean
-        """
-        return True
-    
-    def get_form_class(self):
-        return self.endpoint.get_form_class()
-    
-    def get_form_kwargs(self, **kwargs):
-        """
-        :rtype: dict
-        """
-        return self.endpoint.get_form_kwargs(**kwargs)
-    
-    def get_link_kwargs(self, **kwargs):
-        """
-        :rtype: dict
-        """
-        kwargs.update(self.link_kwargs)
-        kwargs['form_kwargs'] = self.get_form_kwargs(**kwargs.get('form_kwargs', {}))
-        kwargs.setdefault('endpoint', self.endpoint)
-        if kwargs.pop('use_request_url', False):
-            kwargs['url'] = self.endpoint.api_request.get_full_path()
-        assert self.endpoint.state, 'link creation must come from a dispatched endpoint'
-        return kwargs
-    
-    def get_link(self, **link_kwargs):
-        """
-        Creates and returns the link
-        
-        :rtype: Link
-        """
-        link_kwargs = self.get_link_kwargs(**link_kwargs)
-        link = Link(**link_kwargs)
-        return link
-    
-    def handle_submission(self, link, submit_kwargs):
-        """
-        Called when the link is submitted. Returns a link representing the response.
-        
-        :rtype: Link
-        """
-        form = link.get_form(**submit_kwargs)
-        if form.is_valid():
-            instance = form.save()
-            resource_item = self.endpoint.get_resource_item(instance)
-            return self.on_success(resource_item)
-        return link.clone(form=form)
-    
-    def on_success(self, item=None):
-        """
-        Returns a link for a successful submission
-        
-        :rtype: Link
-        """
-        if item is not None:
-            return item.get_link()
-        return self.endpoint.get_resource_link()
-    
-    def get_url(self, **kwargs):
-        return self.endpoint.get_url(**kwargs)
-    
-    def get_url_name(self):
-        return self.endpoint.get_url_name()
 
 class BaseEndpoint(LinkCollectorMixin, View):
     """
@@ -121,7 +25,7 @@ class BaseEndpoint(LinkCollectorMixin, View):
     endpoint_classes = []
     
     form_class = None
-    resource_item_class = ResourceItem
+    resource_item_class = Item
     
     def __init__(self, **kwargs):
         self._init_kwargs = kwargs

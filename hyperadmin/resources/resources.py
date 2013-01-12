@@ -2,8 +2,8 @@ from django import forms
 from django.conf.urls.defaults import patterns
 from django.utils.datastructures import SortedDict
 
-from hyperadmin.hyperobjects import Link, ResourceItem
 from hyperadmin.endpoints import BaseEndpoint
+from hyperadmin.resources.hyperobjects import ResourceItem
 
 
 class EmptyForm(forms.Form):
@@ -14,6 +14,7 @@ class EmptyForm(forms.Form):
 class BaseResource(BaseEndpoint):
     resource_class = '' #hint to the client how this resource is used
     form_class = EmptyForm
+    resource_item_class = ResourceItem
     
     resource_adaptor = None
     

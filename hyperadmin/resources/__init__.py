@@ -1,2 +1,2 @@
 from hyperadmin.resources.resources import BaseResource
-from hyperadmin.resources.crud.crud import CRUDResource
+from hyperadmin.resources.crud import CRUDResource

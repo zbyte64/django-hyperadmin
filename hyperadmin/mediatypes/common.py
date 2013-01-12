@@ -1,6 +1,7 @@
 from django.core.files import File
 from django import http
 
+
 BUILTIN_MEDIA_TYPES = dict()
 
 class MediaType(object):

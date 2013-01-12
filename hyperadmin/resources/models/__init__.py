@@ -1,2 +1,2 @@
-from hyperadmin.resources.models.models import ModelResource, InlineModelResource
+from hyperadmin.resources.models.resources import ModelResource, InlineModelResource
 

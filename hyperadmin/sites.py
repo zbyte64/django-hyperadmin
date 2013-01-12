@@ -1,13 +1,11 @@
 from django.conf.urls.defaults import patterns
 from django.core.urlresolvers import reverse, RegexURLResolver
 from django.utils.datastructures import SortedDict
-from django.http import HttpResponse, HttpResponseRedirect
-from django.utils.encoding import iri_to_uri
 
 from hyperadmin.endpoints import BaseEndpoint
 from hyperadmin.resources.applications.site import SiteResource
 from hyperadmin.resources.applications.application import ApplicationResource
-from hyperadmin.resources.auth.auth import AuthResource
+from hyperadmin.resources.auth import AuthResource
 
 import collections
 
@@ -214,7 +212,7 @@ class ResourceSite(BaseEndpoint):
         return SortedDict()
     
     def generate_model_resource_from_admin_model(self, admin_model):
-        from hyperadmin.resources.models.models import ModelResource
+        from hyperadmin.resources.models import ModelResource
         from django import forms
         class GeneratedModelResource(ModelResource):
             #raw_id_fields = ()
@@ -256,7 +254,7 @@ class ResourceSite(BaseEndpoint):
         return GeneratedModelResource
     
     def install_models_from_site(self, site):
-        from hyperadmin.resources.models.models import InlineModelResource
+        from hyperadmin.resources.models import InlineModelResource
         from django.contrib.admin import ModelAdmin
         for model, admin_model in site._registry.iteritems():
             if model in self.registry:
@@ -276,7 +274,7 @@ class ResourceSite(BaseEndpoint):
                     pass #too much customization for us to handle!
     
     def install_storage_resources(self, media_resource_class=None, static_resource_class=None):
-        from hyperadmin.resources.storages.storages import StorageResource
+        from hyperadmin.resources.storages import StorageResource
         from django.core.files.storage import default_storage as media_storage
         try:
             from django.contrib.staticfiles.storage import staticfiles_storage as static_storage

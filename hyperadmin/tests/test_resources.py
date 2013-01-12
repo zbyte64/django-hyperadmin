@@ -6,7 +6,7 @@ from django.contrib.auth.models import User, Group
 from django.http import HttpResponse
 from django.core.files.base import ContentFile
 
-from hyperadmin.resources.models.models import ModelResource, InlineModelResource
+from hyperadmin.resources.models import ModelResource, InlineModelResource
 from hyperadmin.sites import ResourceSite
 from hyperadmin.apirequests import InternalAPIRequest
 

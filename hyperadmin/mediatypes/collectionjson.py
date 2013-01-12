@@ -8,7 +8,7 @@ from django.utils import simplejson as json
 from django import http
 
 from hyperadmin.mediatypes.common import MediaType
-from hyperadmin.hyperobjects import Link
+from hyperadmin.links import Link
 
 
 class LazyEncoder(DjangoJSONEncoder):

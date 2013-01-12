@@ -4,7 +4,7 @@ from django.utils.decorators import method_decorator
 from django.utils.cache import add_never_cache_headers
 from django.utils.translation import ugettext_lazy as _
 
-from hyperadmin.hyperobjects import Link
+from hyperadmin.links import Link
 from hyperadmin.apirequests import HTTPAPIRequest
 
 

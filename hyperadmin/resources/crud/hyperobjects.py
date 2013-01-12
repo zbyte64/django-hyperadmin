@@ -1,7 +1,7 @@
 from django.utils.encoding import force_unicode
 from django import forms
 
-from hyperadmin.hyperobjects import ResourceItem
+from hyperadmin.resources.hyperobjects import ResourceItem
 
 
 class ListForm(forms.Form):

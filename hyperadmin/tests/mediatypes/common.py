@@ -1,6 +1,6 @@
 from django.contrib.contenttypes.models import ContentType
 
-from hyperadmin.resources.models.models import ModelResource
+from hyperadmin.resources.models import ModelResource
 from hyperadmin.tests.test_resources import ResourceTestCase
 
 from mock import MagicMock

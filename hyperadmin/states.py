@@ -4,7 +4,7 @@ from django.utils.http import urlencode
 from django.utils.datastructures import MergeDict
 from django.http import QueryDict
 
-from hyperadmin.hyperobjects import LinkCollectionProvider, LinkCollectorMixin
+from hyperadmin.links import LinkCollectionProvider, LinkCollectorMixin
 
 
 class State(MergeDict):
