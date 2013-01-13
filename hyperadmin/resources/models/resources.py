@@ -216,6 +216,8 @@ class ModelResource(BaseModelResource):
             assert inline.api_request
             
             namespace = Namespace(name=name, endpoint=inline, state_data={'parent':item})
+            assert 'parent' in namespace.endpoint.state
+            namespace.link
             namespaces[name] = namespace
         return namespaces
 

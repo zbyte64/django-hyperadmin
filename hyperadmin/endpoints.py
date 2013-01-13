@@ -311,6 +311,11 @@ class BaseEndpoint(LinkCollectorMixin, View):
         return self.api_request.generate_response(link=link, state=self.state)
 
 class RootEndpoint(BaseEndpoint):
+    """
+    The top endpoint of a hypermedia aware site
+    
+    Child endpoints bind to this and this endpoint is used to mount in urls.py
+    """
     namespace = None
     media_types = None
     apirequest_class = HTTPAPIRequest

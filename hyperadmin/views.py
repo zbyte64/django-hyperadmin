@@ -36,6 +36,7 @@ class EndpointViewMixin(ConditionalAccessMixin):
         Takes a django request object and builds an APIRequest object
         Calls dispatch_api with the api request
         """
+        assert not self.api_request
         api_request = self.site.create_apirequest(request=request, url_args=args, url_kwargs=kwargs)
         endpoint = api_request.get_endpoint(self.get_url_name())
         return endpoint.dispatch_api(api_request)
@@ -52,11 +53,6 @@ class EndpointViewMixin(ConditionalAccessMixin):
         self.initialize_state()
         
         assert self.state is not None
-        assert self.resource != self
-        assert self.resource.state is not None
-        assert self.common_state is not None #resource.state is not initialized!
-        
-        self.pre_dispatch()
         
         self.common_state.update(self.get_common_state_data())
         
@@ -79,13 +75,6 @@ class EndpointViewMixin(ConditionalAccessMixin):
         Return state data that should be available at the resource level for processing the api request
         """
         return {}
-    
-    def pre_dispatch(self):
-        """
-        Put actions that need to be done after the state is prepped but before the api call is made.
-        Typically extra state manipulation can go here
-        """
-        pass
     
     def handle_link_submission(self, api_request):
         method = api_request.method.upper()

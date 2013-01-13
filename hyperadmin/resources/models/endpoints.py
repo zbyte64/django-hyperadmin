@@ -35,8 +35,9 @@ class InlineModelMixin(object):
         return super(InlineModelMixin, self).get_common_state_data()
     
     def get_parent_instance(self):
-        if 'parent' in self.common_state:
-            return self.common_state['parent'].instance
+        if 'parent' in self.state:
+            return self.state['parent'].instance
+        assert 'parent' not in self.common_state, 'state must inherit from common_state: %r\n%r' % (self.state, self.common_state)
         return self.get_parent_index().get(pk=self.kwargs['pk'])
     
     def get_parent_item(self):

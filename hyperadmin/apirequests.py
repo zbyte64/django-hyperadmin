@@ -1,5 +1,7 @@
 import mimeparse
 
+from hyperadmin.states import State
+
 
 class APIRequest(object):
     """
@@ -15,7 +17,6 @@ class APIRequest(object):
         #self.user = user
         #self.params = params
         #self.META = meta
-        from hyperadmin.states import State
         self.session_state = State()
         self.endpoint_state = State()
         self.endpoint_state['resources'] = dict()
@@ -93,6 +94,7 @@ class APIRequest(object):
         if urlname not in self.endpoint_state['endpoints']:
             endpoint = self.site.get_endpoint_from_urlname(urlname)
             bound_endpoint = endpoint.fork(api_request=self)
+            assert bound_endpoint == self.endpoint_state['endpoints'][urlname]
         return self.endpoint_state['endpoints'][urlname]
     
     def record_endpoint(self, endpoint):
@@ -103,7 +105,8 @@ class APIRequest(object):
         """
         assert endpoint.api_request == self
         urlname = endpoint.get_url_name()
-        self.endpoint_state['endpoints'][urlname] = endpoint
+        if urlname not in self.endpoint_state['endpoints']:
+            self.endpoint_state['endpoints'][urlname] = endpoint
     
     def get_link_prototypes(self, endpoint):
         """
@@ -230,7 +233,7 @@ class NamespaceAPIRequest(InternalAPIRequest):
     def __init__(self, api_request, path='/', url_args=[], url_kwargs={}, **kwargs):
         self.original_api_request = api_request
         super(NamespaceAPIRequest, self).__init__(api_request.site, path, url_args, url_kwargs, **kwargs)
-        self.session_state.update(api_request.session_state)
+        self.session_state = State(substates=[api_request.session_state])
     
     def get_full_path(self):
         #TODO
