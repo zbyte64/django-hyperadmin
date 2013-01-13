@@ -19,7 +19,6 @@ class APIRequest(object):
         #self.META = meta
         self.session_state = State()
         self.endpoint_state = State()
-        self.endpoint_state['resources'] = dict()
         self.endpoint_state['endpoints'] = dict()
         self.endpoint_state['link_prototypes'] = dict()
         super(APIRequest, self).__init__()
@@ -232,7 +231,8 @@ class HTTPAPIRequest(APIRequest):
 class NamespaceAPIRequest(InternalAPIRequest):
     def __init__(self, api_request, path='/', url_args=[], url_kwargs={}, **kwargs):
         self.original_api_request = api_request
-        super(NamespaceAPIRequest, self).__init__(api_request.site, path, url_args, url_kwargs, **kwargs)
+        site = api_request.site.fork(api_request=None)
+        super(NamespaceAPIRequest, self).__init__(site, path, url_args, url_kwargs, **kwargs)
         self.session_state = State(substates=[api_request.session_state])
     
     def get_full_path(self):
@@ -255,8 +255,6 @@ class Namespace(object):
         self.state_data = state_data
         self.endpoint = endpoint.fork(api_request=self.api_request)
         self.endpoint.state.update(state_data)
-        #self.api_request.session_state['endpoints'][self.endpoint.get_url_name()] = self.endpoint
-        self.api_request.endpoint_state['resources'][self.endpoint.get_url_name()] = self.endpoint
     
     def get_namespaces(self):
         return dict()

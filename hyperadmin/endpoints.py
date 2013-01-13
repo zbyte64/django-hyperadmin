@@ -383,7 +383,8 @@ class RootEndpoint(BaseEndpoint):
     def record_endpoint(self, endpoint, url_name=None):
         if url_name is None:
             url_name = endpoint.get_url_name()
-        self.endpoints_by_urlname[url_name] = endpoint
+        if url_name not in self.endpoints_by_urlname:
+            self.endpoints_by_urlname[url_name] = endpoint
     
     def get_endpoint_from_urlname(self, urlname):
         return self.endpoints_by_urlname[urlname]

@@ -6,9 +6,9 @@ from django.contrib import admin
 admin.autodiscover()
 
 import hyperadmin
-hyperadmin.autodiscover()
-hyperadmin.site.install_models_from_site(admin.site)
-hyperadmin.site.install_storage_resources()
+#hyperadmin.autodiscover()
+#hyperadmin.site.install_models_from_site(admin.site)
+#hyperadmin.site.install_storage_resources()
 
 urlpatterns = patterns('',
     # Examples:

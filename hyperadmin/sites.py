@@ -85,6 +85,9 @@ class ResourceSite(RootEndpoint):
         urlpatterns += self.directory_resource.get_urls()
         return urlpatterns
     
+    def get_link(self, **kwargs):
+        return self.directory_resource.get_link(**kwargs)
+    
     def get_login_link(self, api_request, **kwargs):
         auth_resource = self.auth_resource.fork(api_request=api_request)
         return auth_resource.get_link(**kwargs)

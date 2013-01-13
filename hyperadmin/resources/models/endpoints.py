@@ -74,7 +74,7 @@ class InlineListEndpoint(InlineModelMixin, ListEndpoint):
     url_suffix = r'/$'
 
 class InlineCreateEndpoint(InlineModelMixin, CreateEndpoint):
-    pass
+    url_suffix = r'/add/$'
 
 class InlineDetailEndpoint(InlineDetailMixin, DetailEndpoint):
     pass

@@ -171,8 +171,8 @@ class BaseModelResource(CRUDResource):
         return AdminForm
 
 class ModelResource(BaseModelResource):
-    def __init__(self, *args, **kwargs):
-        super(ModelResource, self).__init__(*args, **kwargs)
+    def post_register(self):
+        super(ModelResource, self).post_register()
         self.initialize_inlines()
     
     @property
@@ -237,6 +237,7 @@ class InlineModelResource(BaseModelResource):
         from django.forms.models import _get_foreign_key
         self.fk = _get_foreign_key(self._parent.resource_adaptor, self.model, self.fk_name)
         if self.rel_name is None:
+            #TODO invert this
             self.rel_name = RelatedObject(self.fk.rel.to, self.model, self.fk).get_accessor_name()
         super(InlineModelResource, self).post_register()
     
@@ -251,7 +252,7 @@ class InlineModelResource(BaseModelResource):
         return self.get_queryset(parent=self.state['parent'].instance)
     
     def get_base_url_name(self):
-        return '%s_%s' % (self._parent.get_base_url_name(), self.rel_name)
+        return '%s%s' % (self._parent.get_base_url_name(), self.rel_name)
     
     def get_view_endpoints(self):
         endpoints = super(CRUDResource, self).get_view_endpoints()
