@@ -5,7 +5,6 @@ from django.utils.cache import add_never_cache_headers
 from django.utils.translation import ugettext_lazy as _
 
 from hyperadmin.links import Link
-from hyperadmin.apirequests import HTTPAPIRequest
 
 
 class ConditionalAccessMixin(object):
@@ -37,10 +36,7 @@ class EndpointViewMixin(ConditionalAccessMixin):
         Takes a django request object and builds an APIRequest object
         Calls dispatch_api with the api request
         """
-        api_request = HTTPAPIRequest(site=self.site, request=request, url_args=args, url_kwargs=kwargs)
-        api_request.populate_session_data_from_request(request)
-        if self.global_state is not None:
-            api_request.session_state.update(self.global_state)
+        api_request = self.site.create_apirequest(request=request, url_args=args, url_kwargs=kwargs)
         endpoint = api_request.get_endpoint(self.get_url_name())
         return endpoint.dispatch_api(api_request)
     

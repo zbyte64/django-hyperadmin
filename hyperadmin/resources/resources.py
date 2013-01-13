@@ -80,6 +80,12 @@ class BaseResource(BaseEndpoint):
         """
         return []
     
+    def get_view_kwargs(self):
+        """
+        :rtype: dict
+        """
+        return {}
+    
     def get_urls(self):
         urlpatterns = self.get_extra_urls()
         urls = [endpoint.get_url_object() for endpoint in self.endpoints.itervalues()]

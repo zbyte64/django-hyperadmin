@@ -63,6 +63,10 @@ class EndpointState(LinkCollectorMixin, State):
                      'extra_get_params':{},
                      'endpoint': self.endpoint,})
     
+    @property
+    def api_request(self):
+        return self.endpoint.api_request
+    
     def get_link_collector_kwargs(self, **kwargs):
         params = super(EndpointState, self).get_link_collector_kwargs(**kwargs)
         params['parent'] = self.endpoint.links
@@ -80,10 +84,7 @@ class EndpointState(LinkCollectorMixin, State):
         return self.get('site', self.endpoint.site)
     
     def reverse(self, name, *args, **kwargs):
-        return self.site.reverse(name, *args, **kwargs)
-    
-    def generate_response(self, media_type, response_type, link):
-        return self.site.generate_response(media_type, response_type, link, state=self)
+        return self.api_request.reverse(name, *args, **kwargs)
     
     def _set_item(self, val):
         self['item'] = val

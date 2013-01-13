@@ -1,8 +1,7 @@
-from django.conf.urls.defaults import patterns
-from django.core.urlresolvers import reverse, RegexURLResolver
+from django.core.urlresolvers import RegexURLResolver
 from django.utils.datastructures import SortedDict
 
-from hyperadmin.endpoints import BaseEndpoint
+from hyperadmin.endpoints import RootEndpoint
 from hyperadmin.resources.directory import ResourceDirectory
 from hyperadmin.resources.auth import AuthResource
 
@@ -25,7 +24,7 @@ class Registry(dict):
             items = [(key, self[key]) for key, val in items]
         return items
 
-class ResourceSite(BaseEndpoint):
+class ResourceSite(RootEndpoint):
     directory_resource_class = ResourceDirectory
     auth_resource_class = AuthResource
     name = 'hyperadmin'
@@ -34,7 +33,7 @@ class ResourceSite(BaseEndpoint):
         self.applications = Registry(self)
         self.registry = Registry(self)
         self.resources_by_urlname = dict()#Registry(self)
-        self.media_types = dict()
+        kwargs.setdefault('namespace', kwargs.get('name', self.name))
         super(ResourceSite, self).__init__(**kwargs)
     
     def get_url_name(self):
@@ -92,36 +91,13 @@ class ResourceSite(BaseEndpoint):
     def record_resource(self, resource):
         self.resources_by_urlname[resource.get_url_name()] = resource
     
-    def register_media_type(self, media_type, media_type_handler):
-        self.media_types[media_type] = media_type_handler
-    
     def get_resource(self, resource_adaptor):
         return self.registry[resource_adaptor]
-    
-    def get_resource_item(self, instance, resource_adaptor=None):
-        if resource_adaptor is None:
-            resource_adaptor = type(instance)
-        resource = self.get_resource(resource_adaptor)
-        return resource.get_resource_item(instance)
     
     def get_urls(self):
         urlpatterns = self.get_extra_urls()
         urlpatterns += self.directory_resource.get_urls()
         return urlpatterns
-    
-    @property
-    def urlpatterns(self):
-        return self.get_urls()
-    
-    def get_extra_urls(self):
-        return patterns('',)
-    
-    def urls(self):
-        return self, None, self.name
-    urls = property(urls)
-    
-    def get_view_kwargs(self):
-        return {'resource_site':self,}
     
     def get_login_link(self, api_request, **kwargs):
         auth_resource = self.auth_resource.fork(api_request=api_request)
@@ -170,16 +146,6 @@ class ResourceSite(BaseEndpoint):
         from mediatypes import BUILTIN_MEDIA_TYPES
         for key, value in BUILTIN_MEDIA_TYPES.iteritems():
             self.register_media_type(key, value)
-    
-    def reverse(self, name, *args, **kwargs):
-        return reverse('%s:%s' % (self.name, name), args=args, kwargs=kwargs)#, current_app=self.app_name)
-    
-    def get_absolute_url(self):
-        return self.site_resource.get_absolute_url()
-    
-    def generate_response(self, media_type, content_type, link, state):
-        request = state.endpoint.api_request.request
-        return media_type.serialize(request=request, content_type=content_type, link=link, state=state)
     
     def get_resource_from_urlname(self, urlname):
         return self.resources_by_urlname.get(urlname, None)

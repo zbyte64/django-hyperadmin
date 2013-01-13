@@ -27,6 +27,10 @@ class APIRequest(object):
     def META(self):
         return self.session_state['meta']
     
+    @property
+    def media_types(self):
+        return self.get_site().media_types
+    
     def get_response_type(self):
         """
         Returns the active response type to be used
@@ -34,7 +38,7 @@ class APIRequest(object):
         :rtype: string
         """
         val = self.META.get('HTTP_ACCEPT', '')
-        media_types = self.site.media_types.keys()
+        media_types = self.media_types.keys()
         if not media_types:
             return val
         return mimeparse.best_match(media_types, val) or val
@@ -46,7 +50,7 @@ class APIRequest(object):
         :rtype: string
         """
         val = self.META.get('CONTENT_TYPE', self.META.get('HTTP_ACCEPT', ''))
-        media_types = self.site.media_types.keys()
+        media_types = self.media_types.keys()
         if not media_types:
             return val
         return mimeparse.best_match(media_types, val) or val
@@ -59,9 +63,9 @@ class APIRequest(object):
         :rtype: string
         """
         content_type = self.get_request_type()
-        media_type_cls = self.site.media_types.get(content_type, None)
+        media_type_cls = self.media_types.get(content_type, None)
         if media_type_cls is None:
-            raise ValueError('Unrecognized request content type "%s". Choices are: %s' % (content_type, self.site.media_types.keys()))
+            raise ValueError('Unrecognized request content type "%s". Choices are: %s' % (content_type, self.media_types.keys()))
         return media_type_cls(self)
     
     def get_response_media_type(self):
@@ -72,9 +76,9 @@ class APIRequest(object):
         :rtype: string
         """
         content_type = self.get_response_type()
-        media_type_cls = self.site.media_types.get(content_type, None)
+        media_type_cls = self.media_types.get(content_type, None)
         if media_type_cls is None:
-            raise ValueError('Unrecognized request content type "%s". Choices are: %s' % (content_type, self.site.media_types.keys()))
+            raise ValueError('Unrecognized request content type "%s". Choices are: %s' % (content_type, self.media_types.keys()))
         return media_type_cls(self)
     
     def get_resource(self, urlname):
@@ -169,7 +173,10 @@ class APIRequest(object):
         """
         media_type = self.get_response_media_type()
         response_type = self.get_response_type()
-        return state.generate_response(media_type=media_type, response_type=response_type, link=link)
+        return media_type.serialize(request=self, content_type=response_type, link=link, state=state)
+    
+    def reverse(self, name, *args, **kwargs):
+        return self.get_site().reverse(name, *args, **kwargs)
 
 class InternalAPIRequest(APIRequest):
     """

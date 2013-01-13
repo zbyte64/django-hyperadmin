@@ -1,7 +1,9 @@
-from django.conf.urls.defaults import url
+from django.conf.urls.defaults import url, patterns
+from django.core.urlresolvers import reverse
 from django.views.generic import View
 
 from hyperadmin.links import Link, LinkCollection, LinkCollectorMixin
+from hyperadmin.apirequests import HTTPAPIRequest
 from hyperadmin.hyperobjects import Item
 from hyperadmin.states import EndpointState
 from hyperadmin.views import EndpointViewMixin
@@ -97,6 +99,7 @@ class BaseEndpoint(LinkCollectorMixin, View):
         data = {'endpoint_class':self.endpoint_class,
                 'endpoint_classes':self.get_endpoint_classes(),
                 'params':self.api_request.params,}
+        #TODO send params only if the api request was for this endpoint
         return data
     
     def get_state_kwargs(self):
@@ -128,7 +131,7 @@ class BaseEndpoint(LinkCollectorMixin, View):
         
         :rtype: string
         """
-        return self.state.reverse(*args, **kwargs)
+        return self.api_request.reverse(*args, **kwargs)
     
     #urls
     
@@ -246,12 +249,6 @@ class BaseEndpoint(LinkCollectorMixin, View):
             kwargs.setdefault('instance', item.instance)
         return kwargs
     
-    def get_view_kwargs(self):
-        """
-        :rtype: dict
-        """
-        return {}
-    
     def get_namespaces(self):
         """
         :rtype: dictionary of namespaces
@@ -302,11 +299,65 @@ class BaseEndpoint(LinkCollectorMixin, View):
         """
         return unicode(self)
     
+    #TODO deprecate this, replace with api_request.api_permission_check()
     def api_permission_check(self, api_request):
         return self.site.api_permission_check(api_request)
     
     def generate_response(self, link):
         return self.api_request.generate_response(link=link, state=self.state)
+
+class RootEndpoint(BaseEndpoint):
+    namespace = None
+    media_types = None
+    apirequest_class = HTTPAPIRequest
+    
+    def __init__(self, **kwargs):
+        kwargs.setdefault('media_types', dict())
+        kwargs.setdefault('namespace', str(id(self)))
+        super(RootEndpoint, self).__init__(**kwargs)
+    
+    def get_site(self):
+        if self.api_request:
+            return self.api_request.get_site()
+        return self
+    
+    site = property(get_site)
+    
+    def get_urls(self):
+        #TODO this goes into standalone endpoint...
+        urlpatterns = self.get_extra_urls()
+        urlpatterns += patterns('', self.get_url_object())
+        return urlpatterns
+    
+    @property
+    def urlpatterns(self):
+        return self.get_urls()
+    
+    def get_extra_urls(self):
+        return patterns('',)
+    
+    def urls(self):
+        return self, None, self.namespace
+    urls = property(urls)
+    
+    def reverse(self, name, *args, **kwargs):
+        return reverse('%s:%s' % (self.namespace, name), args=args, kwargs=kwargs)
+    
+    def register_media_type(self, media_type, media_type_handler):
+        self.media_types[media_type] = media_type_handler
+    
+    def get_api_request_kwargs(self, **kwargs):
+        params = {'site':self}
+        params.update(kwargs)
+        return params
+    
+    def create_apirequest(self, request, url_args, url_kwargs):
+        kwargs = self.get_api_request_kwargs(request=request, url_args=url_args, url_kwargs=url_kwargs)
+        api_request = self.apirequest_class(**kwargs)
+        api_request.populate_session_data_from_request(request)
+        if self.global_state is not None:
+            api_request.session_state.update(self.global_state)
+        return api_request
 
 class Endpoint(EndpointViewMixin, BaseEndpoint):
     """
@@ -338,6 +389,12 @@ class Endpoint(EndpointViewMixin, BaseEndpoint):
     
     def get_url_suffix(self):
         return self.url_suffix
+    
+    def get_view_kwargs(self):
+        """
+        :rtype: dict
+        """
+        return {}
     
     def get_view(self, **kwargs):
         """
