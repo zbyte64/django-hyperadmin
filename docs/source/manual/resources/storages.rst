@@ -2,7 +2,7 @@
 StorageResource
 ===============
 
-.. automodule:: hyperadmin.resources.storages.storages
+.. automodule:: hyperadmin.resources.storages
 
 
 Allows for direct browsing and uploading of files. The storage resource includes an endpoint for generating a direct upload link.

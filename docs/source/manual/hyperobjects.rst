@@ -5,23 +5,9 @@ Hyperobjects
 .. automodule:: hyperadmin.hyperobjects
 
 
-Links
-=====
+Item
+====
 
-.. autoclass:: Link
-   :members:
-   :undoc-members:
-
-LinkCollection
-==============
-
-.. autoclass:: LinkCollection
-   :members:
-   :undoc-members:
-
-ResourceItem
-============
-
-.. autoclass:: ResourceItem
+.. autoclass:: Item
    :members:
    :undoc-members:

@@ -7,6 +7,6 @@ Resources
    :maxdepth: 2
 
    resources/models
-   resources/applications
+   resources/directory
    resources/storages
    resources/auth

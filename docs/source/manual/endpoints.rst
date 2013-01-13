@@ -5,14 +5,6 @@ Endpoints
 .. automodule:: hyperadmin.endpoints
 
 
-LinkPrototype
-=============
-
-.. autoclass:: LinkPrototype
-   :members:
-   :undoc-members:
-
-
 BaseEndpoint
 ============
 
@@ -20,6 +12,12 @@ BaseEndpoint
    :members:
    :undoc-members:
 
+
+RootEndpoint
+============
+.. autoclass:: RootEndpoint
+   :members:
+   :undoc-members:
 
 Endpoint
 ========

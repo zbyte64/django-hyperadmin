@@ -11,6 +11,7 @@ Welcome to Django Hyperadmin's documentation
    manual/api
    manual/endpoints
    manual/apirequests
+   manual/links
    manual/hyperobjects
    manual/indexes
    manual/clients
