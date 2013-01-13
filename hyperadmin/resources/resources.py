@@ -22,12 +22,6 @@ class BaseResource(BaseEndpoint):
         assert 'resource_adaptor' in kwargs
         super(BaseResource, self).__init__(**kwargs)
     
-    def post_register(self):
-        if self.api_request:
-            self.api_request.record_resource(self)
-        
-        super(BaseResource, self).post_register()
-    
     @property
     def resource(self):
         #endpoints have a resource attribute

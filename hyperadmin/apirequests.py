@@ -81,36 +81,6 @@ class APIRequest(object):
             raise ValueError('Unrecognized request content type "%s". Choices are: %s' % (content_type, self.media_types.keys()))
         return media_type_cls(self)
     
-    def get_resource(self, urlname):
-        """
-        Returns a bound resource matching the urlname
-        
-        :param urlname: The urlname to find
-        :type urlname: string
-        :raises KeyError: when the urlname does not match any resources
-        :rtype: Resource
-        """
-        if urlname not in self.endpoint_state['resources']:
-            resource = self.site.get_resource_from_urlname(urlname)
-            if resource is None:
-                raise KeyError, urlname
-            bound_resource = resource.fork(api_request=self)
-        return self.endpoint_state['resources'][urlname]
-    
-    def record_resource(self, resource):
-        """
-        Record the resource in our urlname cache
-        
-        :param resource: Resource
-        """
-        assert resource.api_request == self
-        urlname = resource.get_url_name()
-        self.endpoint_state['resources'][urlname] = resource
-        
-        #useful for inline resources
-        if urlname not in self.site.resources_by_urlname:
-            self.site.resources_by_urlname[urlname] = resource
-    
     def get_endpoint(self, urlname):
         """
         Returns a bound endpoint matching the urlname
@@ -122,10 +92,7 @@ class APIRequest(object):
         """
         if urlname not in self.endpoint_state['endpoints']:
             endpoint = self.site.get_endpoint_from_urlname(urlname)
-            if endpoint is None:
-                raise KeyError, urlname
             bound_endpoint = endpoint.fork(api_request=self)
-            #fork => __init__ => post_register => record_endpoint
         return self.endpoint_state['endpoints'][urlname]
     
     def record_endpoint(self, endpoint):

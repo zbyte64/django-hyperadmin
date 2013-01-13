@@ -236,7 +236,6 @@ class InlineModelResource(BaseModelResource):
         self.fk = _get_foreign_key(self._parent.resource_adaptor, self.model, self.fk_name)
         if self.rel_name is None:
             self.rel_name = RelatedObject(self.fk.rel.to, self.model, self.fk).get_accessor_name()
-        self._site.record_resource(self)
         super(InlineModelResource, self).post_register()
     
     def get_queryset(self, parent):
@@ -250,7 +249,7 @@ class InlineModelResource(BaseModelResource):
         return self.get_queryset(parent=self.state['parent'].instance)
     
     def get_base_url_name(self):
-        return '%s_%s_%s_' % (self.parent.app_name, self.parent.resource_name, self.rel_name)
+        return '%s_%s' % (self._parent.get_base_url_name(), self.rel_name)
     
     def get_view_endpoints(self):
         endpoints = super(CRUDResource, self).get_view_endpoints()

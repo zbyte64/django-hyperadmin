@@ -1,4 +1,3 @@
-from django.core.urlresolvers import RegexURLResolver
 from django.utils.datastructures import SortedDict
 
 from hyperadmin.endpoints import RootEndpoint
@@ -15,7 +14,7 @@ class Registry(dict):
     def __getitem__(self, key):
         item = super(Registry, self).__getitem__(key)
         if self.resource_site.api_request:
-            return self.resource_site.api_request.get_resource(item.get_url_name())
+            return self.resource_site.api_request.get_endpoint(item.get_url_name())
         return item
     
     def items(self):
@@ -32,21 +31,14 @@ class ResourceSite(RootEndpoint):
     def __init__(self, **kwargs):
         self.applications = Registry(self)
         self.registry = Registry(self)
-        self.resources_by_urlname = dict()#Registry(self)
         kwargs.setdefault('namespace', kwargs.get('name', self.name))
         super(ResourceSite, self).__init__(**kwargs)
     
-    def get_url_name(self):
-        return None
-    
     def post_register(self):
+        super(ResourceSite, self).post_register()
         self.directory_resource = self.directory_resource_class(**self.get_resource_kwargs(resource_name=self.name, resource_adaptor=self.applications))
         self.auth_resource = self.auth_resource_class(**self.get_resource_kwargs())
         self.directory_resource.register_resource(self.auth_resource, key='-authentication')
-        self.record_resource(self.directory_resource)
-        self.record_resource(self.auth_resource)
-        
-        super(ResourceSite, self).post_register()
     
     def register(self, model_or_iterable, admin_class, **options):
         if isinstance(model_or_iterable, collections.Iterable):
@@ -62,14 +54,12 @@ class ResourceSite(RootEndpoint):
         resource._init_kwargs['parent'] = resource.parent
         self.applications[app_name].register_resource(resource)
         self.registry[model] = resource
-        self.record_resource(resource)
         return resource
     
     def fork(self, **kwargs):
         ret = super(ResourceSite, self).fork(**kwargs)
         ret.applications.update(self.applications)
         ret.registry.update(self.registry)
-        ret.resources_by_urlname.update(self.resources_by_urlname)
         return ret
     
     def get_resource_kwargs(self, **kwargs):
@@ -83,13 +73,9 @@ class ResourceSite(RootEndpoint):
             app_class = self.directory_resource_class
             kwargs = self.get_resource_kwargs(app_name=self.name, resource_name=app_name, parent=self.directory_resource)
             app_resource = app_class(**kwargs)
-            self.record_resource(app_resource)
             self.directory_resource.register_resource(app_resource)
             self.applications[app_name] = app_resource
         return self.applications[app_name]
-    
-    def record_resource(self, resource):
-        self.resources_by_urlname[resource.get_url_name()] = resource
     
     def get_resource(self, resource_adaptor):
         return self.registry[resource_adaptor]
@@ -146,25 +132,6 @@ class ResourceSite(RootEndpoint):
         from mediatypes import BUILTIN_MEDIA_TYPES
         for key, value in BUILTIN_MEDIA_TYPES.iteritems():
             self.register_media_type(key, value)
-    
-    def get_resource_from_urlname(self, urlname):
-        return self.resources_by_urlname.get(urlname, None)
-    
-    def get_endpoint_from_urlname(self, urlname):
-        urlconf_module, app_name, namespace = self.urls
-        main_resolver = RegexURLResolver('', urlconf_module, app_name=app_name, namespace=namespace)
-        
-        def lookup_urlname(resolver, name):
-            for pattern in resolver.url_patterns:
-                if getattr(pattern, 'url_patterns', None):
-                    ret = lookup_urlname(pattern, name)
-                    if ret is not None:
-                        return ret
-                elif hasattr(pattern, 'name') and pattern.name == urlname:
-                    return pattern.callback.endpoint
-            return None
-        
-        return lookup_urlname(main_resolver, urlname)
     
     def get_actions(self, request):
         return SortedDict()

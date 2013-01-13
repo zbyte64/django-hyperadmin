@@ -37,6 +37,10 @@ class BaseEndpoint(LinkCollectorMixin, View):
         self.post_register()
     
     def post_register(self):
+        if self.api_request:
+            self.api_request.record_endpoint(self)
+        else:
+            self._site.record_endpoint(self)
         self.register_link_prototypes()
     
     def get_site(self):
@@ -53,7 +57,7 @@ class BaseEndpoint(LinkCollectorMixin, View):
         if getattr(self, '_parent', None) is None:
             return None
         if self.api_request:
-            return self.api_request.get_resource(self._parent.get_url_name())
+            return self.api_request.get_endpoint(self._parent.get_url_name())
         return self._parent
     
     def set_parent(self, parent):
@@ -314,7 +318,14 @@ class RootEndpoint(BaseEndpoint):
     def __init__(self, **kwargs):
         kwargs.setdefault('media_types', dict())
         kwargs.setdefault('namespace', str(id(self)))
+        self.endpoints_by_urlname = dict()
         super(RootEndpoint, self).__init__(**kwargs)
+    
+    def get_url_name(self):
+        return None
+    
+    def post_register(self):
+        pass #we wrap other endpoints
     
     def get_site(self):
         if self.api_request:
@@ -322,6 +333,11 @@ class RootEndpoint(BaseEndpoint):
         return self
     
     site = property(get_site)
+    
+    def fork(self, **kwargs):
+        ret = super(RootEndpoint, self).fork(**kwargs)
+        ret.endpoints_by_urlname.update(self.endpoints_by_urlname)
+        return ret
     
     def get_urls(self):
         #TODO this goes into standalone endpoint...
@@ -358,6 +374,14 @@ class RootEndpoint(BaseEndpoint):
         if self.global_state is not None:
             api_request.session_state.update(self.global_state)
         return api_request
+    
+    def record_endpoint(self, endpoint, url_name=None):
+        if url_name is None:
+            url_name = endpoint.get_url_name()
+        self.endpoints_by_urlname[url_name] = endpoint
+    
+    def get_endpoint_from_urlname(self, urlname):
+        return self.endpoints_by_urlname[urlname]
 
 class Endpoint(EndpointViewMixin, BaseEndpoint):
     """
@@ -367,11 +391,6 @@ class Endpoint(EndpointViewMixin, BaseEndpoint):
     url_suffix = None
     
     prototype_method_map = {}
-    
-    def post_register(self):
-        if self.api_request:
-            self.api_request.record_endpoint(self)
-        super(Endpoint, self).post_register()
     
     def get_link_prototype_for_method(self, method):
         """
@@ -400,9 +419,10 @@ class Endpoint(EndpointViewMixin, BaseEndpoint):
         """
         :rtype: view callable
         """
-        kwargs.update(self._init_kwargs)
-        kwargs.update(self.get_view_kwargs())
-        view = type(self).as_view(**kwargs)
+        params = self.get_view_kwargs()
+        params.update(self._init_kwargs)
+        params.update(kwargs)
+        view = type(self).as_view(**params)
         #allow for retreiving the endpoint from url patterns
         view.endpoint = self
         #thus allowing us to do: myview.endpoint.get_view(**some_new_kwargs)
