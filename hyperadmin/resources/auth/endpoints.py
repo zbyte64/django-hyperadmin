@@ -31,7 +31,7 @@ class LoginLinkPrototype(LinkPrototype):
         return link.clone(form=form)
     
     def on_success(self):
-        return self.resource.site.site_resource.get_link()
+        return self.resource.site.get_link()
 
 class LogoutLinkPrototype(LinkPrototype):
     def get_form_class(self):
