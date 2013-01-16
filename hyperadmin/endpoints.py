@@ -395,10 +395,16 @@ class RootEndpoint(BaseEndpoint):
             self.endpoints_by_urlname[url_name] = endpoint
         else:
             original = self.endpoints_by_urlname[url_name]
-            self.get_logger().warning('Double registration at site level on %s by %s, original: %s' % (url_name, endpoint, original))
+            self.get_logger().debug('Double registration at site level on %s by %s, original: %s' % (url_name, endpoint, original))
     
     def get_endpoint_from_urlname(self, urlname):
         return self.endpoints_by_urlname[urlname]
+    
+    def api_permission_check(self, api_request):
+        """
+        Return a link describing the authentication failure or return None if the request has sufficient permissions
+        """
+        return None
 
 class Endpoint(EndpointViewMixin, BaseEndpoint):
     """
