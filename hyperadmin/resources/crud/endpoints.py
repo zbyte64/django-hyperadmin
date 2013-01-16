@@ -6,6 +6,9 @@ from hyperadmin.resources.endpoints import ResourceEndpoint
 
 
 class ListLinkPrototype(LinkPrototype):
+    """
+    Resource Item Listing
+    """
     def get_link_kwargs(self, **kwargs):
         link_kwargs = {'url':self.get_url(),
                        'prompt':'list',
@@ -14,6 +17,9 @@ class ListLinkPrototype(LinkPrototype):
         return super(ListLinkPrototype, self).get_link_kwargs(**link_kwargs)
 
 class CreateLinkPrototype(LinkPrototype):
+    """
+    Create Resource Item
+    """
     def show_link(self, **kwargs):
         return self.resource.has_add_permission()
     
@@ -31,6 +37,9 @@ class CreateLinkPrototype(LinkPrototype):
 
 #TODO consider: Update vs Detail link
 class UpdateLinkPrototype(LinkPrototype):
+    """
+    Update Resource Item
+    """
     def show_link(self, **kwargs):
         return self.resource.has_change_permission(item=kwargs.get('item', None))
     
@@ -49,6 +58,9 @@ class UpdateLinkPrototype(LinkPrototype):
         return super(UpdateLinkPrototype, self).get_link_kwargs(**link_kwargs)
 
 class DeleteLinkPrototype(LinkPrototype):
+    """
+    Delete Resource Item
+    """
     def show_link(self, **kwargs):
         return self.resource.has_delete_permission(item=kwargs.get('item', None))
     

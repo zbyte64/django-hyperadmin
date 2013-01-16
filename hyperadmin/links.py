@@ -7,7 +7,7 @@ class Link(object):
     """
     A link in the broad hypermedia sense
     """
-    def __init__(self, url, endpoint, method='GET', prompt=None,
+    def __init__(self, url, endpoint, method='GET', prompt=None, description=None,
                 form=None, form_class=None, form_kwargs=None, on_submit=None,
                 link_factor=None, include_form_params_in_url=False,
                 mimetype=None, descriptors=None,
@@ -18,6 +18,7 @@ class Link(object):
         :param endpoint: the endpoint that generated this link
         :param method: the HTTP method of the link
         :param prompt: the link display
+        :param description: text describing the link, could be help text
         
         :param form: a form instance
         :param form_class: the form class to be used to instantiate the form
@@ -37,6 +38,7 @@ class Link(object):
         self.descriptors = descriptors #is this needed?
         self.cl_headers = cl_headers
         self.prompt = prompt
+        self.description = description
         self.cu_headers = cu_headers
         self.cr_headers = cr_headers
         self.on_submit = on_submit
@@ -344,6 +346,9 @@ class LinkPrototype(object):
         """
         return True
     
+    def get_link_description(self):
+        return self.__doc__
+    
     def get_form_class(self):
         return self.endpoint.get_form_class()
     
@@ -357,13 +362,15 @@ class LinkPrototype(object):
         """
         :rtype: dict
         """
-        kwargs.update(self.link_kwargs)
-        kwargs['form_kwargs'] = self.get_form_kwargs(**kwargs.get('form_kwargs', {}))
-        kwargs.setdefault('endpoint', self.endpoint)
-        if kwargs.pop('use_request_url', False):
-            kwargs['url'] = self.endpoint.api_request.get_full_path()
+        params = dict(self.link_kwargs)
+        params.setdefault('description', self.get_link_description())
+        params.setdefault('endpoint', self.endpoint)
+        if params.pop('use_request_url', False):
+            params['url'] = self.endpoint.api_request.get_full_path()
+        params.update(kwargs)
+        params['form_kwargs'] = self.get_form_kwargs(**params.get('form_kwargs', {}))
         assert self.endpoint.state, 'link creation must come from a dispatched endpoint'
-        return kwargs
+        return params
     
     def get_link(self, **link_kwargs):
         """
