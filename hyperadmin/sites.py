@@ -128,7 +128,7 @@ class ResourceSite(RootEndpoint):
         if isinstance(widget, widgets.Select):
             #if widget.allow_multiple_selected
             return 'select'
-        print 'Uhandled:', type(widget)
+        self.get_logger().warning('Unhandled widget type: %s' % type(widget))
         return 'text'
     
     def register_builtin_media_types(self):
@@ -158,7 +158,7 @@ class ResourceSite(RootEndpoint):
             #save_as = False
             #save_on_top = False
             paginator = admin_model.paginator
-            #inlines = []
+            inlines = list()
             
             #list display options
             list_display = list(admin_model.list_display)
@@ -199,7 +199,9 @@ class ResourceSite(RootEndpoint):
                 try:
                     resource.register_inline(GeneratedInlineModelResource)
                 except:
-                    pass #too much customization for us to handle!
+                    self.get_logger.exception('Could not autoload inline: %s' % inline_cls)
+                else:
+                    resource.inlines.append(GeneratedInlineModelResource)
     
     def install_storage_resources(self, media_resource_class=None, static_resource_class=None):
         from hyperadmin.resources.storages import StorageResource

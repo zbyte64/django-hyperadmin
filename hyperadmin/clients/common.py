@@ -7,6 +7,8 @@ from django.core.urlresolvers import reverse
 
 from hyperadmin.apirequests import InternalAPIRequest
 
+import logging
+
 
 class Client(object):
     default_namespace = 'hyper-client'
@@ -16,6 +18,9 @@ class Client(object):
         self.api_endpoint = api_endpoint
         self.name = name or self.default_namespace
         self.app_name = app_name or self.default_app_name
+    
+    def get_logger(self):
+        return logging.getLogger(__name__)
     
     def get_urls(self):
         pass

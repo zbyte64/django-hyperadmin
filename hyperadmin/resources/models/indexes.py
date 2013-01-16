@@ -37,3 +37,6 @@ class ModelIndex(Index):
                     links.append(self.get_link(url=header["url_toggle"], prompt=prompt, classes=classes+["toggle"], rel="sortby"))
         return links
 
+class InlineIndex(Index):
+    def get(self, **kwargs):
+        return self.get_index_query().get(pk=kwargs['inline_pk'])
