@@ -158,7 +158,7 @@ class ResourceSite(RootEndpoint):
             #save_as = False
             #save_on_top = False
             paginator = admin_model.paginator
-            #inlines = []
+            inlines = list()
             
             #list display options
             list_display = list(admin_model.list_display)
@@ -196,7 +196,6 @@ class ResourceSite(RootEndpoint):
                     model = inline_cls.model
                     fields = inline_cls.fields
                     exclude = inline_cls.exclude
-                    inlines = list()
                 try:
                     resource.register_inline(GeneratedInlineModelResource)
                 except:
