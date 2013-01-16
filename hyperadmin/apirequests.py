@@ -19,7 +19,6 @@ class APIRequest(object):
         #self.META = meta
         self.session_state = State()
         self.endpoint_state = State()
-        self.endpoint_state['resources'] = dict()
         self.endpoint_state['endpoints'] = dict()
         self.endpoint_state['link_prototypes'] = dict()
         super(APIRequest, self).__init__()
@@ -94,7 +93,8 @@ class APIRequest(object):
         if urlname not in self.endpoint_state['endpoints']:
             endpoint = self.site.get_endpoint_from_urlname(urlname)
             bound_endpoint = endpoint.fork(api_request=self)
-            assert bound_endpoint == self.endpoint_state['endpoints'][urlname]
+            if bound_endpoint != self.endpoint_state['endpoints'][urlname]:
+                pass
         return self.endpoint_state['endpoints'][urlname]
     
     def record_endpoint(self, endpoint):
@@ -107,6 +107,11 @@ class APIRequest(object):
         urlname = endpoint.get_url_name()
         if urlname not in self.endpoint_state['endpoints']:
             self.endpoint_state['endpoints'][urlname] = endpoint
+        else:
+            original = self.endpoint_state['endpoints'][urlname]
+            original_state = original.state
+            new_state = endpoint.state
+            #print 'Double registration on %s by %s' % (urlname, endpoint)
     
     def get_link_prototypes(self, endpoint):
         """
@@ -232,7 +237,9 @@ class HTTPAPIRequest(APIRequest):
 class NamespaceAPIRequest(InternalAPIRequest):
     def __init__(self, api_request, path='/', url_args=[], url_kwargs={}, **kwargs):
         self.original_api_request = api_request
+        
         super(NamespaceAPIRequest, self).__init__(api_request.site, path, url_args, url_kwargs, **kwargs)
+        self.site = api_request.site.fork(api_request=self)
         self.session_state = State(substates=[api_request.session_state])
     
     def get_full_path(self):
@@ -255,8 +262,7 @@ class Namespace(object):
         self.state_data = state_data
         self.endpoint = endpoint.fork(api_request=self.api_request)
         self.endpoint.state.update(state_data)
-        #self.api_request.session_state['endpoints'][self.endpoint.get_url_name()] = self.endpoint
-        self.api_request.endpoint_state['resources'][self.endpoint.get_url_name()] = self.endpoint
+        self.api_request.endpoint_state['endpoints'][self.endpoint.get_url_name()] = self.endpoint
     
     def get_namespaces(self):
         return dict()
