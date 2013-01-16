@@ -276,7 +276,7 @@ class SiteResourceTestCase(ResourceTestCase):
 class ApplicationResourceTestCase(ResourceTestCase):
     def register_resource(self):
         self.site.register(User, ModelResource)
-        return self.site.applications.values()[0]
+        return self.site.applications['auth']
     
     def test_get_list(self):
         api_request = self.get_api_request()

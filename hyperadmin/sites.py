@@ -23,22 +23,112 @@ class Registry(dict):
             items = [(key, self[key]) for key, val in items]
         return items
 
-class ResourceSite(RootEndpoint):
+class BaseResourceSite(RootEndpoint):
     directory_resource_class = ResourceDirectory
-    auth_resource_class = AuthResource
     name = 'hyperadmin'
     
     def __init__(self, **kwargs):
-        self.applications = Registry(self)
-        self.registry = Registry(self)
+        self.registry = dict()
         kwargs.setdefault('namespace', kwargs.get('name', self.name))
-        super(ResourceSite, self).__init__(**kwargs)
+        super(BaseResourceSite, self).__init__(**kwargs)
+    
+    def post_register(self):
+        super(BaseResourceSite, self).post_register()
+        self.directory_resource = self.create_directory_resource()
+    
+    def get_directory_resource_kwargs(self, **kwargs):
+        kwargs.setdefault('resource_name', self.name)
+        return self.get_resource_kwargs(**kwargs)
+    
+    def create_directory_resource(self):
+        return self.directory_resource_class(**self.get_directory_resource_kwargs())
+    
+    def get_urls(self):
+        urlpatterns = self.get_extra_urls()
+        urlpatterns += self.directory_resource.get_urls()
+        return urlpatterns
+    
+    def get_link(self, **kwargs):
+        return self.directory_resource.get_link(**kwargs)
+    
+    def get_resource_kwargs(self, **kwargs):
+        params = {'site': self,
+                  'api_request': self.api_request,}
+        params.update(kwargs)
+        return params
+    
+    def get_endpoint_kwargs(self, **kwargs):
+        kwargs.setdefault('parent', self.directory_resource)
+        params = self.get_resource_kwargs(**kwargs)
+        return params
+    
+    def fork(self, **kwargs):
+        ret = super(BaseResourceSite, self).fork(**kwargs)
+        ret.registry.update(self.registry)
+        ret.directory_resource.resource_adaptor.update(self.directory_resource.resource_adaptor)
+        return ret
+    
+    def register_endpoint(self, klass, **options):
+        kwargs = self.get_endpoint_kwargs(**options)
+        endpoint = klass(**kwargs)
+        if 'resource_adaptor' in kwargs:
+            self.registry[kwargs['resource_adaptor']] = endpoint
+        self.directory_resource.register_resource(endpoint)
+        return endpoint
+    
+    #TODO review the following for inclusion into RootEndpoint
+    def register_builtin_media_types(self):
+        from mediatypes import BUILTIN_MEDIA_TYPES
+        for key, value in BUILTIN_MEDIA_TYPES.iteritems():
+            self.register_media_type(key, value)
+    
+    def get_html_type_from_field(self, field):
+        #TODO fill this out, datetime, etc
+        from django.forms import widgets
+        widget = field.field.widget
+        if isinstance(widget, widgets.Input):
+            return widget.input_type
+        if isinstance(widget, widgets.CheckboxInput):
+            return 'checkbox'
+        if isinstance(widget, widgets.Select):
+            #if widget.allow_multiple_selected
+            return 'select'
+        self.get_logger().warning('Unhandled widget type: %s' % type(widget))
+        return 'text'
+    
+    def get_media_resource_urlname(self):
+        return '-storages_media_resource'
+    
+    def get_media_resource(self):
+        urlname = self.get_media_resource_urlname()
+        return self.api_request.get_endpoint(urlname)
+    
+    def get_related_resource_from_field(self, field):
+        #TODO make more dynamic
+        from django.forms import FileField
+        from django.forms.models import ModelChoiceField
+        if hasattr(field, 'field'): #CONSIDER internally we use boundfield
+            field = field.field
+        if isinstance(field, ModelChoiceField):
+            model = field.queryset.model
+            if model in self.registry:
+                resource = self.registry[model]
+                return self.api_request.get_endpoint(resource.get_url_name())
+        if isinstance(field, FileField):
+            return self.get_media_resource().link_prototypes['upload'].get_url()
+        return None
+
+class ResourceSite(BaseResourceSite):
+    auth_resource_class = AuthResource
+    name = 'hyperadmin'
     
     def post_register(self):
         super(ResourceSite, self).post_register()
-        self.directory_resource = self.directory_resource_class(**self.get_resource_kwargs(resource_name=self.name, resource_adaptor=self.applications))
-        self.auth_resource = self.auth_resource_class(**self.get_resource_kwargs())
-        self.directory_resource.register_resource(self.auth_resource, key='-authentication')
+        self.auth_resource = self.register_endpoint(self.auth_resource_class)
+    
+    @property
+    def applications(self):
+        return self.directory_resource.resource_adaptor
     
     def register(self, model_or_iterable, admin_class, **options):
         if isinstance(model_or_iterable, collections.Iterable):
@@ -56,40 +146,16 @@ class ResourceSite(RootEndpoint):
         self.registry[model] = resource
         return resource
     
-    def fork(self, **kwargs):
-        ret = super(ResourceSite, self).fork(**kwargs)
-        ret.applications.update(self.applications)
-        ret.registry.update(self.registry)
-        return ret
-    
-    def get_resource_kwargs(self, **kwargs):
-        params = {'site': self,
-                  'api_request': self.api_request,}
-        params.update(kwargs)
-        return params
-    
     def register_application(self, app_name, app_class=None, **options):
         if app_name not in self.applications:
-            app_class = self.directory_resource_class
-            kwargs = self.get_resource_kwargs(app_name=self.name, resource_name=app_name, parent=self.directory_resource)
-            app_resource = app_class(**kwargs)
-            self.directory_resource.register_resource(app_resource)
+            if app_class is None:
+                app_class = self.directory_resource_class
+            app_resource = self.register_endpoint(app_class, app_name=self.name, resource_name=app_name)
             self.applications[app_name] = app_resource
         return self.applications[app_name]
     
-    def get_resource(self, resource_adaptor):
-        return self.registry[resource_adaptor]
-    
-    def get_urls(self):
-        urlpatterns = self.get_extra_urls()
-        urlpatterns += self.directory_resource.get_urls()
-        return urlpatterns
-    
-    def get_link(self, **kwargs):
-        return self.directory_resource.get_link(**kwargs)
-    
     def get_login_link(self, api_request, **kwargs):
-        auth_resource = self.auth_resource.fork(api_request=api_request)
+        auth_resource = api_request.get_endpoint(self.auth_resource.get_url_name())
         return auth_resource.get_link(**kwargs)
     
     def api_permission_check(self, api_request):
@@ -98,43 +164,6 @@ class ResourceSite(RootEndpoint):
             return self.get_login_link(api_request, prompt='Login Required')
         if not user.is_staff:
             return self.get_login_link(api_request, prompt='Unauthorized', http_status=401)
-    
-    def get_media_resource(self):
-        resource = self.applications['-storages'].resource_adaptor['media']
-        return self.get_resource(resource.resource_adaptor)
-    
-    def get_related_resource_from_field(self, field):
-        #TODO make more dynamic
-        from django.forms import FileField
-        from django.forms.models import ModelChoiceField
-        if hasattr(field, 'field'): #CONSIDER internally we use boundfield
-            field = field.field
-        if isinstance(field, ModelChoiceField):
-            model = field.queryset.model
-            if model in self.registry:
-                return self.registry[model]
-        if isinstance(field, FileField):
-            return self.get_media_resource().link_prototypes['upload'].get_url()
-        return None
-    
-    def get_html_type_from_field(self, field):
-        #TODO fill this out, datetime, etc
-        from django.forms import widgets
-        widget = field.field.widget
-        if isinstance(widget, widgets.Input):
-            return widget.input_type
-        if isinstance(widget, widgets.CheckboxInput):
-            return 'checkbox'
-        if isinstance(widget, widgets.Select):
-            #if widget.allow_multiple_selected
-            return 'select'
-        self.get_logger().warning('Unhandled widget type: %s' % type(widget))
-        return 'text'
-    
-    def register_builtin_media_types(self):
-        from mediatypes import BUILTIN_MEDIA_TYPES
-        for key, value in BUILTIN_MEDIA_TYPES.iteritems():
-            self.register_media_type(key, value)
     
     def get_actions(self, request):
         return SortedDict()

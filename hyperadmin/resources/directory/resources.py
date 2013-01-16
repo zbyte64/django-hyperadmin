@@ -48,12 +48,17 @@ class ResourceDirectory(BaseResource):
             key = resource.get_resource_name()
         self.resource_adaptor[key] = resource
     
+    def fork(self, **kwargs):
+        ret = super(ResourceDirectory, self).fork(**kwargs)
+        ret.resource_adaptor.update(self.resource_adaptor)
+        return ret
+    
     def get_instances(self):
         applications = self.resource_adaptor.items()
         apps = [entry[1] for entry in sorted(applications, key=lambda x: x[0])]
         all_apps = list()
         for app in apps:
-            app = app.fork(api_request=self.api_request)
+            app = self.api_request.get_endpoint(app.get_url_name())
             all_apps.append(app)
             if isinstance(app, ResourceDirectory):
                 all_apps.extend(app.get_instances())
