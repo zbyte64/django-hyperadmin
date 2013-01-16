@@ -196,10 +196,13 @@ class ResourceSite(RootEndpoint):
                     model = inline_cls.model
                     fields = inline_cls.fields
                     exclude = inline_cls.exclude
+                    inlines = list()
                 try:
                     resource.register_inline(GeneratedInlineModelResource)
                 except:
-                    pass #too much customization for us to handle!
+                    self.get_logger.exception('Could not autoload inline: %s' % inline_cls)
+                else:
+                    resource.inlines.append(GeneratedInlineModelResource)
     
     def install_storage_resources(self, media_resource_class=None, static_resource_class=None):
         from hyperadmin.resources.storages import StorageResource

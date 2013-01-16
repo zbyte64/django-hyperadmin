@@ -395,7 +395,7 @@ class RootEndpoint(BaseEndpoint):
             self.endpoints_by_urlname[url_name] = endpoint
         else:
             original = self.endpoints_by_urlname[url_name]
-            self.get_logger().warning('Double registration at site level on %s by %s, original: ' % (url_name, endpoint, original))
+            self.get_logger().warning('Double registration at site level on %s by %s, original: %s' % (url_name, endpoint, original))
     
     def get_endpoint_from_urlname(self, urlname):
         return self.endpoints_by_urlname[urlname]
