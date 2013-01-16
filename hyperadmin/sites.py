@@ -128,7 +128,7 @@ class ResourceSite(RootEndpoint):
         if isinstance(widget, widgets.Select):
             #if widget.allow_multiple_selected
             return 'select'
-        print 'Uhandled:', type(widget)
+        self.get_logger().warning('Unhandled widget type: %s' % type(widget))
         return 'text'
     
     def register_builtin_media_types(self):

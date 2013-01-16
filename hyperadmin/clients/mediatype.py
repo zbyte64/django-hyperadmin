@@ -66,6 +66,6 @@ class MediaTypeClient(Client):
         try:
             return self.wrap_urls(self.endpoint.get_urls())
         except Exception as error:
-            print error
+            self.get_logger().exception('Unabled to load client urls')
             raise
 

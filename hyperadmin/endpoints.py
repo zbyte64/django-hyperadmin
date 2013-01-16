@@ -8,6 +8,8 @@ from hyperadmin.hyperobjects import Item
 from hyperadmin.states import EndpointState
 from hyperadmin.views import EndpointViewMixin
 
+import logging
+
 
 class BaseEndpoint(LinkCollectorMixin, View):
     """
@@ -42,6 +44,9 @@ class BaseEndpoint(LinkCollectorMixin, View):
         else:
             self._site.record_endpoint(self)
         self.register_link_prototypes()
+    
+    def get_logger(self):
+        return self._site.get_logger()
     
     def get_site(self):
         if self.api_request:
@@ -329,6 +334,9 @@ class RootEndpoint(BaseEndpoint):
     def get_url_name(self):
         return None
     
+    def get_logger(self):
+        return logging.getLogger(__name__)
+    
     def post_register(self):
         pass #we wrap other endpoints
     
@@ -387,8 +395,7 @@ class RootEndpoint(BaseEndpoint):
             self.endpoints_by_urlname[url_name] = endpoint
         else:
             original = self.endpoints_by_urlname[url_name]
-            #print 'Double site registration on %s by %s' % (url_name, endpoint)
-            #assert False, 'Double registration on %s by %s' % (url_name, endpoint)
+            self.get_logger().warning('Double registration at site level on %s by %s, original: ' % (url_name, endpoint, original))
     
     def get_endpoint_from_urlname(self, urlname):
         return self.endpoints_by_urlname[urlname]

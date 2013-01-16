@@ -109,9 +109,7 @@ class APIRequest(object):
             self.endpoint_state['endpoints'][urlname] = endpoint
         else:
             original = self.endpoint_state['endpoints'][urlname]
-            original_state = original.state
-            new_state = endpoint.state
-            #print 'Double registration on %s by %s' % (urlname, endpoint)
+            self.site.get_logger().warning('Double registration at api request level on %s by %s, original: %s' % (urlname, endpoint, original))
     
     def get_link_prototypes(self, endpoint):
         """
