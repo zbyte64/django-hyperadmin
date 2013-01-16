@@ -3,7 +3,7 @@ from django import forms
 
 from hyperadmin.apirequests import Namespace
 from hyperadmin.resources.crud import CRUDResource
-from hyperadmin.resources.models.indexes import ModelIndex
+from hyperadmin.resources.models.indexes import ModelIndex, InlineIndex
 from hyperadmin.resources.models.endpoints import InlineListEndpoint, InlineCreateEndpoint, InlineDetailEndpoint, InlineDeleteEndpoint
 
 
@@ -249,6 +249,9 @@ class InlineModelResource(BaseModelResource):
     
     def get_primary_query(self, **kwargs):
         return self.get_queryset(parent=self.state['parent'].instance)
+    
+    def get_indexes(self):
+        return {'primary':InlineIndex('primary', self)}
     
     def get_base_url_name(self):
         return '%s_%s' % (self._parent.get_base_url_name(), self.rel_name)
