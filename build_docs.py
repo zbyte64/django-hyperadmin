@@ -111,7 +111,7 @@ if __name__ == '__main__':
     logger = TaskLogger('docbuilder')
     shell = ShellSession(logger, stdout=sys.stdout, stderr=sys.stderr)
     shell.run('virtualenv --system-site-packages .')
-    shell.run_with_retries('bin/pip install -q -r requirements.txt')
+    shell.run_with_retries('bin/pip install -q -r doc_requirements.txt')
     shell.run_with_retries('bin/pip install -q Sphinx')
     shell.run('bin/python setup.py build_sphinx -E')
 
