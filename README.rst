@@ -46,6 +46,15 @@ Requirements
 Installation
 ============
 
+Install hyperadmin into your python environment::
+
+    pip install django-hyperadmin
+
+or::
+
+    pip install -e git+git://github.com/zbyte64/django-hyperadmin.git#egg=django-hyperadmin
+
+
 Put 'hyperadmin' into your ``INSTALLED_APPS`` section of your settings file.
 
 Add to root url patterns::
