@@ -228,7 +228,7 @@ class ResourceSite(BaseResourceSite):
                 try:
                     resource.register_inline(GeneratedInlineModelResource)
                 except:
-                    self.get_logger.exception('Could not autoload inline: %s' % inline_cls)
+                    self.get_logger().exception('Could not autoload inline: %s' % inline_cls)
                 else:
                     resource.inlines.append(GeneratedInlineModelResource)
     
