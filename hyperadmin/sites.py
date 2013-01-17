@@ -171,9 +171,15 @@ class ResourceSite(BaseResourceSite):
     def generate_model_resource_from_admin_model(self, admin_model):
         from hyperadmin.resources.models import ModelResource
         from django import forms
+        if admin_model.fieldsets:
+            mfields = list()
+            for section, params in admin_model.fieldsets:
+                mfields.extend(params['fields'])
+        else:
+            mfields = admin_model.fields
         class GeneratedModelResource(ModelResource):
             #raw_id_fields = ()
-            fields = admin_model.fields
+            fields = mfields
             exclude = admin_model.exclude
             #fieldsets = None
             #filter_vertical = ()

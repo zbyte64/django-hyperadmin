@@ -33,6 +33,7 @@ ModelResource options
 
 * model
 * fields
+* fieldsets (flattened to provide fields)
 * exclude
 * paginator
 * list_display
