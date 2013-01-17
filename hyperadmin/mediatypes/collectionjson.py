@@ -84,7 +84,7 @@ class CollectionJSON(MediaType):
         links = list()
         links.extend(state.links.get_embedded_links())
         links.extend(state.links.get_outbound_links())
-        queries = state.links.get_templated_queries() + state.links.get_index_queries()
+        queries = state.links.get_filter_links()
         
         data = {
             "links": [self.convert_link(link) for link in links],

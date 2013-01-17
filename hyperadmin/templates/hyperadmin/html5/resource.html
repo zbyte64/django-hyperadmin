@@ -36,21 +36,10 @@
 {% endwith %}
 {% endblock %}
 
-{% block index_queries %}
-{% with state.links.get_index_queries as index_queries %}
-{% if index_queries %}
-<h2>Index Queries</h2>
-<div id=index_queries">
-{% include "hyperadmin/html5/templated_queries.html" with links=index_queries %}
-</div>
-{% endif %}
-{% endwith %}
-{% endblock %}
-
 {% block templated_queries %}
-{% with state.links.get_templated_queries as templated_queries %}
+{% with state.links.get_filter_links as templated_queries %}
 {% if templated_queries %}
-<h2>Templated Queries</h2>
+<h2>Index Queries</h2>
 <div id=templated_queries">
 {% include "hyperadmin/html5/templated_queries.html" with links=templated_queries %}
 </div>

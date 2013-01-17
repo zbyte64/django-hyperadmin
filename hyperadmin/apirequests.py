@@ -23,6 +23,9 @@ class APIRequest(object):
         self.endpoint_state['link_prototypes'] = dict()
         super(APIRequest, self).__init__()
     
+    def get_django_request(self):
+        raise NotImplementedError
+    
     @property
     def META(self):
         return self.session_state['meta']
@@ -191,6 +194,9 @@ class HTTPAPIRequest(APIRequest):
     @property
     def method(self):
         return self.request.method
+    
+    def get_django_request(self):
+        return self.request
     
     def get_full_path(self):
         return self.request.get_full_path()

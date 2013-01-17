@@ -60,7 +60,7 @@ class Html5MediaType(MediaType):
             return self.handle_redirect(link)
         context = self.get_context_data(link=link, state=state)
         
-        response = self.response_class(request=request, template=self.get_template_names(state), context=context)
+        response = self.response_class(request=request.get_django_request(), template=self.get_template_names(state), context=context)
         response['Content-Type'] = 'text/html'
         
         return response

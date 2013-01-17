@@ -97,12 +97,6 @@ class StorageResource(CRUDResource):
         instances = [BoundFile(self.storage, file_name) for file_name in files]
         return instances
     
-    def get_index_queries(self):
-        links = self.create_link_collection()
-        if 'filter_links' in self.state:
-            links += self.state['filter_links']
-        return links
-    
     def get_form_kwargs(self, item=None, **kwargs):
         kwargs = super(StorageResource, self).get_form_kwargs(item, **kwargs)
         kwargs['storage'] = self.storage
