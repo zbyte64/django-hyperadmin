@@ -27,6 +27,10 @@ class BaseResource(BaseEndpoint):
         #endpoints have a resource attribute
         return self
     
+    def post_register(self):
+        self.register_endpoints()
+        super(BaseResource, self).post_register()
+    
     def get_app_name(self):
         return None
     app_name = property(get_app_name)
@@ -43,8 +47,6 @@ class BaseResource(BaseEndpoint):
     
     def create_link_prototypes(self):
         link_prototypes = super(BaseResource, self).create_link_prototypes()
-        
-        self.register_endpoints()
         
         for endpoint in self.endpoints.itervalues():
             link_prototypes.update(endpoint.link_prototypes)
