@@ -6,23 +6,26 @@ except ImportError:
     from distutils.core import setup, find_packages
 
 VERSION = '0.8.0'
-LONG_DESC = """
-django-hyperadmin is an API driven Admin interface for resources in Django. Resources tend to be anything you can manipulate with a form (including models) and you configure your API resource like you would an Admin Model.
-"""
+LONG_DESC = open('README.rst', 'r').read()
 
 setup(name='django-hyperadmin',
       version=VERSION,
-      description="",
+      description="A hypermedia API framework for Django.",
       long_description=LONG_DESC,
       classifiers=[
           'Programming Language :: Python',
+          'Environment :: Web Environment',
+          'Framework :: Django',
           'Operating System :: OS Independent',
           'Natural Language :: English',
           'Development Status :: 4 - Beta',
           'Intended Audience :: Developers',
+          'License :: OSI Approved :: BSD License',
           'Topic :: Internet :: WWW/HTTP :: Dynamic Content',
       ],
-      keywords='django',
+      keywords='django hypermedia REST',
+      author = 'Jason Kraus',
+      author_email = 'zbyte64@gmail.com',
       maintainer = 'Jason Kraus',
       maintainer_email = 'zbyte64@gmail.com',
       url='http://github.com/zbyte64/django-hyperadmin',
@@ -37,5 +40,9 @@ setup(name='django-hyperadmin',
         'nose',
         'django-nose',
       ),
+      install_requires=[
+        'mimeparse',
+      ],
       include_package_data = True,
+      zip_safe = False,
   )
