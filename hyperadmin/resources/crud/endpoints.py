@@ -154,6 +154,7 @@ class ListEndpoint(IndexMixin, ResourceEndpoint):
         
         index = self.get_index()
         paginator = index.get_paginator()
+        data['paginator'] = paginator
         data['index'] = index
         self.state.meta['object_count'] = paginator.count
         self.state.meta['number_of_pages'] = paginator.num_pages
