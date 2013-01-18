@@ -65,7 +65,7 @@ class BaseModelResource(CRUDResource):
         except ImportError:
             from hyperadmin.resources.models.util import lookup_needs_distinct
         
-        indexes = super(BaseModelResource, self).get_indexes()
+        indexes = {'primary': ModelIndex('primary', self)}
         
         index = ModelIndex('filter', self)
         indexes['filter'] = index

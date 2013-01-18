@@ -31,8 +31,6 @@ class Index(object):
     def get_index_query(self):
         return self.resource.get_index_query(self.name)
     
-    #TODO detail endpoints to consult this
-    #TODO get_item_url and their ilk to be powered by this
     def get_url_params(self, param_map={}):
         """
         returns url parts for use in the url regexp for conducting item lookups

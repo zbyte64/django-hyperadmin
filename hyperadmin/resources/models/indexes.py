@@ -6,8 +6,20 @@ class ModelIndex(Index):
     def model(self):
         return self.resource.model
     
-    #def get_active_section(self):
-    #    return self.sections['filter']
+    def get_primary_field(self):
+        return self.model._meta.pk
+    
+    def get_url_params(self, param_map={}):
+        """
+        returns url parts for use in the url regexp for conducting item lookups
+        """
+        #TODO support non integer lookups
+        param_map.setdefault('pk', 'pk')
+        field = self.get_primary_field()
+        from django.db import models
+        if isinstance(field, (models.IntegerField, models.AutoField)):
+            return [r'(?P<{pk}>\d+)'.format(**param_map)]
+        return [r'(?P<{pk}>[\w\d\-]+)'.format(**param_map)]
     
     def get_paginator_kwargs(self):
         return {'per_page':self.resource.list_per_page,}
