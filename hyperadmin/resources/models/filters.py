@@ -329,7 +329,7 @@ class AllValuesFieldFilter(FieldFilter):
         return [self.lookup_kwarg, self.lookup_kwarg_isnull]
 
     def choices(self):
-        lookup_val, lookup_val_isnull = self.valeus()
+        lookup_val, lookup_val_isnull = self.values()
         from django.contrib.admin.views.main import EMPTY_CHANGELIST_VALUE
         yield {
             'selected': (lookup_val is None
