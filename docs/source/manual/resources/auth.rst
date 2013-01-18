@@ -2,7 +2,7 @@
 Auth Resource
 =============
 
-.. automodule:: hyperadmin.resources.auth.auth
+.. automodule:: hyperadmin.resources.auth
 
 Methods
 -------
