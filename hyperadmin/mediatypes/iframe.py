@@ -27,7 +27,7 @@ class IframeMediaType(MediaType):
         media_type_cls = self.site.media_types.get(content_type, None)
         if media_type_cls is None:
             raise ValueError('Unrecognized response content type: %s' % content_type)
-        return media_type_cls(self.view)
+        return media_type_cls(self.api_request)
     
     def get_context_data(self, link, state):
         media_type = self.get_response_media_type()
@@ -42,16 +42,17 @@ class IframeMediaType(MediaType):
     def get_template_names(self):
         return [self.template_name]
     
-    def serialize(self, request, content_type, link, state):
+    def serialize(self, content_type, link, state):
         if self.detect_redirect(link):
             return self.handle_redirect(link)
         
         context = self.get_context_data(link=link, state=state)
-        response = self.response_class(request=request, template=self.get_template_names(), context=context)
+        response = self.response_class(request=self.get_django_request(), template=self.get_template_names(), context=context)
         response['Content-Type'] = 'text/html'
         return response
     
-    def deserialize(self, request):
+    def deserialize(self):
+        request = self.get_django_request()
         self.check_csrf(request)
         
         return {'data':request.POST,

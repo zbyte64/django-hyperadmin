@@ -78,6 +78,8 @@ class CollectionJSON(MediaType):
         return error_r
     
     def prepare_collection(self, form_link, state):
+        data = self.prepare_link(form_link)
+        
         items = [self.convert_item(item) for item in state.get_resource_items()]
         
         #the following maps hfactor to this media type
@@ -86,24 +88,28 @@ class CollectionJSON(MediaType):
         links.extend(state.links.get_outbound_links())
         queries = state.links.get_filter_links()
         
-        data = {
+        data.update({
             "links": [self.convert_link(link) for link in links],
             "items": items,
             "queries": [self.convert_link(query) for query in queries],
-        }
+        })
         
+        data.update(meta=state.meta, prompt=state.resource.get_prompt())
+        return data
+    
+    def prepare_link(self, form_link):
+        data = {
+            'href':form_link.get_absolute_url(),
+            'version': '1.0',
+        }
         if form_link and form_link.form and form_link.form.errors:
             data['error'] = self.convert_errors(form_link.form.errors)
         
-        #get_non_idempotent_updates
-        #get_idempotent_updates
         if form_link.form:
             data['template'] = self.convert_link(form_link)
-        
-        data.update(href=form_link.get_absolute_url(), version="1.0", meta=state.meta, prompt=state.resource.get_prompt())
         return data
     
-    def serialize(self, request, content_type, link, state):
+    def serialize(self, content_type, link, state):
         if self.detect_redirect(link):
             return self.handle_redirect(link)
         data = self.prepare_collection(link, state)
@@ -111,7 +117,18 @@ class CollectionJSON(MediaType):
         assert content_type in self.recognized_media_types, "%s not in %s" % (content_type, self.recognized_media_types)
         return http.HttpResponse(content, content_type)
     
-    def deserialize(self, request):
+    def options_serialize(self, content_type, links, state):
+        methods = dict()
+        for method, link in links.iteritems():
+            methods[method] = {'collection':self.prepare_link(link)}
+        content = json.dumps(methods, cls=LazyEncoder)
+        allow = ','.join(links.iterkeys())
+        response = http.HttpResponse(content, content_type)
+        response['Allow'] = allow
+        return response
+    
+    def deserialize(self):
+        request = self.get_django_request()
         if hasattr(request, 'body'):
             payload = request.body
         else:

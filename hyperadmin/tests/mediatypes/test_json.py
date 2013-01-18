@@ -18,7 +18,7 @@ class JsonTestCase(MediaTypeTestCase):
         link = endpoint.link_prototypes['list'].get_link()
         state = endpoint.state
         
-        response = self.adaptor.serialize(request=self.factory.get('/'), content_type='application/json', link=link, state=state)
+        response = self.adaptor.serialize(content_type='application/json', link=link, state=state)
         data = json.loads(response.content)
         self.assertEqual(len(data), ContentType.objects.count())
     
@@ -31,7 +31,7 @@ class JsonTestCase(MediaTypeTestCase):
         link = item.get_link()
         state = endpoint.state
         
-        response = self.adaptor.serialize(request=self.factory.get('/'), content_type='application/json', link=link, state=state)
+        response = self.adaptor.serialize(content_type='application/json', link=link, state=state)
         data = json.loads(response.content)
         assert data, str(data)
         #self.assertEqual(len(json_items), 1)
@@ -49,7 +49,7 @@ class JsonpTestCase(MediaTypeTestCase):
         link = endpoint.link_prototypes['list'].get_link()
         state = endpoint.state
         
-        response = self.adaptor.serialize(request=self.factory.get('/'), content_type='text/javascript', link=link, state=state)
+        response = self.adaptor.serialize(content_type='text/javascript', link=link, state=state)
         self.assertTrue(response.content.startswith('jscallback('))
         #data = json.loads(response.content)
         #self.assertEqual(len(data), len(items))
@@ -64,7 +64,7 @@ class JsonpTestCase(MediaTypeTestCase):
         link = item.get_link()
         state = endpoint.state
         
-        response = self.adaptor.serialize(request=self.factory.get('/'), content_type='text/javascript', link=link, state=state)
+        response = self.adaptor.serialize(content_type='text/javascript', link=link, state=state)
         self.assertTrue(response.content.startswith('jscallback('))
         #data = json.loads(response.content)
         #assert data, str(data)

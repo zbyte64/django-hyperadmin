@@ -19,6 +19,9 @@ class MediaType(object):
     def site(self):
         return self.api_request.get_site()
     
+    def get_django_request(self):
+        return self.api_request.get_django_request()
+    
     #TODO
     def handle_redirect(self, link):
         if self.api_request.method != 'GET':
@@ -33,13 +36,28 @@ class MediaType(object):
             return True
         return False
     
-    def serialize(self, request, content_type, link, state):
+    def serialize(self, content_type, link, state):
         '''
         Return an HttpResponse
         '''
         raise NotImplementedError
     
-    def deserialize(self, request):
+    def options_serialize(self, content_type, links, state):
+        """
+        Return an HttpResponse describing the available OPTIONS at an endpoint
+        
+        :param links: dictionary mapping available HTTP methods to a link
+        """
+        context = {
+            'links':links,
+            'content_type':content_type,
+            'allow':','.join(links.iterkeys()),
+        }
+        response = http.HttpResponse()
+        response['Allow'] = context['allow']
+        return response
+    
+    def deserialize(self):
         '''
         returns keyword arguments for instantiating a form
         '''

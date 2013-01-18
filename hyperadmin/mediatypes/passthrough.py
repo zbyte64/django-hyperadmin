@@ -11,7 +11,7 @@ class PassthroughResponse(HttpResponse):
 
 class Passthrough(MediaType):
     def handle_redirect(self, link):
-        if self.request.method != 'GET':
+        if self.api_request.method != 'GET':
             response = PassthroughResponse(link.get_absolute_url(), status=303)
             response['Location'] = link.get_absolute_url()
         else:
@@ -22,16 +22,17 @@ class Passthrough(MediaType):
     def detect_redirect(self, link):
         return False
         #TODO
-        if link.get_absolute_url() != self.request.get_full_path():
+        if link.get_absolute_url() != self.api_request.get_full_path():
             return True
         return False
     
-    def serialize(self, request, content_type, link, state):
+    def serialize(self, content_type, link, state):
         if self.detect_redirect(link):
             return self.handle_redirect(link)
         return PassthroughResponse('Unavailable (passthrough media type)', content_type, link=link, state=state)
     
-    def deserialize(self, request):
+    def deserialize(self):
         #TODO should punt to the real media type
+        request = self.get_django_request()
         return {'data':request.POST,
                 'files':request.FILES,}

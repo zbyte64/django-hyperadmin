@@ -23,6 +23,7 @@ class EndpointViewMixin(ConditionalAccessMixin):
     #state = None
     global_state = None
     cacheable = False
+    submit_methods = ['POST', 'PUT', 'DELETE']
     
     def get_request_form_kwargs(self):
         return self.api_request.payload
@@ -83,15 +84,19 @@ class EndpointViewMixin(ConditionalAccessMixin):
         if proto:
             if proto.show_link():
                 kwargs = {'use_request_url':True}
-                if method in ('POST', 'PUT', 'DELETE'):
+                if method in self.submit_methods:
                     #TODO other kwargs may be added
                     kwargs['form_kwargs'] = api_request.payload
                 kwargs = self.get_link_kwargs(**kwargs)
                 link = proto.get_link(**kwargs)
-                if method in ('POST', 'PUT', 'DELETE'):
+                if method in self.submit_methods:
                     response_link = link.submit()
                     return response_link
                 return link
             else:
                 return http.HttpResponseForbidden(_(u"You may not access this endpoint"))
         return http.HttpResponseBadRequest(_(u"Method %s is not allowed") % method)
+    
+    def options(self, api_request):
+        links = self.get_available_links()
+        return self.generate_options_response(links=links)

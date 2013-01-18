@@ -149,7 +149,19 @@ class APIRequest(object):
         """
         media_type = self.get_response_media_type()
         response_type = self.get_response_type()
-        return media_type.serialize(request=self, content_type=response_type, link=link, state=state)
+        return media_type.serialize(content_type=response_type, link=link, state=state)
+    
+    def generate_options_response(self, links, state):
+        """
+        Returns an OPTIONS response generated from the response media type
+        
+        :param links: dictionary mapping available HTTP methods to a link
+        :param state: The endpoint's state
+        :rtype: [Http]Response
+        """
+        media_type = self.get_response_media_type()
+        response_type = self.get_response_type()
+        return media_type.options_serialize(content_type=response_type, links=links, state=state)
     
     def reverse(self, name, *args, **kwargs):
         return self.get_site().reverse(name, *args, **kwargs)
@@ -188,7 +200,7 @@ class HTTPAPIRequest(APIRequest):
     def payload(self):
         if not hasattr(self, '_payload'):
             media_type = self.get_request_media_type()
-            self._payload = media_type.deserialize(self.request)
+            self._payload = media_type.deserialize()
         return self._payload
     
     @property

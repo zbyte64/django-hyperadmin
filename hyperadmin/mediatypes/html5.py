@@ -55,17 +55,31 @@ class Html5MediaType(MediaType):
         
         return names
     
-    def serialize(self, request, content_type, link, state):
+    def serialize(self, content_type, link, state):
         if self.detect_redirect(link):
             return self.handle_redirect(link)
         context = self.get_context_data(link=link, state=state)
         
-        response = self.response_class(request=request.get_django_request(), template=self.get_template_names(state), context=context)
+        response = self.response_class(request=self.get_django_request(), template=self.get_template_names(state), context=context)
         response['Content-Type'] = 'text/html'
         
         return response
     
-    def deserialize(self, request):
+    def get_option_template_names(self):
+        return ['{base}/options.html'.format(base=self.template_dir_name)]
+    
+    def options_serialize(self, content_type, links, state):
+        context = {
+            'links':links,
+            'content_type':content_type,
+            'allow':','.join(links.iterkeys()),
+        }
+        response = self.response_class(request=self.get_django_request(), template=self.get_option_template_names(), context=context)
+        response['Allow'] = context['allow']
+        return response
+    
+    def deserialize(self):
+        request = self.get_django_request()
         self.check_csrf(request)
         
         return {'data':request.POST,

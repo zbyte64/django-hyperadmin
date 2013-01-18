@@ -314,6 +314,9 @@ class BaseEndpoint(LinkCollectorMixin, View):
     
     def generate_response(self, link):
         return self.api_request.generate_response(link=link, state=self.state)
+    
+    def generate_options_response(self, links):
+        return self.api_request.generate_options_response(links=links, state=self.state)
 
 class RootEndpoint(BaseEndpoint):
     """
@@ -422,6 +425,20 @@ class Endpoint(EndpointViewMixin, BaseEndpoint):
         """
         name = self.prototype_method_map.get(method)
         return self.link_prototypes.get(name)
+    
+    def get_available_links(self):
+        """
+        Returns a dictionary mapping available HTTP methods to a link
+        """
+        methods = dict()
+        for method, link_name in self.prototype_method_map.iteritems():
+            proto = self.get_link_prototype_for_method(method)
+            if proto and proto.show_link():
+                kwargs = {'use_request_url':True}
+                kwargs = self.get_link_kwargs(**kwargs)
+                link = proto.get_link(**kwargs)
+                methods[method] = link
+        return methods
     
     def get_name_suffix(self):
         return self.name_suffix

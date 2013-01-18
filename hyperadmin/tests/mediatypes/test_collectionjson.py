@@ -21,7 +21,7 @@ class CollectionJsonTestCase(MediaTypeTestCase):
         link = endpoint.link_prototypes['list'].get_link()
         state = endpoint.state
         
-        response = self.adaptor.serialize(request=self.factory.get('/'), content_type=self.content_type, link=link, state=state)
+        response = self.adaptor.serialize(content_type=self.content_type, link=link, state=state)
         data = json.loads(response.content)
         json_items = data['collection']['items']
         self.assertEqual(len(json_items), len(ContentType.objects.all()))
@@ -34,7 +34,7 @@ class CollectionJsonTestCase(MediaTypeTestCase):
         link = item.get_link()
         state = endpoint.state
         
-        response = self.adaptor.serialize(request=self.factory.get('/'), content_type=self.content_type, link=link, state=state)
+        response = self.adaptor.serialize(content_type=self.content_type, link=link, state=state)
         data = json.loads(response.content)
         json_items = data['collection']['items']
         self.assertEqual(len(json_items), 1)
@@ -51,7 +51,7 @@ class CollectionJsonTestCase(MediaTypeTestCase):
         state = endpoint.state
         state.resource.get_prompt = get_prompt
         
-        response = self.adaptor.serialize(request=self.factory.get('/'), content_type=self.content_type, link=link, state=state)
+        response = self.adaptor.serialize(content_type=self.content_type, link=link, state=state)
         data = json.loads(response.content)
         json_items = data['collection']['items']
         self.assertEqual(data['collection']['prompt'], 'lazy string')
