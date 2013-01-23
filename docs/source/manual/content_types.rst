@@ -1,6 +1,6 @@
-===
-API
-===
+=============
+Content Types
+=============
 
 Media Type Selection
 ====================
