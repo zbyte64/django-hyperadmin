@@ -5,9 +5,7 @@
 Introduction
 ============
 
-django-hyperadmin is a HATEOAS API framework for building resources in Django. Resources are anything that can be manipulated with forms and configuration of a Resource is similar to an Admin Model. Allowable state transitions are communicated using Links which allow Resources to support workflows that go beyond basic CRUD.
-
-This project is overkill for providing a REST CRUD layer in JSON/XML. Resources are meant to power multiple layers in your web application - not just RESTful APIs.
+django-hyperadmin is a HATEOAS API framework for building resources in Django. Resources are anything that can be manipulated with forms and configuration of a Resource is similar to that of an Admin Model. While Resources offer a REST CRUD layer out of the box they are meant to power workflows that go beyond CRUD. Additionally Resources aim to be reusable throughout the web application and not to be limitted to a single API endpoint.
 
 This is BETA
 
