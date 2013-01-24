@@ -168,75 +168,11 @@ class ResourceSite(BaseResourceSite):
     def get_actions(self, request):
         return SortedDict()
     
-    def generate_model_resource_from_admin_model(self, admin_model):
-        from hyperadmin.resources.models import ModelResource
-        from django import forms
-        if admin_model.fieldsets:
-            mfields = list()
-            for section, params in admin_model.fieldsets:
-                mfields.extend(params['fields'])
-        else:
-            mfields = admin_model.fields
-        class GeneratedModelResource(ModelResource):
-            #raw_id_fields = ()
-            fields = mfields
-            exclude = admin_model.exclude
-            #fieldsets = None
-            #filter_vertical = ()
-            #filter_horizontal = ()
-            #radio_fields = {}
-            #prepopulated_fields = {}
-            #formfield_overrides = {}
-            #readonly_fields = ()
-            #declared_fieldsets = None
-            
-            #save_as = False
-            #save_on_top = False
-            paginator = admin_model.paginator
-            inlines = list()
-            
-            #list display options
-            list_display = list(admin_model.list_display)
-            #list_display_links = ()
-            list_filter = admin_model.list_filter
-            list_select_related = admin_model.list_select_related
-            list_per_page = admin_model.list_per_page
-            list_max_show_all = getattr(admin_model, 'list_max_show_all', 200)
-            list_editable = admin_model.list_editable
-            search_fields = admin_model.search_fields
-            date_hierarchy = admin_model.date_hierarchy
-            ordering = admin_model.ordering
-            form_class = getattr(admin_model, 'form_class', None)
-        
-        if 'action_checkbox' in GeneratedModelResource.list_display:
-            GeneratedModelResource.list_display.remove('action_checkbox')
-        
-        if admin_model.form != forms.ModelForm:
-            GeneratedModelResource.form_class = admin_model.form
-        
-        return GeneratedModelResource
-    
     def install_models_from_site(self, site):
-        from hyperadmin.resources.models import InlineModelResource
-        from django.contrib.admin import ModelAdmin
-        for model, admin_model in site._registry.iteritems():
-            if model in self.registry:
-                continue
-            if not isinstance(admin_model, ModelAdmin):
-                continue
-            admin_class = self.generate_model_resource_from_admin_model(admin_model)
-            resource = self.register(model, admin_class)
-            for inline_cls in admin_model.inlines:
-                class GeneratedInlineModelResource(InlineModelResource):
-                    model = inline_cls.model
-                    fields = inline_cls.fields
-                    exclude = inline_cls.exclude
-                try:
-                    resource.register_inline(GeneratedInlineModelResource)
-                except:
-                    self.get_logger().exception('Could not autoload inline: %s' % inline_cls)
-                else:
-                    resource.inlines.append(GeneratedInlineModelResource)
+        from hyperadmin.resources.models.autoload import DEFAULT_LOADER
+        
+        loader = DEFAULT_LOADER(root_endpoint=self, admin_site=site)
+        loader.register_resources()
     
     def install_storage_resources(self, media_resource_class=None, static_resource_class=None):
         from hyperadmin.resources.storages import StorageResource
