@@ -38,7 +38,7 @@ class GenericInlineModelResource(InlineModelResource):
     def get_primary_query(self, **kwargs):
         return self.get_queryset(parent=self.state['parent'].instance)
     
-        def get_form_class(self):
+    def get_form_class(self):
         if self.form_class:
             return self.form_class
         
