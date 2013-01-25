@@ -24,9 +24,6 @@ class CRUDResource(BaseResource):
     detail_endpoint_class = DetailEndpoint
     delete_endpoint_class = DeleteEndpoint
     
-    def get_prompt(self):
-        return self.resource_name
-    
     def get_view_endpoints(self):
         endpoints = super(CRUDResource, self).get_view_endpoints()
         endpoints.extend([

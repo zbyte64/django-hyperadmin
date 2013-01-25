@@ -43,14 +43,9 @@ class BaseModelResource(CRUDResource):
     
     def get_app_name(self):
         return self.opts.app_label
-    app_name = property(get_app_name)
     
     def get_resource_name(self):
         return self.opts.module_name
-    resource_name = property(get_resource_name)
-    
-    def get_prompt(self):
-        return self.resource_name
     
     def get_primary_query(self, **kwargs):
         return self.get_queryset()

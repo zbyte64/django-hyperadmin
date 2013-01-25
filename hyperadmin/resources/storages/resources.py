@@ -46,22 +46,6 @@ class StorageResource(CRUDResource):
         kwargs.setdefault('app_name', '-storages')
         super(StorageResource, self).__init__(**kwargs)
     
-    def get_app_name(self):
-        return self._app_name
-    
-    def set_app_name(self, name):
-        self._app_name = name
-    
-    app_name = property(get_app_name, set_app_name)
-    
-    def get_resource_name(self):
-        return self._resource_name
-    
-    def set_resource_name(self, name):
-        self._resource_name = name
-    
-    resource_name = property(get_resource_name, set_resource_name)
-    
     def get_storage(self):
         return self.resource_adaptor
     storage = property(get_storage)

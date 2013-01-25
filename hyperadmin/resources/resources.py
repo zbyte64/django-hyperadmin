@@ -32,12 +32,37 @@ class BaseResource(BaseEndpoint):
         super(BaseResource, self).post_register()
     
     def get_app_name(self):
-        return None
-    app_name = property(get_app_name)
+        """
+        Return the application name of this resource.
+        Provides the return value of the `app_name` property.
+        """
+        return getattr(self, '_app_name', None)
+    
+    def _get_app_name(self):
+        return self.get_app_name()
+    
+    def _set_app_name(self, name):
+        self._app_name = name
+    
+    app_name = property(_get_app_name, _set_app_name, None, 'Set or get the application name')
     
     def get_resource_name(self):
-        raise NotImplementedError
-    resource_name = property(get_resource_name)
+        """
+        Return the name of this resource.
+        Provides the return value of the `resource_name` property.
+        """
+        return self._resource_name
+    
+    def _get_resource_name(self):
+        return self.get_resource_name()
+    
+    def _set_resource_name(self, name):
+        self._resource_name = name
+    
+    resource_name = property(_get_resource_name, _set_resource_name, None, 'Set or get the name of the resource')
+    
+    def get_prompt(self):
+        return self.resource_name
     
     def get_base_url_name(self):
         if self.app_name:
@@ -103,7 +128,7 @@ class BaseResource(BaseEndpoint):
     
     def get_state_data(self):
         data = super(BaseResource, self).get_state_data()
-        data.update({'resource_name': getattr(self, 'resource_name', None),
+        data.update({'resource_name': self.resource_name,
                      'app_name': self.app_name,})
         return data
     
