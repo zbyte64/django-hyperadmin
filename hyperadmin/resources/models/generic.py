@@ -50,8 +50,8 @@ class GenericInlineModelResource(InlineModelResource):
             def save(self, commit=True):
                 instance = super(AdminForm, self).save(commit=False)
                 
-                setattr(instance, resource._ct_field.get_attname(), resource.content_type)
-                setattr(instance, resource._ct_fk_field.get_attname(), state['parant'].instance.pk)
+                setattr(instance, resource._ct_field.get_attname(), resource.content_type.pk)
+                setattr(instance, resource._ct_fk_field.get_attname(), self.state['parent'].instance.pk)
                 if commit:
                     instance.save()
                 return instance
