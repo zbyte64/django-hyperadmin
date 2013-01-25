@@ -71,3 +71,18 @@ Methods
 .. autoclass:: InlineModelResource
    :members:
    :undoc-members:
+
+
+--------------------------
+GenericInlineModelResource
+--------------------------
+
+.. automodule:: hyperadmin.resources.models.generic
+
+Methods
+-------
+
+.. autoclass:: GenericInlineModelResource
+   :members:
+   :undoc-members:
+
