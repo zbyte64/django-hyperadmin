@@ -5,6 +5,8 @@ from hyperadmin.resources.auth.endpoints import LoginEndpoint, LogoutEndpoint
 
 class AuthResource(BaseResource):
     form_class = AuthenticationResourceForm
+    login_endpoint_class = LoginEndpoint
+    logout_endpoint_class = LogoutEndpoint
     
     def __init__(self, **kwargs):
         kwargs.setdefault('app_name', '-authentication')
@@ -34,8 +36,8 @@ class AuthResource(BaseResource):
     def get_view_endpoints(self):
         endpoints = super(AuthResource, self).get_view_endpoints()
         endpoints.extend([
-            (LoginEndpoint, {}),
-            (LogoutEndpoint, {}),
+            (self.login_endpoint_class, {}),
+            (self.logout_endpoint_class, {}),
         ])
         return endpoints
     

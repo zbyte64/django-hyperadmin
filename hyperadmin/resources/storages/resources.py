@@ -6,7 +6,7 @@ from hyperadmin.links import Link
 from hyperadmin.resources.crud import CRUDResource
 from hyperadmin.resources.storages.forms import UploadForm, UploadLinkForm
 from hyperadmin.resources.storages.indexes import StorageIndex
-from hyperadmin.resources.storages.endpoints import ListEndpoint, CreateEndpoint, CreateUploadEndpoint, DetailEndpoint, DeleteEndpoint, BoundFile
+from hyperadmin.resources.storages.endpoints import ListEndpoint, CreateUploadEndpoint, BoundFile
 
 
 class StorageQuery(object):
@@ -37,9 +37,10 @@ class StorageQuery(object):
 
 class StorageResource(CRUDResource):
     #resource_adaptor = storage object
-    #paginator_class = StoragePaginator
     form_class = UploadForm
     upload_link_form_class = UploadLinkForm
+    list_endpoint_class = ListEndpoint
+    create_upload_endpoint_class = CreateUploadEndpoint
     
     def __init__(self, **kwargs):
         kwargs.setdefault('app_name', '-storages')
@@ -69,13 +70,9 @@ class StorageResource(CRUDResource):
         return self.upload_link_form_class
     
     def get_view_endpoints(self):
-        endpoints = super(CRUDResource, self).get_view_endpoints()
+        endpoints = super(StorageResource, self).get_view_endpoints()
         endpoints.extend([
-            (ListEndpoint, {}),
-            (CreateEndpoint, {}),
-            (CreateUploadEndpoint, {}),
-            (DetailEndpoint, {}),
-            (DeleteEndpoint, {}),
+            (self.create_upload_endpoint_class, {}),
         ])
         return endpoints
     

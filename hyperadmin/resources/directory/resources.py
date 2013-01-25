@@ -9,6 +9,7 @@ from hyperadmin.resources.directory.endpoints import ListEndpoint
 class ResourceDirectory(BaseResource):
     resource_class = 'resourcelisting'
     form_class = ViewResourceForm
+    list_endpoint_class = ListEndpoint
     
     def __init__(self, **kwargs):
         kwargs.setdefault('resource_adaptor', dict())
@@ -32,7 +33,7 @@ class ResourceDirectory(BaseResource):
     
     def get_view_endpoints(self):
         endpoints = super(ResourceDirectory, self).get_view_endpoints()
-        endpoints.append((ListEndpoint, {}))
+        endpoints.append((self.list_endpoint_class, {}))
         return endpoints
     
     def get_urls(self):

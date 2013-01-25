@@ -4,6 +4,7 @@ from django import forms
 from hyperadmin.apirequests import Namespace
 from hyperadmin.resources.crud import CRUDResource
 from hyperadmin.resources.models.indexes import ModelIndex, InlineIndex
+from hyperadmin.resources.models.endpoints import ListEndpoint, CreateEndpoint, DetailEndpoint, DeleteEndpoint
 from hyperadmin.resources.models.endpoints import InlineListEndpoint, InlineCreateEndpoint, InlineDetailEndpoint, InlineDeleteEndpoint
 
 
@@ -171,6 +172,11 @@ class BaseModelResource(CRUDResource):
         return AdminForm
 
 class ModelResource(BaseModelResource):
+    list_endpoint_class = ListEndpoint
+    create_endpoint_class = CreateEndpoint
+    detail_endpoint_class = DetailEndpoint
+    delete_endpoint_class = DeleteEndpoint
+    
     def post_register(self):
         super(ModelResource, self).post_register()
         self.initialize_inlines()
@@ -187,16 +193,12 @@ class ModelResource(BaseModelResource):
     def register_inline(self, inline_cls):
         self.inline_instances.append(inline_cls(parent=self, api_request=self.api_request))
     
-    def get_view_endpoints(self):
-        from hyperadmin.resources.models.endpoints import ListEndpoint, CreateEndpoint, DetailEndpoint, DeleteEndpoint
-        endpoints = super(CRUDResource, self).get_view_endpoints()
-        endpoints.extend([
-            (ListEndpoint, {'index_name':'filter'}),
-            (CreateEndpoint, {}),
-            (DetailEndpoint, {}),
-            (DeleteEndpoint, {}),
-        ])
-        return endpoints
+    def register_endpoint(self, endpoint_cls, **kwargs):
+        #TODO find a better strategy for injecting the index name for list endpoints
+        #perhaps list_endpoint could be a tuple of class and kwargs
+        if endpoint_cls == self.list_endpoint_class:
+            kwargs.setdefault('index_name', 'filter')
+        return super(ModelResource, self).register_endpoint(endpoint_cls, **kwargs)
     
     def get_urls(self):
         urlpatterns = super(ModelResource, self).get_urls()
@@ -225,6 +227,11 @@ class InlineModelResource(BaseModelResource):
     model = None
     fk_name = None
     rel_name = None
+    
+    list_endpoint_class = InlineListEndpoint
+    create_endpoint_class = InlineCreateEndpoint
+    detail_endpoint_class = InlineDetailEndpoint
+    delete_endpoint_class = InlineDeleteEndpoint
     
     def __init__(self, parent, **kwargs):
         kwargs['site'] = parent.site
@@ -256,16 +263,6 @@ class InlineModelResource(BaseModelResource):
     
     def get_base_url_name(self):
         return '%s%s' % (self._parent.get_base_url_name(), self.rel_name)
-    
-    def get_view_endpoints(self):
-        endpoints = super(CRUDResource, self).get_view_endpoints()
-        endpoints.extend([
-            (InlineListEndpoint, {}),
-            (InlineCreateEndpoint, {}),
-            (InlineDetailEndpoint, {}),
-            (InlineDeleteEndpoint, {}),
-        ])
-        return endpoints
     
     def get_item_url(self, item):
         return self.link_prototypes['update'].get_url(item=item)

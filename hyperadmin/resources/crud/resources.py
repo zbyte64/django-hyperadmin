@@ -17,11 +17,12 @@ class CRUDResource(BaseResource):
     #TODO support the following:
     actions = []
     
-    list_view = None
-    add_view = None
-    detail_view = None
-    delete_view = None
     form_class = None
+    
+    list_endpoint_class = ListEndpoint
+    create_endpoint_class = CreateEndpoint
+    detail_endpoint_class = DetailEndpoint
+    delete_endpoint_class = DeleteEndpoint
     
     def get_prompt(self):
         return self.resource_name
@@ -29,10 +30,10 @@ class CRUDResource(BaseResource):
     def get_view_endpoints(self):
         endpoints = super(CRUDResource, self).get_view_endpoints()
         endpoints.extend([
-            (ListEndpoint, {})
-            (CreateEndpoint, {}),
-            (DetailEndpoint, {}),
-            (DeleteEndpoint, {}),
+            (self.list_endpoint_class, {}),
+            (self.create_endpoint_class, {}),
+            (self.detail_endpoint_class, {}),
+            (self.delete_endpoint_class, {}),
         ])
         return endpoints
     
