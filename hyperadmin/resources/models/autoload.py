@@ -1,4 +1,5 @@
 from django.conf import settings
+from django.db import models
 
 
 class DjangoModelAdminLoader(object):
@@ -11,11 +12,16 @@ class DjangoModelAdminLoader(object):
     
     def register_resources(self):
         for model, admin_model in self.admin_site._registry.iteritems():
+            if not isinstance(model, models.Model):
+                continue
             if model in self.root_endpoint.registry:
                 continue
             resource_class = self.generate_resource(admin_model)
-            resource = self.root_endpoint.register(model, resource_class)
-            self.register_inlines(admin_model, resource)
+            try:
+                resource = self.root_endpoint.register(model, resource_class)
+                self.register_inlines(admin_model, resource)
+            except Exception as error:
+                self.get_logger().exception('Could not autoload: %s' % admin_model)
     
     def generate_resource(self, admin_model):
         from django.contrib.admin import ModelAdmin
