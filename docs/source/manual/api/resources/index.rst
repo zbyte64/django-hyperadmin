@@ -8,6 +8,7 @@ Resources
 
    resources
    models
+   autoload
    directory
    auth
    storages

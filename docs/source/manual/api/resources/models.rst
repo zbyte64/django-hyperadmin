@@ -28,8 +28,26 @@ Registering a model with hyperadmin::
     hyperadmin.site.register(MyModel, MyModelResource)
 
 
-ModelResource options
----------------------
+Options
+-------
+
+* model
+* fields
+* exclude
+* paginator
+* list_display
+* list_filter (basic filters, don't know about custom)
+* search_fields
+* list_per_page
+* form_class
+* inlines
+
+The params queryset, ordering, search_fields, list_select_related and date_hierarchy are planned.
+
+Autoloaded Options
+------------------
+
+These options are mapped to the ModelResource when using autoload.
 
 * model
 * fields
@@ -38,11 +56,10 @@ ModelResource options
 * paginator
 * list_display
 * list_filter (basic filters, don't know about custom)
+* search_fields
 * list_per_page
 * form_class
-* inlines (not auto imported yet)
-
-The params queryset, ordering, search_fields, list_select_related and date_hierarchy are planned.
+* inlines
 
 
 API Endpoints
@@ -71,6 +88,14 @@ Methods
 .. autoclass:: InlineModelResource
    :members:
    :undoc-members:
+
+API Endpoints
+-------------
+
+* "/<parent_id>/(relname)/" lists rows; POST to create
+* "/<parent_id>/(relname)/add/" POST to add
+* "/<parent_id>/(relname)/<id>/" displays a specific row; PUT/POST to update, DELETE to delete
+* "/<parent_id>/(relname)/<id>/delete/" POST to delete
 
 
 --------------------------

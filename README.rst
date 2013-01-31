@@ -19,6 +19,7 @@ Features
 * Media type agnostic
 * Index classes define search and filter capabilities through forms
 * Autoloads basic functionality from admin site
+* Inline support
 * Internal resource representation based on hfactor, forms and endpoints
 * Clients packaged seperately
 
@@ -62,6 +63,61 @@ Add to root url patterns::
     url(r'^hyperapi/', include('hyperadmin.urls')),
 
 
+=============
+Configuration
+=============
+
+------------------
+Registering models
+------------------
+
+Registering a model with hyperadmin::
+
+    import hyperadmin
+    from hpyeradmin.resources.models import ModelResource, InlineModelResource
+    from myapp.models import MyModel, ChildModel
+    
+    class ChildModelResource(InlineModelResource):
+        model = ChildModel
+    
+    class MyModelResource(ModelResource):
+        inlines = [ChildModelResource]
+        list_display = ['name', 'number']
+        list_filter = ['timestamp', 'category']
+    
+    hyperadmin.site.register(MyModel, MyModelResource)
+
+
+API Endpoints
+-------------
+
+* "/" lists rows; POST to create
+* "/add/" POST to add
+* "/<id>/" displays a specific row; PUT/POST to update, DELETE to delete
+* "/<id>/delete/" POST to delete
+
+Inline API Endpoints
+--------------------
+
+* "/<parent_id>/(relname)/" lists rows; POST to create
+* "/<parent_id>/(relname)/add/" POST to add
+* "/<parent_id>/(relname)/<id>/" displays a specific row; PUT/POST to update, DELETE to delete
+* "/<parent_id>/(relname)/<id>/delete/" POST to delete
+
+-----------------------------
+Autoloading from Django Admin
+-----------------------------
+
+The following registers the models from admin site (this is already done if you import from ``hyperadmin.urls``)::
+
+    from hyperadmin.resources.models.autload import DjangoCTModelAdminLoader
+    from django.contrib.admin import site as admin_site
+    from hyperadmin import site as root_endpoint
+    
+    loader = DjangoCTModelAdminLoader(root_endpoint, admin_site)
+    loader.register_resources()
+
+
 =======
 Clients
 =======
@@ -99,53 +155,6 @@ Dockit CMS
 https://github.com/zbyte64/django-dockitcms (endpoints branch)
 
 A dynamic API builder with a public HTML (template driven) client.
-
-
-=============
-Configuration
-=============
-
--------------
-ModelResource
--------------
-
-Registering models
--------------------
-
-Registering a model with hyperadmin::
-
-    import hyperadmin
-    from hpyeradmin.resources.models import ModelResource, InlineModelResource
-    from myapp.models import MyModel, ChildModel
-    
-    class ChildModelResource(InlineModelResource):
-        model = ChildModel
-    
-    class MyModelResource(ModelResource):
-        inlines = [ChildModelResource]
-        list_display = ['name', 'number']
-        list_filter = ['timestamp', 'category']
-    
-    hyperadmin.site.register(MyModel, MyModelResource)
-
-
-Autoloading from Django Admin
------------------------------
-
-The following registers the models from admin site (this is already done if you import from ``hyperadmin.urls``)::
-
-    from django.contrib import admin
-    hyperadmin.site.install_models_from_site(admin.site)
-
-
-API Endpoints
--------------
-
-* "/" lists rows; POST to create
-* "/add/" POST to add
-* "/<id>/" displays a specific row; PUT/POST to update, DELETE to delete
-* "/<id>/delete/" POST to delete
-
 
 =============================
 Reading up on Hypermedia APIs

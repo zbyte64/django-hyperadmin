@@ -1,8 +1,25 @@
+'''
+Maps django model admin entries to model resources.
+
+Usage::
+
+    from hyperadmin.resources.models.autload import DjangoCTModelAdminLoader
+    from django.contrib.admin import site as admin_site
+    from hyperadmin import site as root_endpoint
+    
+    loader = DjangoCTModelAdminLoader(root_endpoint, admin_site)
+    loader.register_resources()
+
+'''
 from django.conf import settings
 from django.db import models
 
 
 class DjangoModelAdminLoader(object):
+    '''
+    A helper class that maps admin entries from a 
+    `django.contrib.admin.site.AdminSite` object to a `RootEndpoint`
+    '''
     def __init__(self, root_endpoint, admin_site):
         self.root_endpoint = root_endpoint
         self.admin_site = admin_site
@@ -24,6 +41,25 @@ class DjangoModelAdminLoader(object):
                 self.get_logger().exception('Could not autoload: %s' % admin_model)
     
     def generate_resource(self, admin_model):
+        '''
+        When supplied a subclass of `ModelAdmin`
+        Returns a ModelResource class with the following options mapped:
+        
+        * fields
+        * fieldsets (flattened to provided fields)
+        * exclude
+        * paginator
+        * list_display
+        * list_filter
+        * list_select_related (not used)
+        * list_per_page
+        * list_max_show_all (not used)
+        * list_editable (not used)
+        * search_fields
+        * date_hierarchy (not used)
+        * ordering (not used)
+        * form_class
+        '''
         from django.contrib.admin import ModelAdmin
         if not isinstance(admin_model, ModelAdmin):
             return
@@ -80,10 +116,30 @@ class DjangoModelAdminLoader(object):
             self.register_inline(admin_model, resource, inline_cls)
     
     def register_inline(self, admin_model, resource, inline_cls):
+        inline_resource = self.generate_inline(inline_cls)
+        if inline_resource:
+            try:
+                resource.register_inline(inline_resource)
+            except:
+                self.get_logger().exception('Could not autoload inline: %s' % inline_cls)
+            else:
+                resource.inlines.append(inline_resource)
+                return inline_resource
+    
+    def generate_inline(self, inline_cls):
+        '''
+        When supplied a subclass of `InlineModelAdmin`
+        Returns an InlineModelResource with the following options mapped:
+        
+        * model
+        * fields
+        * exclude
+        * fk_name
+        '''
         from django.contrib.admin.options import InlineModelAdmin
         
         if not issubclass(inline_cls, InlineModelAdmin):
-            return False
+            return None
         
         from hyperadmin.resources.models import InlineModelResource
         
@@ -92,20 +148,29 @@ class DjangoModelAdminLoader(object):
             fields = inline_cls.fields
             exclude = inline_cls.exclude
             fk_name = inline_cls.fk_name
-        try:
-            resource.register_inline(GeneratedInlineModelResource)
-        except:
-            self.get_logger().exception('Could not autoload inline: %s' % inline_cls)
-        else:
-            resource.inlines.append(GeneratedInlineModelResource)
-            return GeneratedInlineModelResource
+        
+        return GeneratedInlineModelResource
 
 class DjangoCTModelAdminLoader(DjangoModelAdminLoader):
-    def register_inline(self, admin_model, resource, inline_cls):
+    '''
+    Extends `DjangoModelAdminLoader` to provide support for autloading 
+    generic inlines
+    '''
+    def generate_inline(self, inline_cls):
+        '''
+        When supplied a subclass of `GenericInlineModelAdmin`
+        Returns a GenericInlineModelResource with the following options mapped:
+        
+        * model
+        * fields
+        * exclude
+        * ct_field
+        * ct_fk_field
+        '''
         from django.contrib.contenttypes.generic import GenericInlineModelAdmin
         
         if not issubclass(inline_cls, GenericInlineModelAdmin):
-            return super(DjangoCTModelAdminLoader, self).register_inline(admin_model, resource, inline_cls)
+            return super(DjangoCTModelAdminLoader, self).generate_inline(inline_cls)
         
         from hyperadmin.resources.models.generic import GenericInlineModelResource
         
@@ -116,13 +181,8 @@ class DjangoCTModelAdminLoader(DjangoModelAdminLoader):
             ct_field = inline_cls.ct_field
             ct_fk_field = inline_cls.ct_fk_field
             formset = inline_cls.formset #TODO is this used?
-        try:
-            resource.register_inline(GeneratedInlineModelResource)
-        except:
-            self.get_logger().exception('Could not autoload inline: %s' % inline_cls)
-        else:
-            resource.inlines.append(GeneratedInlineModelResource)
-            return GeneratedInlineModelResource
+        
+        return GeneratedInlineModelResource
 
 DEFAULT_LOADER = DjangoModelAdminLoader
 
