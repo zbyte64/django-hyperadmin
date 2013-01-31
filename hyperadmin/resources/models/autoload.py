@@ -12,7 +12,7 @@ class DjangoModelAdminLoader(object):
     
     def register_resources(self):
         for model, admin_model in self.admin_site._registry.iteritems():
-            if not isinstance(model, models.Model):
+            if not issubclass(model, models.Model):
                 continue
             if model in self.root_endpoint.registry:
                 continue
