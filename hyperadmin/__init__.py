@@ -1,6 +1,6 @@
 VERSION = (0, 8, 2, 'beta', 0)
 
-def get_version(version=None):
+def get_version(version=None, include_sub=True):
     """Derives a PEP386-compliant version number from VERSION."""
     if version is None:
         version = VERSION
@@ -26,8 +26,11 @@ def get_version(version=None):
     elif version[3] != 'final':
         mapping = {'alpha': 'a', 'beta': 'b', 'rc': 'c'}
         sub = mapping[version[3]] + str(version[4])
-
-    return main + sub
+    
+    if include_sub:
+        return main + sub
+    else:
+        return main
 
 
 from hyperadmin.sites import site
