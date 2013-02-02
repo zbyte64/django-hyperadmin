@@ -8,7 +8,8 @@ from django.core.files.base import ContentFile
 
 from hyperadmin.resources.models import ModelResource, InlineModelResource
 from hyperadmin.sites import ResourceSite
-from hyperadmin.apirequests import InternalAPIRequest
+from hyperadmin.apirequests import InternalAPIRequest, NamespaceAPIRequest
+from hyperadmin.endpoints import RootEndpoint
 
 from common import GenericURLResolver, SuperUserRequestFactory
 
@@ -43,6 +44,9 @@ class ResourceTestCase(unittest.TestCase):
             return ret
         self.reverse = reverse
         
+        def cls_reverse(slf, name, *args, **kwargs):
+            return self.resolver.reverse(name, *args, **kwargs)
+        
         original_fork = self.site.fork
         
         def fork(**kwargs):
@@ -51,6 +55,8 @@ class ResourceTestCase(unittest.TestCase):
             return ret
         
         self.site.fork = fork
+        NamespaceAPIRequest.reverse = cls_reverse
+        RootEndpoint.reverse = cls_reverse
         self.site.reverse = reverse
     
     def get_api_request(self, **kwargs):
@@ -146,7 +152,6 @@ class ModelResourceTestCase(ResourceTestCase):
         link = call_kwargs['link']
         state = call_kwargs['state']
         
-        #with state.push_session(self.popped_states):
         self.assertTrue(link.form)
         self.assertTrue(link.form.errors)
         
@@ -173,7 +178,6 @@ class InlineModelResourceTestCase(ResourceTestCase):
         link = call_kwargs['link']
         state = call_kwargs['state']
         
-        #with state.push_session(self.popped_states):
         self.assertEqual(len(state.get_resource_items()), self.user.groups.all().count())
     
     def test_namespaced_form(self):
@@ -186,12 +190,11 @@ class InlineModelResourceTestCase(ResourceTestCase):
         link = call_kwargs['link']
         state = call_kwargs['state']
         
-        #with state.push_session(self.popped_states):
         self.assertEqual(len(state.get_resource_items()), 1)
         self.assertTrue(state.item)
         self.assertEqual(state.item.instance, instance)
         
-        self.skipTest("Need to patch namespace's api_request's reverse")
+        #self.skipTest("Need to patch namespace's api_request's reverse")
         item_namespaces = state.item.get_namespaces()
         self.assertTrue(item_namespaces)
         namespace = item_namespaces.values()[0]
@@ -205,7 +208,8 @@ class InlineModelResourceTestCase(ResourceTestCase):
         self.assertTrue(inline_link.get_absolute_url())
         
         #TODO
-        #edit_link = inline_link.submit()
+        edit_link = inline_link.submit()
+        self.assertEqual(edit_link.method, 'POST', str(edit_link.endpoint))
     
     #TODO
     def test_get_detail(self):

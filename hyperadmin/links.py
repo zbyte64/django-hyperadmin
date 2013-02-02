@@ -44,6 +44,10 @@ class Link(object):
         self.on_submit = on_submit
     
     @property
+    def api_request(self):
+        return self.endpoint.api_request
+    
+    @property
     def resource(self):
         return self.endpoint.resource
     
@@ -53,7 +57,7 @@ class Link(object):
     
     @property
     def site(self):
-        return self.state.site
+        return self.endpoint.site
     
     @property
     def rel(self):
@@ -203,16 +207,22 @@ class Link(object):
         on_submit = self.on_submit
         
         if on_submit is None:
-            return None
-            #TODO implement the following
-            #make an api request
-            api_request = NamespaceAPIRequest(self.endpoint.api_request, path=self.get_absolute_url())
-            endpoint = self.endpoint.fork(api_request=api_request)
-            #TODO state to be processed
-            #endpoint = self.site.get_endpoint_by_absolute_url(self.get_absolute_url())
-            return endpoint.get_link()
+            return self.follow()
         else:
             return on_submit(link=self, submit_kwargs=kwargs)
+    
+    def follow(self):
+        '''
+        Follows the link to the endpoint in a subrequest
+        Returns a link representing the endpoint response
+        '''
+        params = {
+            'url': self.get_absolute_url(),
+            'user': self.api_request.user,
+        }
+        #TODO self.site has broken urlpatterns
+        endpoint = self.api_request.site.call_endpoint(**params)
+        return endpoint.generate_api_response(endpoint.api_request)
     
     def clone(self, **kwargs):
         a_clone = copy(self)

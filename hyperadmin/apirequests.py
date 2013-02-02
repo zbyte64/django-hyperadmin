@@ -175,11 +175,12 @@ class InternalAPIRequest(APIRequest):
         kwargs.setdefault('method', 'GET')
         kwargs.setdefault('params', {})
         kwargs.setdefault('payload', {})
+        kwargs.setdefault('full_path', path)
         for key, val in kwargs.iteritems():
             setattr(self, key, val)
     
     def get_full_path(self):
-        return self.path
+        return self.full_path
 
 class HTTPAPIRequest(APIRequest):
     """

@@ -1,6 +1,7 @@
 from django.conf.urls.defaults import url, patterns
 from django.core.urlresolvers import reverse
 from django.views.generic import View
+from django.utils.datastructures import MultiValueDict
 
 from hyperadmin.links import Link, LinkCollection, LinkCollectorMixin
 from hyperadmin.apirequests import HTTPAPIRequest
@@ -9,6 +10,7 @@ from hyperadmin.states import EndpointState
 from hyperadmin.views import EndpointViewMixin
 
 import logging
+import urlparse
 
 
 class BaseEndpoint(LinkCollectorMixin, View):
@@ -375,6 +377,38 @@ class RootEndpoint(BaseEndpoint):
     def reverse(self, name, *args, **kwargs):
         return reverse('%s:%s' % (self.namespace, name), args=args, kwargs=kwargs)
     
+    def get_resolver(self):
+        from django.core.urlresolvers import RegexURLResolver
+        #TODO what about our root url?
+        starter = self.get_link().get_absolute_url()
+        return RegexURLResolver(r'^%s' % starter, self.urlpatterns)
+    
+    def call_endpoint(self, url, **request_params):
+        '''
+        Looks up the endpoint as an internal api request
+        :rtype: Bound Endpoint
+        '''
+        url_parts = urlparse.urlparse(url)
+        path = url_parts.path
+        from django.core.urlresolvers import Resolver404
+        from hyperadmin.apirequests import InternalAPIRequest
+        try:
+            match = self.get_resolver().resolve(path)
+        except Resolver404 as notfound:
+            assert False
+        params = {
+            'site': self,
+            'path': path,
+            'full_path': url,
+            'url_kwargs': match.kwargs,
+            'url_args': match.args,
+            'params': MultiValueDict(urlparse.parse_qs(url_parts.query))
+        }
+        params.update(request_params)
+        api_request = InternalAPIRequest(**params)
+        
+        return match.func.endpoint.fork(api_request=api_request)
+    
     def register_media_type(self, media_type, media_type_handler):
         self.media_types[media_type] = media_type_handler
     
@@ -474,5 +508,5 @@ class Endpoint(EndpointViewMixin, BaseEndpoint):
     
     #TODO review if this is needed anymore
     def get_main_link_name(self):
-        return self.get_link_prototypes_for_method('GET').name
+        return self.get_link_prototype_for_method('GET').name
 
