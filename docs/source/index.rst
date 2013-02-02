@@ -17,6 +17,7 @@ Table of Contents
    manual/api/index
    manual/content_types
    manual/other_resources
+   release_notes
 
 
 Indices and tables
