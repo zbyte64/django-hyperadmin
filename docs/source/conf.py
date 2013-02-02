@@ -184,7 +184,7 @@ htmlhelp_basename = 'DjangoHyperadmindoc'
 # Grouping the document tree into LaTeX files. List of tuples
 # (source start file, target name, title, author, documentclass [howto/manual]).
 latex_documents = [
-  ('index', 'DjangoHyperadmin.tex', u'Django Hyperadmin Documentation',
+  ('index', 'DjangoHyperadmin.tex', u'Django Hyperadmin Documentation', 'Jason Kraus',
    'manual'),
 ]
 
