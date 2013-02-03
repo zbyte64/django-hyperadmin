@@ -4,7 +4,7 @@ from django.views.generic import View
 from django.utils.datastructures import MultiValueDict
 
 from hyperadmin.links import Link, LinkCollection, LinkCollectorMixin
-from hyperadmin.apirequests import HTTPAPIRequest
+from hyperadmin.app_settings import DEFAULT_API_REQUEST_CLASS
 from hyperadmin.hyperobjects import Item
 from hyperadmin.states import EndpointState
 from hyperadmin.views import EndpointViewMixin
@@ -328,7 +328,7 @@ class RootEndpoint(BaseEndpoint):
     """
     namespace = None
     media_types = None
-    apirequest_class = HTTPAPIRequest
+    apirequest_class = DEFAULT_API_REQUEST_CLASS
     
     def __init__(self, **kwargs):
         kwargs.setdefault('media_types', dict())
@@ -379,7 +379,7 @@ class RootEndpoint(BaseEndpoint):
     
     def get_resolver(self):
         from django.core.urlresolvers import RegexURLResolver
-        #TODO what about our root url?
+        #get our root url
         starter = self.get_link().get_absolute_url()
         return RegexURLResolver(r'^%s' % starter, self.urlpatterns)
     

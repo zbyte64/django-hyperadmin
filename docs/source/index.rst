@@ -13,6 +13,7 @@ Table of Contents
    :maxdepth: 2
 
    manual/installation
+   manual/authentication
    manual/clients
    manual/api/index
    manual/content_types

@@ -28,5 +28,8 @@ Add to root url patterns::
 
 (Optional) Install a client:
 
-* https://github.com/zbyte64/django-hyperadmin-emberclient
-* https://github.com/zbyte64/django-hyperadmin-client
+* :ref:`clients`
+
+(Optional) Install additional authenticators:
+
+* :ref:`authentication`
