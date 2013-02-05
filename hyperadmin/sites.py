@@ -43,10 +43,8 @@ class BaseResourceSite(RootEndpoint):
     def create_directory_resource(self):
         return self.directory_resource_class(**self.get_directory_resource_kwargs())
     
-    def get_urls(self):
-        urlpatterns = self.get_extra_urls()
-        urlpatterns += self.directory_resource.get_urls()
-        return urlpatterns
+    def get_children_endpoints(self):
+        return [self.directory_resource]
     
     def get_link(self, **kwargs):
         return self.directory_resource.get_link(**kwargs)
@@ -119,6 +117,10 @@ class BaseResourceSite(RootEndpoint):
         return None
 
 class ResourceSite(BaseResourceSite):
+    '''
+    A Resource Site that is suited for administrative purposes. By 
+    default the user must be a staff user.
+    '''
     auth_resource_class = AuthResource
     name = 'hyperadmin'
     
@@ -190,7 +192,15 @@ class ResourceSite(BaseResourceSite):
         self.register(media_storage, media_resource_class, resource_name='media')
         self.register(static_storage, static_resource_class, resource_name='static')
 
+class GlobalSite(BaseResourceSite):
+    '''
+    A Resource Site that is meant for globally registering endpoints 
+    without needing to explicitly create a Resource Site.
+    '''
+    name = 'apisite'
 
 site = ResourceSite()
 site.register_builtin_media_types()
 
+#TODO do we include this in urls?
+global_site = GlobalSite()

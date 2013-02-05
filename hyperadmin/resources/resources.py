@@ -2,7 +2,7 @@ from django import forms
 from django.conf.urls.defaults import patterns
 from django.utils.datastructures import SortedDict
 
-from hyperadmin.endpoints import BaseEndpoint
+from hyperadmin.endpoints import VirtualEndpoint, GlobalSiteMixin
 from hyperadmin.resources.hyperobjects import ResourceItem
 
 
@@ -11,7 +11,7 @@ class EmptyForm(forms.Form):
         self.instance = kwargs.pop('instance', None)
         super(EmptyForm, self).__init__(**kwargs)
 
-class BaseResource(BaseEndpoint):
+class BaseResource(GlobalSiteMixin, VirtualEndpoint):
     resource_class = '' #hint to the client how this resource is used
     form_class = EmptyForm
     resource_item_class = ResourceItem
@@ -107,18 +107,8 @@ class BaseResource(BaseEndpoint):
         """
         return {}
     
-    def get_urls(self):
-        urlpatterns = self.get_extra_urls()
-        urls = [endpoint.get_url_object() for endpoint in self.endpoints.itervalues()]
-        urlpatterns += patterns('', *urls)
-        return urlpatterns
-    
-    def get_extra_urls(self):
-        return patterns('',)
-    
-    def urls(self):
-        return self.get_urls(), self.app_name, None
-    urls = property(urls)
+    def get_children_endpoints(self):
+        return self.endpoints.values()
     
     def reverse(self, name, *args, **kwargs):
         return self.site.reverse(name, *args, **kwargs)

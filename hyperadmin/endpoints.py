@@ -1,4 +1,4 @@
-from django.conf.urls.defaults import url, patterns
+from django.conf.urls.defaults import url, patterns, include
 from django.core.urlresolvers import reverse
 from django.views.generic import View
 from django.utils.datastructures import MultiValueDict
@@ -32,6 +32,7 @@ class BaseEndpoint(LinkCollectorMixin, View):
     
     form_class = None
     resource_item_class = Item
+    app_name = None
     
     def __init__(self, **kwargs):
         self._init_kwargs = kwargs
@@ -154,6 +155,9 @@ class BaseEndpoint(LinkCollectorMixin, View):
     
     def get_url(self, **kwargs):
         return self.reverse(self.get_url_name(), **kwargs)
+    
+    def get_url_suffix(self):
+        return ''
     
     def create_link_collection(self):
         """
@@ -320,7 +324,58 @@ class BaseEndpoint(LinkCollectorMixin, View):
     def generate_options_response(self, links):
         return self.api_request.generate_options_response(links=links, state=self.state)
 
-class RootEndpoint(BaseEndpoint):
+class VirtualEndpoint(BaseEndpoint):
+    '''
+    A type of endpoint that does not define any active endpoints itself
+    but references other endpoints.
+    '''
+    def get_children_endpoints(self):
+        return []
+    
+    def get_urls(self):
+        urlpatterns = self.get_extra_urls()
+        urls = [endpoint.get_url_object() for endpoint in self.get_children_endpoints()]
+        urlpatterns += patterns('', *urls)
+        return urlpatterns
+    
+    def get_extra_urls(self):
+        return patterns('',)
+    
+    def urls(self):
+        return self.get_urls(), self.app_name, None
+    urls = property(urls)
+    
+    def dynamic_urls(self):
+        return self, self.app_name, None
+    
+    @property
+    def urlpatterns(self):
+        return self.get_urls()
+    
+    def get_url_object(self):
+        return url(self.get_url_suffix(), include(self.urls))
+
+class GlobalSiteMixin(object):
+    '''
+    Endpoints inheriting this class will default to the global site if
+    no site is passed in.
+    '''
+    global_endpoint = False
+    
+    def __init__(self, **kwargs):
+        if 'site' not in kwargs:
+            from hyperadmin.sites import global_site
+            kwargs.setdefault('site', global_site)
+            self.global_endpoint = True
+        super(GlobalSiteMixin, self).__init__(**kwargs)
+    
+    def urls(self):
+        if self.global_endpoint:
+            return self.get_urls(), self.app_name, self.site.namespace
+        return self.get_urls(), self.app_name, None
+    urls = property(urls)
+
+class RootEndpoint(VirtualEndpoint):
     """
     The top endpoint of a hypermedia aware site
     
@@ -356,19 +411,6 @@ class RootEndpoint(BaseEndpoint):
         ret = super(RootEndpoint, self).fork(**kwargs)
         ret.endpoints_by_urlname.update(self.endpoints_by_urlname)
         return ret
-    
-    def get_urls(self):
-        #TODO this goes into standalone endpoint...
-        urlpatterns = self.get_extra_urls()
-        urlpatterns += patterns('', self.get_url_object())
-        return urlpatterns
-    
-    @property
-    def urlpatterns(self):
-        return self.get_urls()
-    
-    def get_extra_urls(self):
-        return patterns('',)
     
     def urls(self):
         return self, None, self.namespace
@@ -443,7 +485,7 @@ class RootEndpoint(BaseEndpoint):
         """
         return None
 
-class Endpoint(EndpointViewMixin, BaseEndpoint):
+class Endpoint(GlobalSiteMixin, EndpointViewMixin, BaseEndpoint):
     """
     Endpoint class that contains link prototypes and maps HTTP requests to those links.
     """
