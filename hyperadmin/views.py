@@ -24,6 +24,12 @@ class EndpointViewMixin(ConditionalAccessMixin):
     global_state = None
     cacheable = False
     submit_methods = ['POST', 'PUT', 'DELETE']
+    template_name = None
+    
+    def get_template_names(self):
+        if self.template_name:
+            return [self.template_name]
+        return None
     
     def get_request_form_kwargs(self):
         return self.api_request.payload
