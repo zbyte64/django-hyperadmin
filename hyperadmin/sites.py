@@ -202,5 +202,5 @@ class GlobalSite(BaseResourceSite):
 site = ResourceSite()
 site.register_builtin_media_types()
 
-#TODO do we include this in urls?
 global_site = GlobalSite()
+global_site.register_builtin_media_types()
