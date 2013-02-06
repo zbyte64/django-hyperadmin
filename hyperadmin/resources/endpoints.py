@@ -68,4 +68,6 @@ class ResourceEndpoint(Endpoint):
     
     def api_permission_check(self, api_request):
         return self.resource.api_permission_check(api_request)
-
+    
+    def create_apirequest(self, **kwargs):
+        return self.resource.create_apirequest(**kwargs)

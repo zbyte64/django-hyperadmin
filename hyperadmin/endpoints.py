@@ -314,7 +314,6 @@ class BaseEndpoint(LinkCollectorMixin, View):
         """
         return unicode(self)
     
-    #TODO deprecate this, replace with api_request.api_permission_check()
     def api_permission_check(self, api_request):
         return self.site.api_permission_check(api_request)
     
@@ -323,6 +322,9 @@ class BaseEndpoint(LinkCollectorMixin, View):
     
     def generate_options_response(self, links):
         return self.api_request.generate_options_response(links=links, state=self.state)
+    
+    def create_apirequest(self, **kwargs):
+        return self.site.create_apirequest(**kwargs)
 
 class VirtualEndpoint(BaseEndpoint):
     '''
@@ -375,7 +377,23 @@ class GlobalSiteMixin(object):
         return self.get_urls(), self.app_name, None
     urls = property(urls)
 
-class RootEndpoint(VirtualEndpoint):
+class APIRequestBuilder(object):
+    apirequest_class = HTTPAPIRequest
+    
+    def get_api_request_kwargs(self, **kwargs):
+        params = {'site':self.site}
+        params.update(kwargs)
+        return params
+    
+    def create_apirequest(self, request, url_args, url_kwargs):
+        kwargs = self.get_api_request_kwargs(request=request, url_args=url_args, url_kwargs=url_kwargs)
+        api_request = self.apirequest_class(**kwargs)
+        api_request.populate_session_data_from_request(request)
+        if self.global_state is not None:
+            api_request.session_state.update(self.global_state)
+        return api_request
+
+class RootEndpoint(APIRequestBuilder, VirtualEndpoint):
     """
     The top endpoint of a hypermedia aware site
     
@@ -383,7 +401,6 @@ class RootEndpoint(VirtualEndpoint):
     """
     namespace = None
     media_types = None
-    apirequest_class = HTTPAPIRequest
     
     def __init__(self, **kwargs):
         kwargs.setdefault('media_types', dict())
@@ -453,19 +470,6 @@ class RootEndpoint(VirtualEndpoint):
     
     def register_media_type(self, media_type, media_type_handler):
         self.media_types[media_type] = media_type_handler
-    
-    def get_api_request_kwargs(self, **kwargs):
-        params = {'site':self}
-        params.update(kwargs)
-        return params
-    
-    def create_apirequest(self, request, url_args, url_kwargs):
-        kwargs = self.get_api_request_kwargs(request=request, url_args=url_args, url_kwargs=url_kwargs)
-        api_request = self.apirequest_class(**kwargs)
-        api_request.populate_session_data_from_request(request)
-        if self.global_state is not None:
-            api_request.session_state.update(self.global_state)
-        return api_request
     
     def record_endpoint(self, endpoint, url_name=None):
         if url_name is None:

@@ -39,7 +39,7 @@ class EndpointViewMixin(ConditionalAccessMixin):
         :rtype: HttpResponse
         """
         assert not self.api_request
-        api_request = self.site.create_apirequest(request=request, url_args=args, url_kwargs=kwargs)
+        api_request = self.create_apirequest(request=request, url_args=args, url_kwargs=kwargs)
         endpoint = api_request.get_endpoint(self.get_url_name())
         return endpoint.dispatch_api(api_request)
     

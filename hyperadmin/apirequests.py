@@ -224,7 +224,7 @@ class HTTPAPIRequest(APIRequest):
             self._params = self.request.GET.copy()
         return self._params
     
-    def populate_session_data_from_request(self, request):
+    def get_session_data_from_request(self, request):
         #TODO consult site object
         data = {'endpoints': {},
                 'resources': {},
@@ -233,9 +233,12 @@ class HTTPAPIRequest(APIRequest):
                 'extra_get_params': self.get_passthrough_params(request),}
         if hasattr(request, 'user'):
             data['auth'] = request.user
+        return data
+    
+    def populate_session_data_from_request(self, request):
+        data = self.get_session_data_from_request(request)
         self.session_state.update(data)
         #TODO set response type & request type
-        return data
     
     def patched_meta(self, request):
         meta = dict(request.META)
@@ -265,6 +268,9 @@ class NamespaceAPIRequest(InternalAPIRequest):
     @property
     def user(self):
         return self.original_api_request.user
+    
+    def get_django_request(self):
+        return self.original_api_request.get_django_request()
 
 class Namespace(object):
     """
