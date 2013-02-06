@@ -40,7 +40,7 @@ class APIRequest(object):
         
         :rtype: string
         """
-        val = self.META.get('HTTP_ACCEPT', '')
+        val = self.META.get('HTTP_ACCEPT', self.META.get('CONTENT_TYPE', ''))
         media_types = self.media_types.keys()
         if not media_types:
             return val
