@@ -276,6 +276,14 @@ class SiteResourceTestCase(ResourceTestCase):
         
         #with state.push_session(self.popped_states):
         self.assertTrue(state.get_resource_items())
+    
+    def test_url_stability_after_fork(self):
+        api_request = self.get_api_request()
+        bound_site = self.site.fork(api_request=api_request)
+        print self.site.get_urls()
+        print api_request.get_site().get_urls()
+        self.assertEqual(str(self.site.get_urls()), str(bound_site.get_urls()))
+        self.assertEqual(str(self.site.get_urls()), str(api_request.get_site().get_urls()))
 
 class ApplicationResourceTestCase(ResourceTestCase):
     def register_resource(self):

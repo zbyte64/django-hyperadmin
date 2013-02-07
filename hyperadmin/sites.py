@@ -198,6 +198,10 @@ class GlobalSite(BaseResourceSite):
     without needing to explicitly create a Resource Site.
     '''
     name = 'apisite'
+    
+    def get_resolver(self):
+        from django.core.urlresolvers import get_resolver
+        return get_resolver(None)
 
 site = ResourceSite()
 site.register_builtin_media_types()

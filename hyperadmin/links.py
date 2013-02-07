@@ -221,7 +221,8 @@ class Link(object):
             'user': self.api_request.user,
         }
         #TODO self.site has broken urlpatterns
-        endpoint = self.api_request.site.call_endpoint(**params)
+        endpoint = self.site.call_endpoint(**params)
+        #endpoint = self.api_request.site.call_endpoint(**params)
         return endpoint.generate_api_response(endpoint.api_request)
     
     def clone(self, **kwargs):

@@ -454,14 +454,17 @@ class RootEndpoint(APIRequestBuilder, VirtualEndpoint):
         try:
             match = self.get_resolver().resolve(path)
         except Resolver404 as notfound:
-            assert False
+            self.get_logger().exception('Could not resolve %s' % url)
+            assert False, str(notfound)
         params = {
             'site': self,
             'path': path,
             'full_path': url,
             'url_kwargs': match.kwargs,
             'url_args': match.args,
-            'params': MultiValueDict(urlparse.parse_qs(url_parts.query))
+            'params': MultiValueDict(urlparse.parse_qs(url_parts.query)),
+            'session_state': self.api_request.session_state,
+            'user': self.api_request.user,
         }
         params.update(request_params)
         api_request = InternalAPIRequest(**params)
@@ -478,7 +481,7 @@ class RootEndpoint(APIRequestBuilder, VirtualEndpoint):
             self.endpoints_by_urlname[url_name] = endpoint
         else:
             original = self.endpoints_by_urlname[url_name]
-            self.get_logger().debug('Double registration at site level on %s by %s, original: %s' % (url_name, endpoint, original))
+            #self.get_logger().debug('Double registration at site level on %s by %s, original: %s' % (url_name, endpoint, original))
     
     def get_endpoint_from_urlname(self, urlname):
         return self.endpoints_by_urlname[urlname]
