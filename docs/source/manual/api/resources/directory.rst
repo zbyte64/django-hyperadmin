@@ -17,5 +17,6 @@ Methods
 -------
 
 .. autoclass:: ResourceDirectory
+   :show-inheritance:
    :members:
    :undoc-members:

@@ -18,5 +18,6 @@ DjangoCTModelAdminLoader
 ------------------------
 
 .. autoclass:: DjangoCTModelAdminLoader
+   :show-inheritance:
    :members:
    :undoc-members:
