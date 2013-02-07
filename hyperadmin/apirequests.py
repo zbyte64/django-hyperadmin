@@ -110,9 +110,9 @@ class APIRequest(object):
         urlname = endpoint.get_url_name()
         if urlname not in self.endpoint_state['endpoints']:
             self.endpoint_state['endpoints'][urlname] = endpoint
-        else:
-            original = self.endpoint_state['endpoints'][urlname]
-            #self.site.get_logger().debug('Double registration at api request level on %s by %s, original: %s' % (urlname, endpoint, original))
+        #else:
+        #    original = self.endpoint_state['endpoints'][urlname]
+        #    self.site.get_logger().debug('Double registration at api request level on %s by %s, original: %s' % (urlname, endpoint, original))
     
     def get_link_prototypes(self, endpoint):
         """
@@ -136,7 +136,6 @@ class APIRequest(object):
         if 'site' not in self.endpoint_state:
             bound_site = self.site.fork(api_request=self)
             self.endpoint_state['site'] = bound_site
-            bound_site.post_register()
         return self.endpoint_state['site']
     
     def generate_response(self, link, state):

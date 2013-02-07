@@ -6,7 +6,10 @@ except ImportError:
     from distutils.core import setup, find_packages
 
 VERSION = '0.8.2'
-LONG_DESC = '\n===='+open('README.rst', 'r').read().split('====', 1)[-1]
+try:
+    LONG_DESC = '\n===='+open('README.rst', 'r').read().split('====', 1)[-1]
+except IOError:
+    LONG_DESC = ''
 
 setup(name='django-hyperadmin',
       version=VERSION,

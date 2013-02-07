@@ -274,7 +274,6 @@ class SiteResourceTestCase(ResourceTestCase):
         link = call_kwargs['link']
         state = call_kwargs['state']
         
-        #with state.push_session(self.popped_states):
         self.assertTrue(state.get_resource_items())
     
     def test_url_stability_after_fork(self):
@@ -299,7 +298,6 @@ class ApplicationResourceTestCase(ResourceTestCase):
         link = call_kwargs['link']
         state = call_kwargs['state']
         
-        #with state.push_session(self.popped_states):
         self.assertTrue(state.get_resource_items())
 
 class StorageResourceTestCase(ResourceTestCase):
