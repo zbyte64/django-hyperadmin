@@ -382,6 +382,9 @@ class LinkPrototype(object):
         assert self.endpoint.state, 'link creation must come from a dispatched endpoint'
         return params
     
+    def get_link_class(self):
+        return Link
+    
     def get_link(self, **link_kwargs):
         """
         Creates and returns the link
@@ -389,7 +392,8 @@ class LinkPrototype(object):
         :rtype: Link
         """
         link_kwargs = self.get_link_kwargs(**link_kwargs)
-        link = Link(**link_kwargs)
+        link_class = self.get_link_class()
+        link = link_class(**link_kwargs)
         return link
     
     def handle_submission(self, link, submit_kwargs):
