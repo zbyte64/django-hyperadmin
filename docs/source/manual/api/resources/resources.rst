@@ -13,6 +13,7 @@ Methods
 -------
 
 .. autoclass:: BaseResource
+   :show-inheritance:
    :members:
    :undoc-members:
 
@@ -26,6 +27,7 @@ Methods
 -------
 
 .. autoclass:: ResourceEndpoint
+   :show-inheritance:
    :members:
    :undoc-members:
 
@@ -39,6 +41,7 @@ Methods
 -------
 
 .. autoclass:: ResourceItem
+   :show-inheritance:
    :members:
    :undoc-members:
 

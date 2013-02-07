@@ -74,6 +74,7 @@ Methods
 -------
 
 .. autoclass:: ModelResource
+   :show-inheritance:
    :members:
    :undoc-members:
 
@@ -86,6 +87,7 @@ Methods
 -------
 
 .. autoclass:: InlineModelResource
+   :show-inheritance:
    :members:
    :undoc-members:
 
@@ -108,6 +110,7 @@ Methods
 -------
 
 .. autoclass:: GenericInlineModelResource
+   :show-inheritance:
    :members:
    :undoc-members:
 

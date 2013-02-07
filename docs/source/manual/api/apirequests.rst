@@ -17,6 +17,7 @@ HTTPAPIRequest
 ==============
 
 .. autoclass:: HTTPAPIRequest
+   :show-inheritance:
    :members:
    :undoc-members:
 
@@ -25,6 +26,7 @@ NamespaceAPIRequest
 ===================
 
 .. autoclass:: NamespaceAPIRequest
+   :show-inheritance:
    :members:
    :undoc-members:
 
@@ -33,5 +35,6 @@ Namespace
 =========
 
 .. autoclass:: Namespace
+   :show-inheritance:
    :members:
    :undoc-members:

@@ -22,5 +22,6 @@ Methods
 -------
 
 .. autoclass:: StorageResource
+   :show-inheritance:
    :members:
    :undoc-members:

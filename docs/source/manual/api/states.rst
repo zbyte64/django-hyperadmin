@@ -17,5 +17,6 @@ EndpointState
 =============
 
 .. autoclass:: EndpointState
+   :show-inheritance:
    :members:
    :undoc-members:

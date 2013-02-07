@@ -9,6 +9,7 @@ Indexes
    :undoc-members:
 
 .. autoclass:: PrimaryIndex
+   :show-inheritance:
    :members:
    :undoc-members:
 

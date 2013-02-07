@@ -8,6 +8,7 @@ Methods
 -------
 
 .. autoclass:: AuthResource
+   :show-inheritance:
    :members:
    :undoc-members:
 
