@@ -78,7 +78,7 @@ class ResourceTestCase(unittest.TestCase):
 
 class ModelResourceTestCase(ResourceTestCase):
     def register_resource(self):
-        self.site.register(User, UserResource)
+        self.site.register(User, UserResource, app_name='auth')
         return self.site.registry[User]
     
     def test_get_list(self):
@@ -165,7 +165,7 @@ class InlineModelResourceTestCase(ResourceTestCase):
         self.user.groups.add(self.test_group)
     
     def register_resource(self):
-        self.site.register(User, UserResource)
+        self.site.register(User, UserResource, app_name='auth')
         self.user_resource = self.site.registry[User]
         return self.user_resource.inline_instances[0]
     
@@ -253,7 +253,7 @@ class InlineModelResourceTestCase(ResourceTestCase):
 
 class SiteResourceTestCase(ResourceTestCase):
     def register_resource(self):
-        self.site.register(User, ModelResource)
+        self.site.register(User, ModelResource, app_name='auth')
         return self.site.directory_resource
     
     '''
@@ -286,7 +286,7 @@ class SiteResourceTestCase(ResourceTestCase):
 
 class ApplicationResourceTestCase(ResourceTestCase):
     def register_resource(self):
-        self.site.register(User, ModelResource)
+        self.site.register(User, ModelResource, app_name='auth')
         return self.site.applications['auth']
     
     def test_get_list(self):

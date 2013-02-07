@@ -19,6 +19,8 @@ class BaseResource(GlobalSiteMixin, VirtualEndpoint):
     
     resource_adaptor = None
     
+    #base_url_name_suffix = self.resource_name
+    
     def __init__(self, **kwargs):
         assert 'resource_adaptor' in kwargs
         super(BaseResource, self).__init__(**kwargs)
@@ -64,15 +66,17 @@ class BaseResource(GlobalSiteMixin, VirtualEndpoint):
     
     def get_prompt(self):
         return self.resource_name
-    
+    '''
     def get_base_url_name(self):
         if self.app_name:
             return '%s_%s_' % (self.app_name, self.resource_name)
         else:
             return '%s_' % self.resource_name
-    
+    '''
     def get_base_url_name_suffix(self):
-        return self.resource_name
+        if self.base_url_name_suffix is None:
+            return self.resource_name
+        return self.base_url_name_suffix
     
     def register_endpoints(self):
         self.endpoints = SortedDict()

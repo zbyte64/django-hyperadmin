@@ -34,14 +34,15 @@ class BaseResourceSite(RootEndpoint):
     
     def post_register(self):
         super(BaseResourceSite, self).post_register()
-        self.directory_resource = self.create_directory_resource()
+        self.directory_resource = self.create_directory_resource(base_url_name_suffix='')
     
     def get_directory_resource_kwargs(self, **kwargs):
         kwargs.setdefault('resource_name', self.name)
         return self.get_resource_kwargs(**kwargs)
     
-    def create_directory_resource(self):
-        return self.directory_resource_class(**self.get_directory_resource_kwargs())
+    def create_directory_resource(self, **kwargs):
+        params = self.get_directory_resource_kwargs(**kwargs)
+        return self.directory_resource_class(**params)
     
     def get_children_endpoints(self):
         return [self.directory_resource]
@@ -139,11 +140,14 @@ class ResourceSite(BaseResourceSite):
                 resources.append(self.register(model, admin_class, **options))
             return resources
         model = model_or_iterable
+        app_name = options.pop('app_name')
+        app_resource = self.register_application(app_name)
+        options['parent'] = app_resource
         kwargs = self.get_resource_kwargs(resource_adaptor=model, **options)
         resource = admin_class(**kwargs)
-        app_name = resource.app_name
-        resource.parent = self.register_application(app_name)
-        resource._init_kwargs['parent'] = resource.parent
+        #app_name = resource.app_name
+        #resource.parent = self.register_application(app_name)
+        #resource._init_kwargs['parent'] = resource.parent
         self.applications[app_name].register_resource(resource)
         self.registry[model] = resource
         return resource
@@ -189,8 +193,9 @@ class ResourceSite(BaseResourceSite):
             media_resource_class = StorageResource
         if static_resource_class is None:
             static_resource_class = StorageResource
-        self.register(media_storage, media_resource_class, resource_name='media')
-        self.register(static_storage, static_resource_class, resource_name='static')
+        app_name = '-storages'
+        self.register(media_storage, media_resource_class, resource_name='media', app_name=app_name)
+        self.register(static_storage, static_resource_class, resource_name='static', app_name=app_name)
 
 class GlobalSite(BaseResourceSite):
     '''

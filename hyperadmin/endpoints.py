@@ -33,6 +33,7 @@ class BaseEndpoint(LinkCollectorMixin, View):
     form_class = None
     resource_item_class = Item
     app_name = None
+    base_url_name_suffix = None
     
     def __init__(self, **kwargs):
         self._init_kwargs = kwargs
@@ -162,12 +163,18 @@ class BaseEndpoint(LinkCollectorMixin, View):
     #urls
     
     def get_base_url_name_suffix(self):
-        raise NotImplementedError
+        return self.base_url_name_suffix
+    
+    def get_base_url_name_prefix(self):
+        if self.parent:
+            prefix = self.parent.get_base_url_name()
+            if not prefix.startswith('_'):
+                prefix += '_'
+            return prefix
+        return ''
     
     def get_base_url_name(self):
-        if self.parent:
-            return self.parent.get_base_url_name() + self.get_base_url_name_suffix()
-        return self.get_base_url_name_suffix()
+        return self.get_base_url_name_prefix() + self.get_base_url_name_suffix() +'_'
     
     def get_url_name(self):
         raise NotImplementedError
@@ -439,15 +446,13 @@ class RootEndpoint(APIRequestBuilder, VirtualEndpoint):
     """
     namespace = None
     media_types = None
+    base_url_name_suffix = ''
     
     def __init__(self, **kwargs):
         kwargs.setdefault('media_types', dict())
         kwargs.setdefault('namespace', str(id(self)))
         self.endpoints_by_urlname = dict()
         super(RootEndpoint, self).__init__(**kwargs)
-    
-    def get_base_url_name_suffix(self):
-        return ''
     
     def get_url_name(self):
         return None
