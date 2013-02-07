@@ -15,6 +15,7 @@ class BaseResource(GlobalSiteMixin, VirtualEndpoint):
     resource_class = '' #hint to the client how this resource is used
     form_class = EmptyForm
     resource_item_class = ResourceItem
+    virtual_slug = 'resource'
     
     resource_adaptor = None
     
@@ -70,13 +71,8 @@ class BaseResource(GlobalSiteMixin, VirtualEndpoint):
         else:
             return '%s_' % self.resource_name
     
-    def create_link_prototypes(self):
-        link_prototypes = super(BaseResource, self).create_link_prototypes()
-        
-        for endpoint in self.endpoints.itervalues():
-            link_prototypes.update(endpoint.link_prototypes)
-        
-        return link_prototypes
+    def get_base_url_name_suffix(self):
+        return self.resource_name
     
     def register_endpoints(self):
         self.endpoints = SortedDict()
@@ -87,12 +83,6 @@ class BaseResource(GlobalSiteMixin, VirtualEndpoint):
         kwargs = self.get_endpoint_kwargs(**kwargs)
         endpoint = endpoint_cls(**kwargs)
         self.endpoints[endpoint.get_name_suffix()] = endpoint
-    
-    def get_endpoint_kwargs(self, **kwargs):
-        kwargs.setdefault('parent', self)
-        kwargs.setdefault('site', self._site)
-        kwargs.setdefault('api_request', self.api_request)
-        return kwargs
     
     def get_view_endpoints(self):
         """
@@ -148,9 +138,6 @@ class BaseResource(GlobalSiteMixin, VirtualEndpoint):
     
     def get_resource_link_item(self):
         return None
-    
-    def get_url_name(self):
-        return self.get_base_url_name() + 'resource'
     
     def get_main_link_name(self):
         return 'list'

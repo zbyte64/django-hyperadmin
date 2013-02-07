@@ -39,9 +39,12 @@ class BaseEndpoint(LinkCollectorMixin, View):
         self.links = self.get_link_collector()
         super(BaseEndpoint, self).__init__(**kwargs)
         
+        self._registered = False
         self.post_register()
+        self._registered = True
     
     def post_register(self):
+        assert not self._registered
         if self.api_request:
             self.api_request.record_endpoint(self)
         else:
@@ -52,7 +55,7 @@ class BaseEndpoint(LinkCollectorMixin, View):
         return self._site.get_logger()
     
     def get_site(self):
-        if self.api_request:
+        if self._registered and self.api_request:
             return self.api_request.get_site()
         return self._site
     
@@ -64,7 +67,7 @@ class BaseEndpoint(LinkCollectorMixin, View):
     def get_parent(self):
         if getattr(self, '_parent', None) is None:
             return None
-        if self.api_request:
+        if self._registered and self.api_request:
             return self.api_request.get_endpoint(self._parent.get_url_name())
         return self._parent
     
@@ -72,6 +75,17 @@ class BaseEndpoint(LinkCollectorMixin, View):
         self._parent = parent
     
     parent = property(get_parent, set_parent)
+    
+    def get_endpoint_kwargs(self, **kwargs):
+        '''
+        Consult for creating child endpoints
+        '''
+        kwargs.setdefault('parent', self)
+        kwargs.setdefault('site', self.site)
+        kwargs.setdefault('api_request', self.api_request)
+        #if self.parent:
+        #    kwargs = self.parent.get_endpoint_kwargs(**kwargs)
+        return kwargs
     
     def get_common_state(self):
         return None
@@ -147,8 +161,13 @@ class BaseEndpoint(LinkCollectorMixin, View):
     
     #urls
     
-    def get_base_url_name(self):
+    def get_base_url_name_suffix(self):
         raise NotImplementedError
+    
+    def get_base_url_name(self):
+        if self.parent:
+            return self.parent.get_base_url_name() + self.get_base_url_name_suffix()
+        return self.get_base_url_name_suffix()
     
     def get_url_name(self):
         raise NotImplementedError
@@ -331,6 +350,8 @@ class VirtualEndpoint(BaseEndpoint):
     A type of endpoint that does not define any active endpoints itself
     but references other endpoints.
     '''
+    virtual_slug = 'virtual'
+    
     def get_children_endpoints(self):
         return []
     
@@ -356,6 +377,23 @@ class VirtualEndpoint(BaseEndpoint):
     
     def get_url_object(self):
         return url(self.get_url_suffix(), include(self.urls))
+    
+    def get_url_name(self):
+        base = self.get_base_url_name()
+        if base.endswith('_'):
+            return base + self.virtual_slug
+        return '%s_%s' % (base, self.virtual_slug)
+    
+    def create_link_prototypes(self):
+        '''
+        Inludes the link prototypes created by the children endpoints
+        '''
+        link_prototypes = super(VirtualEndpoint, self).create_link_prototypes()
+        
+        for endpoint in self.get_children_endpoints():
+            link_prototypes.update(endpoint.link_prototypes)
+        
+        return link_prototypes
 
 class GlobalSiteMixin(object):
     '''
@@ -408,6 +446,9 @@ class RootEndpoint(APIRequestBuilder, VirtualEndpoint):
         self.endpoints_by_urlname = dict()
         super(RootEndpoint, self).__init__(**kwargs)
     
+    def get_base_url_name_suffix(self):
+        return ''
+    
     def get_url_name(self):
         return None
     
@@ -450,24 +491,22 @@ class RootEndpoint(APIRequestBuilder, VirtualEndpoint):
         url_parts = urlparse.urlparse(url)
         path = url_parts.path
         from django.core.urlresolvers import Resolver404
-        from hyperadmin.apirequests import InternalAPIRequest
+        from hyperadmin.apirequests import NamespaceAPIRequest
         try:
             match = self.get_resolver().resolve(path)
         except Resolver404 as notfound:
             self.get_logger().exception('Could not resolve %s' % url)
             assert False, str(notfound)
         params = {
-            'site': self,
+            'api_request': self.api_request,
             'path': path,
             'full_path': url,
             'url_kwargs': match.kwargs,
             'url_args': match.args,
             'params': MultiValueDict(urlparse.parse_qs(url_parts.query)),
-            'session_state': self.api_request.session_state,
-            'user': self.api_request.user,
         }
         params.update(request_params)
-        api_request = InternalAPIRequest(**params)
+        api_request = NamespaceAPIRequest(**params)
         
         return match.func.endpoint.fork(api_request=api_request)
     
@@ -542,6 +581,7 @@ class Endpoint(GlobalSiteMixin, EndpointViewMixin, BaseEndpoint):
         """
         :rtype: view callable
         """
+        #TODO should this be get_endpoint_kwargs?
         params = self.get_view_kwargs()
         params.update(self._init_kwargs)
         params.update(kwargs)

@@ -256,13 +256,10 @@ class HTTPAPIRequest(APIRequest):
 class NamespaceAPIRequest(InternalAPIRequest):
     def __init__(self, api_request, path='/', url_args=[], url_kwargs={}, **kwargs):
         self.original_api_request = api_request
+        kwargs.setdefault('full_path', self.original_api_request.get_full_path())
         super(NamespaceAPIRequest, self).__init__(api_request.site, path, url_args, url_kwargs, **kwargs)
         self.site = api_request.site.fork(api_request=self)
         self.session_state = State(substates=[api_request.session_state])
-    
-    def get_full_path(self):
-        #TODO
-        return self.original_api_request.get_full_path()
     
     @property
     def user(self):

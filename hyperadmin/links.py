@@ -218,7 +218,6 @@ class Link(object):
         '''
         params = {
             'url': self.get_absolute_url(),
-            'user': self.api_request.user,
         }
         #TODO self.site has broken urlpatterns
         endpoint = self.site.call_endpoint(**params)
