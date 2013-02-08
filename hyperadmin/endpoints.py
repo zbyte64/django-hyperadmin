@@ -34,6 +34,7 @@ class BaseEndpoint(LinkCollectorMixin, View):
     resource_item_class = Item
     app_name = None
     base_url_name_suffix = None
+    name_suffix = None
     
     def __init__(self, **kwargs):
         self._init_kwargs = kwargs
@@ -73,6 +74,7 @@ class BaseEndpoint(LinkCollectorMixin, View):
         return self._parent
     
     def set_parent(self, parent):
+        assert parent != self
         self._parent = parent
     
     parent = property(get_parent, set_parent)
@@ -174,10 +176,20 @@ class BaseEndpoint(LinkCollectorMixin, View):
         return ''
     
     def get_base_url_name(self):
+        '''
+        Returns the base url name to be used by our name and the name of
+        our children endpoints
+        '''
         return self.get_base_url_name_prefix() + self.get_base_url_name_suffix() +'_'
     
+    def get_name_suffix(self):
+        return self.name_suffix
+    
     def get_url_name(self):
-        raise NotImplementedError
+        '''
+        Returns the url name that will address this endpoint
+        '''
+        return self.get_base_url_name() + self.get_name_suffix()
     
     def get_url(self, **kwargs):
         return self.reverse(self.get_url_name(), **kwargs)
@@ -357,7 +369,7 @@ class VirtualEndpoint(BaseEndpoint):
     A type of endpoint that does not define any active endpoints itself
     but references other endpoints.
     '''
-    virtual_slug = 'virtual'
+    name_suffix = 'virtual'
     
     def get_children_endpoints(self):
         return []
@@ -384,12 +396,6 @@ class VirtualEndpoint(BaseEndpoint):
     
     def get_url_object(self):
         return url(self.get_url_suffix(), include(self.urls))
-    
-    def get_url_name(self):
-        base = self.get_base_url_name()
-        if base.endswith('_'):
-            return base + self.virtual_slug
-        return '%s_%s' % (base, self.virtual_slug)
     
     def create_link_prototypes(self):
         '''
@@ -447,15 +453,13 @@ class RootEndpoint(APIRequestBuilder, VirtualEndpoint):
     namespace = None
     media_types = None
     base_url_name_suffix = ''
+    name_suffix = 'virtualroot'
     
     def __init__(self, **kwargs):
         kwargs.setdefault('media_types', dict())
         kwargs.setdefault('namespace', str(id(self)))
         self.endpoints_by_urlname = dict()
         super(RootEndpoint, self).__init__(**kwargs)
-    
-    def get_url_name(self):
-        return None
     
     def get_logger(self):
         return logging.getLogger(__name__)
@@ -540,7 +544,6 @@ class Endpoint(GlobalSiteMixin, EndpointViewMixin, BaseEndpoint):
     """
     Endpoint class that contains link prototypes and maps HTTP requests to those links.
     """
-    name_suffix = None
     url_suffix = None
     
     prototype_method_map = {}
@@ -566,12 +569,6 @@ class Endpoint(GlobalSiteMixin, EndpointViewMixin, BaseEndpoint):
                 link = proto.get_link(**kwargs)
                 methods[method] = link
         return methods
-    
-    def get_name_suffix(self):
-        return self.name_suffix
-    
-    def get_url_name(self):
-        return self.get_base_url_name() + self.get_name_suffix()
     
     def get_url_suffix(self):
         return self.url_suffix

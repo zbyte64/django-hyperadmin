@@ -15,11 +15,9 @@ class BaseResource(GlobalSiteMixin, VirtualEndpoint):
     resource_class = '' #hint to the client how this resource is used
     form_class = EmptyForm
     resource_item_class = ResourceItem
-    virtual_slug = 'resource'
+    name_suffix = 'resource'
     
     resource_adaptor = None
-    
-    #base_url_name_suffix = self.resource_name
     
     def __init__(self, **kwargs):
         assert 'resource_adaptor' in kwargs
@@ -66,13 +64,7 @@ class BaseResource(GlobalSiteMixin, VirtualEndpoint):
     
     def get_prompt(self):
         return self.resource_name
-    '''
-    def get_base_url_name(self):
-        if self.app_name:
-            return '%s_%s_' % (self.app_name, self.resource_name)
-        else:
-            return '%s_' % self.resource_name
-    '''
+    
     def get_base_url_name_suffix(self):
         if self.base_url_name_suffix is None:
             return self.resource_name
