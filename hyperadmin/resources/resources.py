@@ -87,12 +87,6 @@ class BaseResource(GlobalSiteMixin, VirtualEndpoint):
         """
         return []
     
-    def get_view_kwargs(self):
-        """
-        :rtype: dict
-        """
-        return {}
-    
     def get_children_endpoints(self):
         return self.endpoints.values()
     

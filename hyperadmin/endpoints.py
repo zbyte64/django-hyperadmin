@@ -37,7 +37,7 @@ class BaseEndpoint(LinkCollectorMixin, View):
     name_suffix = None
     
     def __init__(self, **kwargs):
-        self._init_kwargs = kwargs
+        self._init_kwargs = dict(kwargs)
         self.links = self.get_link_collector()
         super(BaseEndpoint, self).__init__(**kwargs)
         
@@ -169,10 +169,7 @@ class BaseEndpoint(LinkCollectorMixin, View):
     
     def get_base_url_name_prefix(self):
         if self.parent:
-            prefix = self.parent.get_base_url_name()
-            if not prefix.startswith('_'):
-                prefix += '_'
-            return prefix
+            return self.parent.get_base_url_name()
         return ''
     
     def get_base_url_name(self):
@@ -180,7 +177,10 @@ class BaseEndpoint(LinkCollectorMixin, View):
         Returns the base url name to be used by our name and the name of
         our children endpoints
         '''
-        return self.get_base_url_name_prefix() + self.get_base_url_name_suffix() +'_'
+        base = self.get_base_url_name_prefix() + self.get_base_url_name_suffix() 
+        if base and not base.endswith('_'):
+            base += '_'
+        return base
     
     def get_name_suffix(self):
         return self.name_suffix
@@ -189,6 +189,7 @@ class BaseEndpoint(LinkCollectorMixin, View):
         '''
         Returns the url name that will address this endpoint
         '''
+        assert self.get_base_url_name() != '_'
         return self.get_base_url_name() + self.get_name_suffix()
     
     def get_url(self, **kwargs):
@@ -461,6 +462,10 @@ class RootEndpoint(APIRequestBuilder, VirtualEndpoint):
         self.endpoints_by_urlname = dict()
         super(RootEndpoint, self).__init__(**kwargs)
     
+    @property
+    def parent(self):
+        return None
+    
     def get_logger(self):
         return logging.getLogger(__name__)
     
@@ -573,20 +578,20 @@ class Endpoint(GlobalSiteMixin, EndpointViewMixin, BaseEndpoint):
     def get_url_suffix(self):
         return self.url_suffix
     
-    def get_view_kwargs(self):
+    def get_view_kwargs(self, **kwargs):
         """
         :rtype: dict
         """
-        return {}
+        params = dict(self._init_kwargs)
+        params.update(kwargs)
+        return params
     
     def get_view(self, **kwargs):
         """
         :rtype: view callable
         """
         #TODO should this be get_endpoint_kwargs?
-        params = self.get_view_kwargs()
-        params.update(self._init_kwargs)
-        params.update(kwargs)
+        params = self.get_view_kwargs(**kwargs)
         view = type(self).as_view(**params)
         #allow for retreiving the endpoint from url patterns
         view.endpoint = self

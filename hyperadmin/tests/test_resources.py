@@ -81,6 +81,10 @@ class ModelResourceTestCase(ResourceTestCase):
         self.site.register(User, UserResource, app_name='auth')
         return self.site.registry[User]
     
+    def test_get_url_name(self):
+        urlname = self.resource.get_url_name()
+        self.assertEqual(urlname, 'admin_auth_user_resource')
+    
     def test_get_list(self):
         api_request = self.get_api_request()
         endpoint = self.resource.endpoints['list'].fork(api_request=api_request)

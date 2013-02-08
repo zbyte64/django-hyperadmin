@@ -34,10 +34,11 @@ class BaseResourceSite(RootEndpoint):
     
     def post_register(self):
         super(BaseResourceSite, self).post_register()
-        self.directory_resource = self.create_directory_resource(base_url_name_suffix='')
+        self.directory_resource = self.create_directory_resource(base_url_name_suffix='admin')
     
     def get_directory_resource_kwargs(self, **kwargs):
         kwargs.setdefault('resource_name', self.name)
+        #kwargs.setdefault('parent', self)
         return self.get_resource_kwargs(**kwargs)
     
     def create_directory_resource(self, **kwargs):
@@ -124,6 +125,7 @@ class ResourceSite(BaseResourceSite):
     '''
     auth_resource_class = AuthResource
     name = 'hyperadmin'
+    base_url_name_suffix = 'admin'
     
     def post_register(self):
         super(ResourceSite, self).post_register()
@@ -142,12 +144,9 @@ class ResourceSite(BaseResourceSite):
         model = model_or_iterable
         app_name = options.pop('app_name')
         app_resource = self.register_application(app_name)
-        options['parent'] = app_resource
+        options.setdefault('parent', app_resource)
         kwargs = self.get_resource_kwargs(resource_adaptor=model, **options)
         resource = admin_class(**kwargs)
-        #app_name = resource.app_name
-        #resource.parent = self.register_application(app_name)
-        #resource._init_kwargs['parent'] = resource.parent
         self.applications[app_name].register_resource(resource)
         self.registry[model] = resource
         return resource
