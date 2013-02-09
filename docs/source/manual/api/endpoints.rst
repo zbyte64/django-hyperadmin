@@ -12,6 +12,12 @@ BaseEndpoint
    :members:
    :undoc-members:
 
+VirtualEndpoint
+===============
+
+.. autoclass:: VirtualEndpoint
+   :members:
+   :undoc-members:
 
 RootEndpoint
 ============
