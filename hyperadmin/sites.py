@@ -26,7 +26,7 @@ class Registry(dict):
 
 class BaseResourceSite(RootEndpoint):
     directory_resource_class = ResourceDirectory
-    throttle = Throttle(throttle_at=200)
+    throttle = Throttle(throttle_at=1200)
     name = 'hyperadmin'
     
     def __init__(self, **kwargs):
