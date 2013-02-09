@@ -1,5 +1,4 @@
 from django import forms
-from django.conf.urls.defaults import patterns
 from django.utils.datastructures import SortedDict
 
 from hyperadmin.endpoints import VirtualEndpoint, GlobalSiteMixin
@@ -92,9 +91,6 @@ class BaseResource(GlobalSiteMixin, VirtualEndpoint):
     
     def reverse(self, name, *args, **kwargs):
         return self.site.reverse(name, *args, **kwargs)
-    
-    def api_permission_check(self, request):
-        return self.site.api_permission_check(request)
     
     def get_state_data(self):
         data = super(BaseResource, self).get_state_data()

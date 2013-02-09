@@ -76,7 +76,7 @@ class EndpointViewMixin(ConditionalAccessMixin):
         
         self.common_state.update(self.get_common_state_data())
         
-        permission_response = self.api_permission_check(api_request)
+        permission_response = self.api_permission_check(api_request, self)
         if permission_response is not None:
             return permission_response
         else:

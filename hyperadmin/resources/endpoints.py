@@ -63,8 +63,8 @@ class ResourceEndpoint(Endpoint):
         breadcrumbs.endpoint = self
         return breadcrumbs
     
-    def api_permission_check(self, api_request):
-        return self.resource.api_permission_check(api_request)
+    def api_permission_check(self, api_request, endpoint):
+        return self.resource.api_permission_check(api_request, endpoint)
     
     def create_apirequest(self, **kwargs):
         return self.resource.create_apirequest(**kwargs)
