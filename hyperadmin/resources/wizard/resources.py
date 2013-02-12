@@ -1,3 +1,5 @@
+from django.utils.datastructures import SortedDict
+
 from hyperadmin.resources import BaseResource
 
 from hyperadmin.resources.wizard.endpoints import StepList, StepProvider
@@ -45,13 +47,12 @@ class Wizard(BaseResource):
         return endpoints
     
     def set_step_status(self, slug, status):
-        statuses = {
-            slug: status
-        }
+        statuses = SortedDict([(slug, [status]),])
         return self.update_statuses(statuses)
     
     def update_statuses(self, statuses):
-        self.state.pop('step_statuses', None)
+        if 'step_statuses' in self.state:
+            self.state['step_statuses'].update(statuses)
         return self.set_step_statuses(statuses)
     
     @property
@@ -63,12 +64,10 @@ class Wizard(BaseResource):
     def get_step_statuses(self):
         data = self.storage.get_step_data('_step_statuses')
         if data is None:
-            print 'no data'
             data = dict()
         for step in self.steps:
             if step.slug not in data:
                 data[step.slug] = 'incomplete'
-        print data
         return data
     
     def set_step_statuses(self, statuses):
