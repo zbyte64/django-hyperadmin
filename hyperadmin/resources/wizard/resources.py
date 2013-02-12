@@ -1,9 +1,13 @@
-from django.utils.datastructures import SortedDict
+from django.utils.datastructures import MultiValueDict
 
 from hyperadmin.resources import BaseResource
 
 from hyperadmin.resources.wizard.endpoints import StepList, StepProvider
 
+
+def multi_value_merge(dest, source):
+    for key, value in source.iteritems():
+        dest[key] = value
 
 class Wizard(BaseResource):
     step_definitions = [] #tuples of Step and dictionary kwargs, kwarg must contain slug
@@ -47,12 +51,10 @@ class Wizard(BaseResource):
         return endpoints
     
     def set_step_status(self, slug, status):
-        statuses = SortedDict([(slug, [status]),])
+        statuses = MultiValueDict([(slug, [status]),])
         return self.update_statuses(statuses)
     
     def update_statuses(self, statuses):
-        if 'step_statuses' in self.state:
-            self.state['step_statuses'].update(statuses)
         return self.set_step_statuses(statuses)
     
     @property
@@ -64,14 +66,17 @@ class Wizard(BaseResource):
     def get_step_statuses(self):
         data = self.storage.get_step_data('_step_statuses')
         if data is None:
-            data = dict()
+            data = MultiValueDict()
         for step in self.steps:
             if step.slug not in data:
                 data[step.slug] = 'incomplete'
         return data
     
     def set_step_statuses(self, statuses):
-        self.storage.set_step_data('_step_statuses', statuses)
+        effective_statuses = self.step_statuses.copy()
+        multi_value_merge(effective_statuses, statuses)
+        self.storage.set_step_data('_step_statuses', effective_statuses)
+        self.state.pop('step_statuses', None)
     
     def get_step_data(self, key):
         return self.storage.get_step_data(key)
@@ -98,10 +103,14 @@ class Wizard(BaseResource):
     def next_step(self, skip_steps=[], desired_step=None):
         step = self.get_next_step(skip_steps, desired_step)
         if step is None:
-            return self.done()
+            submissions = dict()
+            for step in self.steps:
+                key = step.slug
+                submissions[key] = self.get_step_data(key)
+            return self.done(submissions)
         return step.get_link()
     
-    def done(self):
+    def done(self, submissions):
         raise NotImplementedError
 
 class MultiPartStep(Wizard, StepProvider):
@@ -134,3 +143,4 @@ class MultiPartStep(Wizard, StepProvider):
         self.wizard.set_step_data(self.slug, submissions)
         self.wizard.update_status(self.slug, 'complete')
         return self.wizard.next_step()
+
