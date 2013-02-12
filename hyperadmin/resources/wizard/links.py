@@ -27,17 +27,12 @@ class FormStepLinkPrototype(LinkPrototype):
     
     def get_next_step_kwargs(self):
         return {
-            'step_key':self.endpoint.step_key,
-            'continue_editing': self.endpoint.get_continue_editing(),
-            'skip_to_step': self.endpoint.get_skip_to_step(),
             'skip_steps': self.endpoint.get_skip_steps(),
-            'expiration': self.endpoint.get_expiration(),
+            'desired_step': self.endpoint.get_desired_step(),
         }
     
     def on_success(self, item=None):
-        step_controller = self.endpoint.process.endpoints['step']
+        step_controller = self.endpoint.wizard
         params = self.get_next_step_kwargs()
-        next_step = step_controller.get_next_step(**params)
-        if next_step is None: #no more steps, goto confirm checkout
-            return self.endpoint.process.endpoints['confirm'].get_link()
-        return self.endpoint.process.bound_step(next_step).get_link()
+        return self.endpoint.wizard.next_step(**params)
+
