@@ -180,6 +180,9 @@ class InternalAPIRequest(APIRequest):
     
     def get_full_path(self):
         return self.full_path
+    
+    def get_django_request(self):
+        return self.request
 
 class HTTPAPIRequest(APIRequest):
     """

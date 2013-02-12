@@ -13,7 +13,7 @@ class UsernameForm(forms.Form):
     username = forms.CharField()
 
 class PasswordForm(forms.Form):
-    password = forms.PasswordField()
+    password = forms.CharField()
 
 class GetEmail(FormStep):
     form_class = EmailForm
@@ -26,9 +26,9 @@ class GetPassword(FormStep):
 
 class SimpleWizard(Wizard):
     step_definitions = [
-        (GetEmail, {'slug':'email'})
-        (GetUsername, {'slug':'username'})
-        (GetPassword, {'slug':'password'})
+        (GetEmail, {'slug':'email'}),
+        (GetUsername, {'slug':'username'}),
+        (GetPassword, {'slug':'password'}),
     ]
     
     def done(self, submissions):
@@ -43,15 +43,21 @@ class SimpleWizard(Wizard):
 
 class SimpleWizardTestCase(ResourceTestCase):
     def register_resource(self):
-        self.site.register(User, SimpleWizard)
-        return self.site.registry[User]
+        from django.contrib.formtools.wizard.storage import BaseStorage
+        self.site.register(BaseStorage, SimpleWizard, app_name='wizard', resource_name='adduser')
+        return self.site.registry[BaseStorage]
     
     def test_email_step(self):
         #start = self.resource.get_link()
-        email_e = self.resource.endpoints['step_email'].get_link()
         data = {
             'email': 'z@z.com',
         }
-        response = email_e.submit(data=data)
+        api_request = self.get_api_request(payload={'data':data}, method='POST')
+        endpoint = self.resource.endpoints['step_email'].fork(api_request=api_request)
+        print api_request.endpoint_state['link_prototypes']
+        assert endpoint.link_prototypes
+        response = endpoint.dispatch_api(api_request)
+        print response
+        self.assertEqual(endpoint.status, 'complete')
         
 

@@ -12,7 +12,9 @@ class Wizard(BaseResource):
     def storage(self):
         if not hasattr(self, '_storage'):
             kwargs = self.get_storage_kwargs()
-            self._storage = self.adaptor(**kwargs)
+            self._storage = self.resource_adaptor(**kwargs)
+            if not hasattr(self._storage, 'data'):
+                self._storage.init_data()
         return self._storage
     
     def get_storage_kwargs(self):

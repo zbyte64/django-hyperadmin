@@ -4,6 +4,9 @@ from hyperadmin.resources.wizard.links import FormStepLinkPrototype
 
 
 class StepList(ResourceEndpoint):
+    url_suffix = r'^$'
+    name_suffix = 'list'
+    
     @property
     def wizard(self):
         return self.parent
@@ -14,9 +17,9 @@ class StepList(ResourceEndpoint):
 class StepProvider(object):
     slug = None
     status_choices = [
-        ('incomplete', 'Incomplete')
-        ('inactive', 'Inactive')
-        ('skipped', 'Skipped')
+        ('incomplete', 'Incomplete'),
+        ('inactive', 'Inactive'),
+        ('skipped', 'Skipped'),
         ('complete', 'Complete'),
     ]
     
@@ -32,7 +35,11 @@ class StepProvider(object):
         return self.wizard.step_statuses[self.slug]
     
 class Step(StepProvider, ResourceEndpoint):
-    pass
+    def get_skip_steps(self):
+        return []
+    
+    def get_desired_step(self):
+        return None
 
 class FormStep(Step):
     link_prototype = FormStepLinkPrototype
@@ -44,6 +51,11 @@ class FormStep(Step):
             'GET':'step_%s' % self.slug,
             'POST':'step_%s' % self.slug,
         }
+    
+    def get_link_prototypes(self):
+        return [
+            (self.link_prototype, {'name':'step_%s' % self.slug}),
+        ]
     
     def get_url_suffix(self):
         return r'^%s/$' % self.slug
