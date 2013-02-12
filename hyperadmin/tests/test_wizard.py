@@ -38,14 +38,12 @@ class SimpleWizard(Wizard):
         #retrieve payload
         #create user
         pass
-    
-    
 
 class SimpleWizardTestCase(ResourceTestCase):
     def register_resource(self):
-        from django.contrib.formtools.wizard.storage import BaseStorage
-        self.site.register(BaseStorage, SimpleWizard, app_name='wizard', resource_name='adduser')
-        return self.site.registry[BaseStorage]
+        from django.contrib.formtools.wizard.storage.session import SessionStorage
+        self.site.register(SessionStorage, SimpleWizard, app_name='wizard', resource_name='adduser')
+        return self.site.registry[SessionStorage]
     
     def test_email_step(self):
         #start = self.resource.get_link()
@@ -54,10 +52,7 @@ class SimpleWizardTestCase(ResourceTestCase):
         }
         api_request = self.get_api_request(payload={'data':data}, method='POST')
         endpoint = self.resource.endpoints['step_email'].fork(api_request=api_request)
-        print api_request.endpoint_state['link_prototypes']
         assert endpoint.link_prototypes
         response = endpoint.dispatch_api(api_request)
-        print response
+        #response is GETUsername (shouldn't it be a link?)
         self.assertEqual(endpoint.status, 'complete')
-        
-

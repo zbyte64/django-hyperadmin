@@ -5,6 +5,7 @@ class FormStepLinkPrototype(LinkPrototype):
     def get_link_kwargs(self, **kwargs):
         link_kwargs = {'on_submit':self.handle_submission,
                        'method':'POST',
+                       'url':self.get_url(),
                        'form_class': self.get_form_class(),
                        'prompt':'step',
                        'rel':'step',}

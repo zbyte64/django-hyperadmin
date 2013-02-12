@@ -79,7 +79,9 @@ class FormStep(Step):
         return links
     
     def form_valid(self, form):
+        print 'setting status'
         self.wizard.set_step_data(self.slug, form.cleaned_data)
+        self.wizard.set_step_status(self.slug, 'complete')
     
     def form_invalid(self, form):
         pass

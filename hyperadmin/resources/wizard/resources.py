@@ -44,14 +44,14 @@ class Wizard(BaseResource):
         endpoints.extend(self.step_definitions)
         return endpoints
     
-    def update_status(self, slug, status):
+    def set_step_status(self, slug, status):
         statuses = {
             slug: status
         }
         return self.update_statuses(statuses)
     
     def update_statuses(self, statuses):
-        self.state.pop('step_statuses')
+        self.state.pop('step_statuses', None)
         return self.set_step_statuses(statuses)
     
     @property
@@ -61,7 +61,15 @@ class Wizard(BaseResource):
         return self.state['step_statuses']
     
     def get_step_statuses(self):
-        return self.storage.get_step_data('_step_statuses')
+        data = self.storage.get_step_data('_step_statuses')
+        if data is None:
+            print 'no data'
+            data = dict()
+        for step in self.steps:
+            if step.slug not in data:
+                data[step.slug] = 'incomplete'
+        print data
+        return data
     
     def set_step_statuses(self, statuses):
         self.storage.set_step_data('_step_statuses', statuses)
@@ -87,6 +95,12 @@ class Wizard(BaseResource):
                 return step
         self.update_statuses(statuses)
         return None
+    
+    def next_step(self, skip_steps=[], desired_step=None):
+        step = self.get_next_step(skip_steps, desired_step)
+        if step is None:
+            return self.done()
+        return step.get_link()
     
     def done(self):
         raise NotImplementedError
@@ -121,10 +135,3 @@ class MultiPartStep(Wizard, StepProvider):
         self.wizard.set_step_data(self.slug, submissions)
         self.wizard.update_status(self.slug, 'complete')
         return self.wizard.next_step()
-
-    def next_step(self, skip_steps=[], desired_step=None):
-        step = self.get_next_step(skip_steps, desired_step)
-        if step is None:
-            return self.done()
-        return step
-    
