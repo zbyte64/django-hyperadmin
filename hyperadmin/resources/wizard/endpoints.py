@@ -1,15 +1,30 @@
 from hyperadmin.resources import ResourceEndpoint
 
-from hyperadmin.resources.wizard.links import FormStepLinkPrototype
+from hyperadmin.resources.wizard.links import FormStepLinkPrototype, ControlStepLinkPrototype
+from hyperadmin.resources.wizard.forms import StepControlForm
 
 
 class StepList(ResourceEndpoint):
     url_suffix = r'^$'
     name_suffix = 'list'
+    link_prototype = ControlStepLinkPrototype
+    form_class = StepControlForm
     
     @property
     def wizard(self):
         return self.parent
+    
+    @property
+    def prototype_method_map(self):
+        return {
+            'GET':'list',
+            'POST':'list',
+        }
+    
+    def get_link_prototypes(self):
+        return [
+            (self.link_prototype, {'name':'list'}),
+        ]
     
     #post here for step control
     #get for loader, api for steps as items with status
@@ -34,6 +49,12 @@ class StepProvider(object):
     def status(self):
         return self.wizard.step_statuses[self.slug]
     
+    def get_url_suffix(self):
+        return r'^%s/$' % self.slug
+    
+    def get_name_suffix(self):
+        return 'step_%s' % self.slug
+    
 class Step(StepProvider, ResourceEndpoint):
     def get_skip_steps(self):
         return []
@@ -57,11 +78,6 @@ class FormStep(Step):
             (self.link_prototype, {'name':'step_%s' % self.slug}),
         ]
     
-    def get_url_suffix(self):
-        return r'^%s/$' % self.slug
-    
-    def get_name_suffix(self):
-        return 'step_%s' % self.slug
     
     def get_context_data(self, **kwargs):
         kwargs['form'] = kwargs['link'].form

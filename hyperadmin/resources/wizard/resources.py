@@ -113,11 +113,17 @@ class Wizard(BaseResource):
     def done(self, submissions):
         raise NotImplementedError
 
-class MultiPartStep(Wizard, StepProvider):
+class MultiPartStep(StepProvider, Wizard):
     #main form is step control from wizard
     def __init__(self, **kwargs):
-        kwargs.setdefault('adaptor', kwargs['parent'].adaptor)
+        kwargs.setdefault('resource_adaptor', kwargs['parent'].resource_adaptor)
         super(MultiPartStep, self).__init__(**kwargs)
+    
+    def get_resource_name(self):
+        return self.slug
+    
+    def get_url_suffix(self):
+        return r'^%s/' % self.slug
     
     def get_namespaces(self):
         namespaces = super(MultiPartStep, self).get_namespaces()
@@ -136,6 +142,7 @@ class MultiPartStep(Wizard, StepProvider):
                 'skip_steps': [self.slug],
             },
         }
+        #but this link should complete this step not skip it
         link = links.add_link(self, link_factor='LN', form_kwargs=form_kwargs, prompt='Continue')
         return links
     
