@@ -68,6 +68,17 @@ class StepProvider(object):
     def get_prompt(self):
         return self.slug
     
+    def get_outbound_links(self):
+        links = self.create_link_collection()
+        if self.can_skip():
+            form_kwargs = {
+                'initial': {
+                    'skip_steps': [self.slug],
+                },
+            }
+            link = links.add_link(self.wizard, link_factor='LN', form_kwargs=form_kwargs, prompt='Skip')
+        return links
+    
 class Step(StepProvider, ResourceEndpoint):
     def get_skip_steps(self):
         return []
@@ -91,21 +102,9 @@ class FormStep(Step):
             (self.link_prototype, {'name':'step_%s' % self.slug}),
         ]
     
-    
     def get_context_data(self, **kwargs):
         kwargs['form'] = kwargs['link'].form
         return super(FormStep, self).get_context_data(**kwargs)
-    
-    def get_outbound_links(self):
-        links = self.create_link_collection()
-        if self.can_skip():
-            form_kwargs = {
-                'initial': {
-                    'skip_steps': [self.slug],
-                },
-            }
-            link = links.add_link(self.wizard, link_factor='LN', form_kwargs=form_kwargs, prompt='Skip')
-        return links
     
     def form_valid(self, form):
         self.wizard.set_step_data(self.slug, form.cleaned_data)

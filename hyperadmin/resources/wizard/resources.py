@@ -133,17 +133,22 @@ class MultiPartStep(StepProvider, Wizard):
             namespaces[namespace.name] = namespace
         return namespaces
     
+    def can_skip(self):
+        for endpoint in self.steps:
+            if not endpoint.can_skip() and endpoint.status != 'complete':
+                return False
+        return True
+    
     def get_outbound_links(self):
         links = self.create_link_collection()
-        #if all steps are optional
-        #link that represents continue checkout
-        form_kwargs = {
-            'initial': {
-                'skip_steps': [self.slug],
-            },
-        }
-        #but this link should complete this step not skip it
-        link = links.add_link(self, link_factor='LN', form_kwargs=form_kwargs, prompt='Continue')
+        if self.can_skip():
+            form_kwargs = {
+                'initial': {
+                    'skip_steps': [self.slug],
+                },
+            }
+            #but this link should complete this step not skip it
+            link = links.add_link(self, link_factor='LN', form_kwargs=form_kwargs, prompt='Continue')
         return links
     
     def done(self, submissions):

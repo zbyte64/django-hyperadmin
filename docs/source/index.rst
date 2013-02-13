@@ -14,9 +14,10 @@ Table of Contents
 
    manual/installation
    manual/clients
-   manual/api/index
+   manual/wizards
    manual/content_types
    manual/other_resources
+   manual/api/index
    release_notes
 
 
