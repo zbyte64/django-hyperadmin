@@ -175,6 +175,23 @@ class ExpandedWizardTestCase(ResourceTestCase):
         response = endpoint.generate_api_response(api_request)
         self.assertEqual(endpoint.status, 'complete')
         self.assertEqual(response, 'success')
+    
+    def test_attributes_skip_1step(self):
+        #start = self.resource.get_link()
+        data = {
+            'skip_steps': ['attr1'],
+        }
+        api_request = self.get_api_request(payload={'data':data}, method='POST')
+        metastep = self.resource.endpoints['step_attributes'].fork(api_request=api_request)
+        metastep.wizard.set_step_status('email', 'complete')
+        metastep.wizard.set_step_status('username', 'complete')
+        metastep.wizard.set_step_status('password', 'complete')
+        
+        control = metastep.endpoints['list']
+        response = control.generate_api_response(api_request)
+        endpoint = metastep.endpoints['step_attr1']
+        self.assertEqual(endpoint.status, 'skipped')
+        self.assertEqual(response.endpoint.get_url_name(), 'admin_wizard_adduser_attributes_step_attr2')
 
 #TODO test step control, step listing
 

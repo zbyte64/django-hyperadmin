@@ -26,6 +26,16 @@ class StepList(ResourceEndpoint):
             (self.link_prototype, {'name':'list'}),
         ]
     
+    def get_form_kwargs(self, **kwargs):
+        available_steps = list()
+        for step in self.wizard.steps:
+            if step.status == 'incomplete':
+                available_steps.append((step.slug, step.get_prompt()))
+        params = {
+            'available_steps': available_steps
+        }
+        params.update(kwargs)
+        return super(StepList, self).get_form_kwargs(**params)
     #post here for step control
     #get for loader, api for steps as items with status
 
@@ -54,6 +64,9 @@ class StepProvider(object):
     
     def get_name_suffix(self):
         return 'step_%s' % self.slug
+    
+    def get_prompt(self):
+        return self.slug
     
 class Step(StepProvider, ResourceEndpoint):
     def get_skip_steps(self):
