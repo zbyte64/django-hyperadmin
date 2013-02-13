@@ -30,6 +30,9 @@ class GetPassword(FormStep):
 
 class GetAttribute(FormStep):
     form_class = AttributeForm
+    
+    def can_skip(self):
+        return True
 
 class GetAttributes(MultiPartStep):
     step_definitions = [
@@ -90,7 +93,6 @@ class SimpleWizardTestCase(ResourceTestCase):
         endpoint = self.resource.endpoints['step_email'].fork(api_request=api_request)
         assert endpoint.link_prototypes
         response = endpoint.generate_api_response(api_request)
-        TestStorage._session['wizard_admin_wizard_adduser_resource']['step_data']['_step_statuses']
         self.assertEqual(endpoint.status, 'complete')
         self.assertEqual(response.endpoint.get_url_name(), 'admin_wizard_adduser_step_username')
         
@@ -138,6 +140,41 @@ class ExpandedWizardTestCase(ResourceTestCase):
         
         link = endpoint.get_link()
         response = link.follow()
+    
+    def test_attributes_1step(self):
+        #start = self.resource.get_link()
+        data = {
+            'key': 'firstname',
+            'value': 'johnson',
+        }
+        api_request = self.get_api_request(payload={'data':data}, method='POST')
+        metastep = self.resource.endpoints['step_attributes'].fork(api_request=api_request)
+        metastep.wizard.set_step_status('email', 'complete')
+        metastep.wizard.set_step_status('username', 'complete')
+        metastep.wizard.set_step_status('password', 'complete')
+        
+        endpoint = metastep.endpoints['step_attr1']
+        response = endpoint.generate_api_response(api_request)
+        self.assertEqual(endpoint.status, 'complete')
+        self.assertEqual(response.endpoint.get_url_name(), 'admin_wizard_adduser_attributes_step_attr2')
+    
+    def test_attributes_completion(self):
+        #start = self.resource.get_link()
+        data = {
+            'key': 'firstname',
+            'value': 'johnson',
+        }
+        api_request = self.get_api_request(payload={'data':data}, method='POST')
+        metastep = self.resource.endpoints['step_attributes'].fork(api_request=api_request)
+        metastep.wizard.set_step_status('email', 'complete')
+        metastep.wizard.set_step_status('username', 'complete')
+        metastep.wizard.set_step_status('password', 'complete')
+        metastep.set_step_status('attr1', 'complete')
+        
+        endpoint = metastep.endpoints['step_attr2']
+        response = endpoint.generate_api_response(api_request)
+        self.assertEqual(endpoint.status, 'complete')
+        self.assertEqual(response, 'success')
 
 #TODO test step control, step listing
 

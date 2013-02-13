@@ -148,6 +148,6 @@ class MultiPartStep(StepProvider, Wizard):
     
     def done(self, submissions):
         self.wizard.set_step_data(self.slug, submissions)
-        self.wizard.update_status(self.slug, 'complete')
+        self.wizard.set_step_status(self.slug, 'complete')
         return self.wizard.next_step()
 
