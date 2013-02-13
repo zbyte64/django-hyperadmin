@@ -247,6 +247,9 @@ class LinkCollection(list):
         Adds the specified link from the resource.
         This will only add the link if it exists and the person is allowed to view it.
         """
+        from hyperadmin.endpoints import BaseEndpoint
+        if isinstance(link_name, BaseEndpoint):
+            link_name = link_name.get_main_link_name()
         if link_name not in self.link_prototypes:
             return False
         endpoint_link = self.link_prototypes[link_name]

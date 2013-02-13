@@ -11,8 +11,11 @@ def multi_value_merge(dest, source):
 
 class Wizard(BaseResource):
     step_definitions = [] #tuples of Step and dictionary kwargs, kwarg must contain slug
-    list_endpoint = StepList
+    list_endpoint = StepList #CONSIDER: rename to start_endpoint
     #CONSIDER: my resource adaptor is a wizard storage class #ie: from django.contrib.formtools.wizard.storage.
+    
+    def get_index_endpoint(self):
+        return self.endpoints['start']
     
     @property
     def storage(self):

@@ -48,11 +48,8 @@ class BaseResourceSite(RootEndpoint):
     def get_children_endpoints(self):
         return [self.directory_resource]
     
-    def get_url(self, **kwargs):
-        return self.directory_resource.get_url(**kwargs)
-    
-    def get_link(self, **kwargs):
-        return self.directory_resource.get_link(**kwargs)
+    def get_index_endpoint(self):
+        return self.directory_resource
     
     def get_resource_kwargs(self, **kwargs):
         params = {'site': self,

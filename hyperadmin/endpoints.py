@@ -34,6 +34,7 @@ class BaseEndpoint(LinkCollectorMixin, View):
     resource_item_class = Item
     app_name = None
     base_url_name_suffix = None
+    base_url_name = None
     name_suffix = None
     
     def __init__(self, **kwargs):
@@ -177,7 +178,10 @@ class BaseEndpoint(LinkCollectorMixin, View):
         Returns the base url name to be used by our name and the name of
         our children endpoints
         '''
-        base = self.get_base_url_name_prefix() + self.get_base_url_name_suffix() 
+        if self.base_url_name:
+            base = self.base_url_name
+        else:
+            base = self.get_base_url_name_prefix() + self.get_base_url_name_suffix() 
         if base and not base.endswith('_'):
             base += '_'
         return base
@@ -408,6 +412,12 @@ class VirtualEndpoint(BaseEndpoint):
             link_prototypes.update(endpoint.link_prototypes)
         
         return link_prototypes
+    
+    def get_index_endpoint(self):
+        raise NotImplementedError
+    
+    def get_main_link_name(self):
+        return self.get_index_endpoint().get_main_link_name()
 
 class GlobalSiteMixin(object):
     '''
@@ -461,6 +471,10 @@ class RootEndpoint(APIRequestBuilder, VirtualEndpoint):
         kwargs.setdefault('namespace', str(id(self)))
         self.endpoints_by_urlname = dict()
         super(RootEndpoint, self).__init__(**kwargs)
+    
+    @property
+    def link_prototypes(self):
+        return self.get_index_endpoint().link_prototypes
     
     @property
     def parent(self):
@@ -602,7 +616,6 @@ class Endpoint(GlobalSiteMixin, EndpointViewMixin, BaseEndpoint):
         view = self.get_view()
         return url(self.get_url_suffix(), view, name=self.get_url_name(),)
     
-    #TODO review if this is needed anymore
     def get_main_link_name(self):
         return self.get_link_prototype_for_method('GET').name
 

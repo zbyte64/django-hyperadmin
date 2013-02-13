@@ -187,7 +187,7 @@ class ExpandedWizardTestCase(ResourceTestCase):
         metastep.wizard.set_step_status('username', 'complete')
         metastep.wizard.set_step_status('password', 'complete')
         
-        control = metastep.endpoints['list']
+        control = metastep.endpoints['start']
         response = control.generate_api_response(api_request)
         endpoint = metastep.endpoints['step_attr1']
         self.assertEqual(endpoint.status, 'skipped')

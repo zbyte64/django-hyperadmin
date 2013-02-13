@@ -129,12 +129,12 @@ class BaseResource(GlobalSiteMixin, VirtualEndpoint):
     def get_resource_link_item(self):
         return None
     
-    def get_main_link_name(self):
-        return 'list'
+    def get_index_endpoint(self):
+        return self.endpoints['list']
     
     def get_breadcrumb(self):
         bread = self.create_link_collection()
-        bread.add_link('list', rel='breadcrumb', link_factor='LO', prompt=self.get_prompt())
+        bread.add_link(self.get_index_endpoint(), rel='breadcrumb', link_factor='LO', prompt=self.get_prompt())
         return bread
     
     def get_breadcrumbs(self):

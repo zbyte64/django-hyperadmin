@@ -6,7 +6,7 @@ from hyperadmin.resources.wizard.forms import StepControlForm
 
 class StepList(ResourceEndpoint):
     url_suffix = r'^$'
-    name_suffix = 'list'
+    name_suffix = 'start'
     link_prototype = ControlStepLinkPrototype
     form_class = StepControlForm
     
@@ -17,13 +17,13 @@ class StepList(ResourceEndpoint):
     @property
     def prototype_method_map(self):
         return {
-            'GET':'list',
-            'POST':'list',
+            'GET':'steps',
+            'POST':'steps',
         }
     
     def get_link_prototypes(self):
         return [
-            (self.link_prototype, {'name':'list'}),
+            (self.link_prototype, {'name':'steps'}),
         ]
     
     def get_form_kwargs(self, **kwargs):
