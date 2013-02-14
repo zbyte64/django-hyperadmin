@@ -136,7 +136,7 @@ class ResourceSite(BaseResourceSite):
         return self.directory_resource.resource_adaptor
     
     def register(self, model_or_iterable, admin_class, **options):
-        if isinstance(model_or_iterable, collections.Iterable):
+        if isinstance(model_or_iterable, collections.Iterable) and not isinstance(model_or_iterable, basestring):
             resources = list()
             for model in model_or_iterable:
                 resources.append(self.register(model, admin_class, **options))

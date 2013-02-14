@@ -10,3 +10,21 @@ class StepControlForm(forms.Form):
         self.fields['skip_steps'].choices = available_steps
         self.fields['desired_step'].choices = available_steps
 
+class StepStatusForm(forms.Form):
+    slug = forms.CharField()
+    status = forms.CharField()
+    can_skip = forms.BooleanField(required=False)
+    is_active = forms.BooleanField(required=False)
+    
+    def __init__(self, **kwargs):
+        self.instance = kwargs.pop('instance', None)
+        super(StepStatusForm, self).__init__(**kwargs)
+        if self.instance:
+            self.initial['slug'] = self.instance.slug
+            self.initial['status'] = self.instance.status
+            self.initial['can_skip'] = self.instance.can_skip()
+            self.initial['is_active'] = self.instance.is_active()
+            
+            for key, datum in self.instance.get_extra_status_info().iteritems():
+                self.fields[key] = forms.CharField(required=False)
+                self.initial[key] = datum

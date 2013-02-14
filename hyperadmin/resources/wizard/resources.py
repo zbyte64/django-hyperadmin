@@ -3,16 +3,26 @@ from django.utils.datastructures import MultiValueDict
 from hyperadmin.resources import BaseResource
 
 from hyperadmin.resources.wizard.endpoints import StepList, StepProvider
+from hyperadmin.resources.wizard.forms import StepStatusForm
+
+from django.contrib.formtools.wizard.storage.session import SessionStorage
 
 
 def multi_value_merge(dest, source):
     for key, value in source.iteritems():
         dest[key] = value
 
+#CONSIDER: are we a resource or a complex endpoint?
 class Wizard(BaseResource):
     step_definitions = [] #tuples of Step and dictionary kwargs, kwarg must contain slug
     list_endpoint = StepList #CONSIDER: rename to start_endpoint
-    #CONSIDER: my resource adaptor is a wizard storage class #ie: from django.contrib.formtools.wizard.storage.
+    instance_form_class = StepStatusForm
+    storage_class = SessionStorage
+    #CONSIDER: my resource adaptor is a wizard storage class #ie: from 
+    
+    def __init__(self, **kwargs):
+        kwargs.setdefault('resource_adaptor', None)
+        super(Wizard, self).__init__(**kwargs)
     
     def get_index_endpoint(self):
         return self.endpoints['start']
@@ -20,11 +30,18 @@ class Wizard(BaseResource):
     @property
     def storage(self):
         if not hasattr(self, '_storage'):
-            kwargs = self.get_storage_kwargs()
-            self._storage = self.resource_adaptor(**kwargs)
-            if not hasattr(self._storage, 'data'):
-                self._storage.init_data()
+            self._storage = self.create_storage()
         return self._storage
+    
+    def create_storage(self):
+        kwargs = self.get_storage_kwargs()
+        storage = self.get_storage_class()(**kwargs)
+        if not hasattr(storage, 'data'):
+            storage.init_data()
+        return storage
+    
+    def get_storage_class(self):
+        return self.storage_class
     
     def get_storage_kwargs(self):
         return {
@@ -42,7 +59,7 @@ class Wizard(BaseResource):
         return ret
     
     def step_index(self, slug):
-        return self.endpoints.keyOrder.index('step_%s' % slug)
+        return self.endpoints.keyOrder.index(slug)
     
     def get_instances(self):
         return self.steps

@@ -56,9 +56,16 @@ class StepProvider(object):
     def can_skip(self):
         return False
     
+    def is_active(self): #TODO support this
+        return True
+    
     @property
     def status(self):
         return self.wizard.step_statuses[self.slug]
+    
+    def get_extra_status_info(self):
+        submitted_data = self.wizard.get_step_data(self.slug)
+        return {'submitted_data':submitted_data}
     
     def get_url_suffix(self):
         return r'^%s/$' % self.slug
