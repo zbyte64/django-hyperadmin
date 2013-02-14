@@ -1,6 +1,9 @@
 from copy import copy
 
-from django.conf.urls import patterns
+try:
+    from django.conf.urls import patterns
+except ImportError:
+    from django.conf.urls.defaults import patterns
 
 from hyperadmin.clients.common import Client
 from hyperadmin.endpoints import RootEndpoint

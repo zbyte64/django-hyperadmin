@@ -36,7 +36,7 @@ setup(name='django-hyperadmin',
       packages=find_packages(exclude=['tests']),
       test_suite='tests.runtests.runtests',
       tests_require=(
-        'pep8==1.3.1',
+        'pep8',
         'coverage',
         'django',
         'Mock',
