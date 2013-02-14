@@ -11,7 +11,7 @@ from hyperadmin.sites import ResourceSite
 from hyperadmin.apirequests import InternalAPIRequest, NamespaceAPIRequest
 from hyperadmin.endpoints import RootEndpoint
 
-from common import GenericURLResolver, SuperUserRequestFactory
+from common import GenericURLResolver, SuperUserRequestFactory, URLReverseMixin
 
 from mock import MagicMock
 
@@ -27,7 +27,7 @@ class UserResource(ModelResource):
     date_hierarchy = 'date_joined'
     search_fields = ['email', 'username']
 
-class ResourceTestCase(unittest.TestCase):
+class ResourceTestCase(URLReverseMixin, unittest.TestCase):
     def setUp(self):
         self.site = ResourceSite()
         self.site.register_builtin_media_types()
@@ -39,25 +39,10 @@ class ResourceTestCase(unittest.TestCase):
         
         self.resolver = GenericURLResolver(r'^', self.site.get_urls())
         
-        def reverse(name, *args, **kwargs):
-            ret = self.resolver.reverse(name, *args, **kwargs)
-            return ret
-        self.reverse = reverse
-        
-        def cls_reverse(slf, name, *args, **kwargs):
-            return self.resolver.reverse(name, *args, **kwargs)
-        
-        original_fork = self.site.fork
-        
-        def fork(**kwargs):
-            ret = original_fork(**kwargs)
-            ret.reverse = reverse
-            return ret
-        
-        self.site.fork = fork
-        NamespaceAPIRequest.reverse = cls_reverse
-        RootEndpoint.reverse = cls_reverse
-        self.site.reverse = reverse
+        self.patch_reverse(self.resolver)
+    
+    def tearDown(self):
+        self.unpatch_reverse()
     
     def get_api_request(self, **kwargs):
         kwargs.setdefault('site', self.site)
@@ -66,7 +51,6 @@ class ResourceTestCase(unittest.TestCase):
         kwargs.setdefault('method', 'GET')
         kwargs.setdefault('payload', {})
         kwargs.setdefault('request', self.factory.get('/'))
-        kwargs.setdefault('reverse', self.reverse)
         api_request = InternalAPIRequest(**kwargs)
         
         api_request.generate_response = MagicMock(return_value=HttpResponse())
