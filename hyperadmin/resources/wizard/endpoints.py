@@ -87,6 +87,14 @@ class StepProvider(object):
             link = links.add_link(self.wizard, link_factor='LN', form_kwargs=form_kwargs, prompt='Skip')
         return links
     
+    def get_item(self):
+        return self.get_resource_item(self)
+    
+    def get_common_state_data(self):
+        data = super(StepProvider, self).get_common_state_data()
+        data['item'] = self.get_item()
+        return data
+    
 class Step(StepProvider, ResourceEndpoint):
     def get_skip_steps(self):
         return []
@@ -112,6 +120,7 @@ class FormStep(Step):
     
     def get_context_data(self, **kwargs):
         kwargs['form'] = kwargs['link'].form
+        return kwargs
         return super(FormStep, self).get_context_data(**kwargs)
     
     def form_valid(self, form):

@@ -63,6 +63,9 @@ class Wizard(BaseResource):
     def get_instances(self):
         return self.steps
     
+    def get_item_url(self, item):
+        return item.instance.get_url()
+    
     def get_view_endpoints(self):
         endpoints = super(Wizard, self).get_view_endpoints()
         endpoints.append((self.list_endpoint, {}))
@@ -147,14 +150,6 @@ class MultiPartStep(StepProvider, Wizard):
     def get_base_url_name_suffix(self):
         return 'step_%s' % self.slug
     
-    def get_namespaces(self):
-        namespaces = super(MultiPartStep, self).get_namespaces()
-        #all our substeps are namespaces
-        for endpoint in self.steps:
-            namespace = Namespace(name='substep-%s'% endpoint.slug, endpoint=endpoint)
-            namespaces[namespace.name] = namespace
-        return namespaces
-    
     def can_skip(self):
         for endpoint in self.steps:
             if not endpoint.can_skip() and endpoint.status != 'complete':
@@ -177,4 +172,6 @@ class MultiPartStep(StepProvider, Wizard):
         self.wizard.set_step_data(self.slug, submissions)
         self.wizard.set_step_status(self.slug, 'complete')
         return self.wizard.next_step()
-
+    
+    def expand_template_names(self, suffixes):
+        return self.parent.expand_template_names(suffixes)
