@@ -128,6 +128,9 @@ class MultiPartStep(StepProvider, Wizard):
     def get_url_suffix(self):
         return r'^%s/' % self.slug
     
+    def get_base_url_name_suffix(self):
+        return 'step_%s' % self.slug
+    
     def get_namespaces(self):
         namespaces = super(MultiPartStep, self).get_namespaces()
         #all our substeps are namespaces

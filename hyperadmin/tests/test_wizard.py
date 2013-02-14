@@ -90,7 +90,7 @@ class SimpleWizardTestCase(ResourceTestCase):
             'email': 'z@z.com',
         }
         api_request = self.get_api_request(payload={'data':data}, method='POST')
-        endpoint = self.resource.endpoints['step_email'].fork(api_request=api_request)
+        endpoint = self.resource.endpoints['email'].fork(api_request=api_request)
         assert endpoint.link_prototypes
         response = endpoint.generate_api_response(api_request)
         self.assertEqual(endpoint.status, 'complete')
@@ -102,7 +102,7 @@ class SimpleWizardTestCase(ResourceTestCase):
             'username': 'foobar',
         }
         api_request = self.get_api_request(payload={'data':data}, method='POST')
-        endpoint = self.resource.endpoints['step_username'].fork(api_request=api_request)
+        endpoint = self.resource.endpoints['username'].fork(api_request=api_request)
         endpoint.wizard.set_step_status('email', 'complete')
         assert endpoint.link_prototypes
         response = endpoint.generate_api_response(api_request)
@@ -115,7 +115,7 @@ class SimpleWizardTestCase(ResourceTestCase):
             'password': 'secret',
         }
         api_request = self.get_api_request(payload={'data':data}, method='POST')
-        endpoint = self.resource.endpoints['step_password'].fork(api_request=api_request)
+        endpoint = self.resource.endpoints['password'].fork(api_request=api_request)
         endpoint.wizard.set_step_status('email', 'complete')
         endpoint.wizard.set_step_status('username', 'complete')
         assert 'email' in TestStorage._session['wizard_admin_wizard_adduser_resource']['step_data']['_step_statuses']
@@ -133,7 +133,7 @@ class ExpandedWizardTestCase(ResourceTestCase):
     def test_get_attributes_step(self):
         #start = self.resource.get_link()
         api_request = self.get_api_request()
-        endpoint = self.resource.endpoints['step_attributes'].fork(api_request=api_request)
+        endpoint = self.resource.endpoints['attributes'].fork(api_request=api_request)
         endpoint.wizard.set_step_status('email', 'complete')
         endpoint.wizard.set_step_status('username', 'complete')
         endpoint.wizard.set_step_status('password', 'complete')
@@ -148,15 +148,15 @@ class ExpandedWizardTestCase(ResourceTestCase):
             'value': 'johnson',
         }
         api_request = self.get_api_request(payload={'data':data}, method='POST')
-        metastep = self.resource.endpoints['step_attributes'].fork(api_request=api_request)
+        metastep = self.resource.endpoints['attributes'].fork(api_request=api_request)
         metastep.wizard.set_step_status('email', 'complete')
         metastep.wizard.set_step_status('username', 'complete')
         metastep.wizard.set_step_status('password', 'complete')
         
-        endpoint = metastep.endpoints['step_attr1']
+        endpoint = metastep.endpoints['attr1']
         response = endpoint.generate_api_response(api_request)
         self.assertEqual(endpoint.status, 'complete')
-        self.assertEqual(response.endpoint.get_url_name(), 'admin_wizard_adduser_attributes_step_attr2')
+        self.assertEqual(response.endpoint.get_url_name(), 'admin_wizard_adduser_step_attributes_step_attr2')
     
     def test_attributes_completion(self):
         #start = self.resource.get_link()
@@ -165,13 +165,13 @@ class ExpandedWizardTestCase(ResourceTestCase):
             'value': 'johnson',
         }
         api_request = self.get_api_request(payload={'data':data}, method='POST')
-        metastep = self.resource.endpoints['step_attributes'].fork(api_request=api_request)
+        metastep = self.resource.endpoints['attributes'].fork(api_request=api_request)
         metastep.wizard.set_step_status('email', 'complete')
         metastep.wizard.set_step_status('username', 'complete')
         metastep.wizard.set_step_status('password', 'complete')
         metastep.set_step_status('attr1', 'complete')
         
-        endpoint = metastep.endpoints['step_attr2']
+        endpoint = metastep.endpoints['attr2']
         response = endpoint.generate_api_response(api_request)
         self.assertEqual(endpoint.status, 'complete')
         self.assertEqual(response, 'success')
@@ -182,16 +182,16 @@ class ExpandedWizardTestCase(ResourceTestCase):
             'skip_steps': ['attr1'],
         }
         api_request = self.get_api_request(payload={'data':data}, method='POST')
-        metastep = self.resource.endpoints['step_attributes'].fork(api_request=api_request)
+        metastep = self.resource.endpoints['attributes'].fork(api_request=api_request)
         metastep.wizard.set_step_status('email', 'complete')
         metastep.wizard.set_step_status('username', 'complete')
         metastep.wizard.set_step_status('password', 'complete')
         
         control = metastep.endpoints['start']
         response = control.generate_api_response(api_request)
-        endpoint = metastep.endpoints['step_attr1']
+        endpoint = metastep.endpoints['attr1']
         self.assertEqual(endpoint.status, 'skipped')
-        self.assertEqual(response.endpoint.get_url_name(), 'admin_wizard_adduser_attributes_step_attr2')
+        self.assertEqual(response.endpoint.get_url_name(), 'admin_wizard_adduser_step_attributes_step_attr2')
 
 #TODO test step control, step listing
 

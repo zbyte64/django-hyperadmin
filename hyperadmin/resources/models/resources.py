@@ -256,8 +256,9 @@ class InlineModelResource(BaseModelResource):
     def get_indexes(self):
         return {'primary':InlineIndex('primary', self)}
     
-    def get_base_url_name(self):
-        return '%s%s' % (self._parent.get_base_url_name(), self.rel_name)
+    def get_base_url_name_suffix(self):
+        assert self.rel_name is not None
+        return self.rel_name
     
     def get_item_url(self, item):
         return self.link_prototypes['update'].get_url(item=item)

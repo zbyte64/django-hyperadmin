@@ -36,6 +36,7 @@ class BaseEndpoint(LinkCollectorMixin, View):
     base_url_name_suffix = None
     base_url_name = None
     name_suffix = None
+    url_name = None
     
     def __init__(self, **kwargs):
         self._init_kwargs = dict(kwargs)
@@ -166,6 +167,7 @@ class BaseEndpoint(LinkCollectorMixin, View):
     #urls
     
     def get_base_url_name_suffix(self):
+        assert self.base_url_name_suffix is not None, '%s has not set base_url_name_suffix' % self
         return self.base_url_name_suffix
     
     def get_base_url_name_prefix(self):
@@ -177,8 +179,10 @@ class BaseEndpoint(LinkCollectorMixin, View):
         '''
         Returns the base url name to be used by our name and the name of
         our children endpoints
+        Return self.base_url_name if set otherwise return the concat of
+        self.get_base_url_name_prefix() and self.get_base_url_name_suffix()
         '''
-        if self.base_url_name:
+        if self.base_url_name is not None:
             base = self.base_url_name
         else:
             base = self.get_base_url_name_prefix() + self.get_base_url_name_suffix() 
@@ -192,7 +196,11 @@ class BaseEndpoint(LinkCollectorMixin, View):
     def get_url_name(self):
         '''
         Returns the url name that will address this endpoint
+        Return self.url_name is set otherwise return the result of 
+        concatting self.get_base_url_name() and self.get_name_suffx()
         '''
+        if self.url_name is not None:
+            return self.url_name
         assert self.get_base_url_name() != '_'
         return self.get_base_url_name() + self.get_name_suffix()
     
@@ -330,11 +338,9 @@ class BaseEndpoint(LinkCollectorMixin, View):
         item_link = Link(**link_kwargs)
         return item_link
     
-    #TODO review if this is needed anymore
     def get_main_link_name(self):
         raise NotImplementedError
     
-    #TODO review if this is needed anymore
     def get_main_link_prototype(self):
         return self.link_prototypes[self.get_main_link_name()]
     
@@ -368,6 +374,12 @@ class BaseEndpoint(LinkCollectorMixin, View):
     
     def create_apirequest(self, **kwargs):
         return self.site.create_apirequest(**kwargs)
+    
+    def generate_api_response(self, api_request):
+        """
+        :rtype: Link or HttpResponse
+        """
+        raise NotImplementedError
 
 class VirtualEndpoint(BaseEndpoint):
     '''
@@ -418,6 +430,14 @@ class VirtualEndpoint(BaseEndpoint):
     
     def get_main_link_name(self):
         return self.get_index_endpoint().get_main_link_name()
+    
+    def generate_api_response(self, api_request):
+        """
+        Calls the index endpoint and returns it's api response
+        :rtype: Link or HttpResponse
+        """
+        endpoint = self.get_index_endpoint().fork(api_request=api_request)
+        return endpoint.generate_api_response(api_request)
 
 class GlobalSiteMixin(object):
     '''
@@ -463,7 +483,7 @@ class RootEndpoint(APIRequestBuilder, VirtualEndpoint):
     """
     namespace = None
     media_types = None
-    base_url_name_suffix = ''
+    base_url_name = ''
     name_suffix = 'virtualroot'
     
     def __init__(self, **kwargs):
@@ -564,6 +584,7 @@ class Endpoint(GlobalSiteMixin, EndpointViewMixin, BaseEndpoint):
     Endpoint class that contains link prototypes and maps HTTP requests to those links.
     """
     url_suffix = None
+    base_url_name_suffix = ''
     
     prototype_method_map = {}
     

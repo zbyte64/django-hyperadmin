@@ -41,6 +41,7 @@ class StepList(ResourceEndpoint):
 
 class StepProvider(object):
     slug = None
+    base_url_name_suffix = 'step'
     status_choices = [
         ('incomplete', 'Incomplete'),
         ('inactive', 'Inactive'),
@@ -63,7 +64,7 @@ class StepProvider(object):
         return r'^%s/$' % self.slug
     
     def get_name_suffix(self):
-        return 'step_%s' % self.slug
+        return self.slug
     
     def get_prompt(self):
         return self.slug

@@ -10,9 +10,6 @@ class ResourceEndpoint(Endpoint):
     def create_link_collection(self):
         return LinkCollection(endpoint=self.resource)
     
-    def get_base_url_name(self):
-        return self.parent.get_base_url_name()
-    
     def get_resource_item(self, instance, **kwargs):
         kwargs.setdefault('endpoint', self)
         return self.resource.get_resource_item(instance, **kwargs)
