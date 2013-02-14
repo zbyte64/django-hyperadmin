@@ -56,7 +56,7 @@ class StepProvider(object):
     def can_skip(self):
         return False
     
-    def is_active(self): #TODO support this
+    def is_active(self):
         return True
     
     @property

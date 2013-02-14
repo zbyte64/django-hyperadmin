@@ -28,7 +28,11 @@ class EndpointViewMixin(ConditionalAccessMixin):
     
     def get_template_names(self):
         if self.template_name:
-            return [self.template_name]
+            if isinstance(self.template_name, basestring):
+                template_names = [self.template_name]
+            else:
+                template_names = self.template_name
+            return self.expand_template_names(template_names)
         return None
     
     def get_request_form_kwargs(self):

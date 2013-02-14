@@ -65,3 +65,6 @@ class ResourceEndpoint(Endpoint):
     
     def create_apirequest(self, **kwargs):
         return self.resource.create_apirequest(**kwargs)
+    
+    def expand_template_names(self, suffixes):
+        return self.resource.expand_template_names(suffixes)

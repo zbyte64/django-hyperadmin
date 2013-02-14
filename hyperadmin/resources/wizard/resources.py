@@ -15,10 +15,9 @@ def multi_value_merge(dest, source):
 #CONSIDER: are we a resource or a complex endpoint?
 class Wizard(BaseResource):
     step_definitions = [] #tuples of Step and dictionary kwargs, kwarg must contain slug
-    list_endpoint = StepList #CONSIDER: rename to start_endpoint
+    list_endpoint = StepList
     instance_form_class = StepStatusForm
     storage_class = SessionStorage
-    #CONSIDER: my resource adaptor is a wizard storage class #ie: from 
     
     def __init__(self, **kwargs):
         kwargs.setdefault('resource_adaptor', None)
@@ -110,7 +109,7 @@ class Wizard(BaseResource):
         for step in self.steps:
             if step.slug in skip_steps and step.can_skip():
                 statuses[step.slug] = 'skipped'
-            elif step.status == 'incomplete':
+            elif step.status == 'incomplete' and step.is_active():
                 if desired_step and step.slug != desired_step and step.status.can_skip():
                     #CONSIDER: this assumes we can get to our desired step
                     statuses[step.slug] = 'skipped'
