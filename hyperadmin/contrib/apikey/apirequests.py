@@ -12,12 +12,12 @@ class APIKeyMixin(object):
             key = request.META[HTTP_HEADER]
             user = authenticate(key)
             if user:
-                data['user'] = user
+                data['auth'] = user
         if GET_VARIABLE in request.GET:
             key = request.GET[HTTP_HEADER]
             user = authenticate(key)
             if user:
-                data['user'] = user
+                data['auth'] = user
         return data
 
 class HTTPAPIKeyRequest(APIKeyMixin, HTTPAPIRequest):

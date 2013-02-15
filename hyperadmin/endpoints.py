@@ -484,7 +484,8 @@ class GlobalSiteMixin(object):
     urls = property(urls)
 
 class APIRequestBuilder(object):
-    apirequest_class = HTTPAPIRequest
+    apirequest_class = DEFAULT_API_REQUEST_CLASS
+    '''The api request class to use for incomming django requests'''
     
     def get_api_request_kwargs(self, **kwargs):
         params = {'site':self.site}
@@ -510,9 +511,6 @@ class RootEndpoint(APIRequestBuilder, VirtualEndpoint):
     
     media_types = None
     '''Dictionary of supported media types'''
-    
-    apirequest_class = DEFAULT_API_REQUEST_CLASS
-    '''The api request class to use for incomming django requests'''
     
     template_paths = None
     '''List of template paths to use for template name resolution'''

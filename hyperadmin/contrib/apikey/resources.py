@@ -7,5 +7,5 @@ from hyperadmin.contrib.apikey.models import ApiKey
 class ApiKeyResource(ModelResource):
     model = ApiKey
 
-site.register(ApiKey, ApiKeyResource)
+site.register(ApiKey, ApiKeyResource, app_name='apikey')
 

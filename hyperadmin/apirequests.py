@@ -1,5 +1,7 @@
 import mimeparse
 
+from django.contrib.auth.models import AnonymousUser
+
 from hyperadmin.states import State
 
 
@@ -218,7 +220,7 @@ class HTTPAPIRequest(APIRequest):
     
     @property
     def user(self):
-        return self.session_state['auth']
+        return self.session_state.get('auth', AnonymousUser())
     
     @property
     def params(self):

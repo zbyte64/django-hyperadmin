@@ -77,7 +77,7 @@ class ResourceTestCase(unittest.TestCase):
 
 class APIKeyTestCase(ResourceTestCase):
     def register_resource(self):
-        self.site.register(User, UserResource)
+        self.site.register(User, UserResource, app_name='auth')
         return self.site.registry[User]
     
     def test_user_lookup(self):
