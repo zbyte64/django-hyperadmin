@@ -5,7 +5,7 @@ try:
 except ImportError:
     from distutils.core import setup, find_packages
 
-VERSION = '0.8.2'
+VERSION = '0.9.0'
 PATH = os.path.dirname(os.path.abspath(__file__))
 try:
     LONG_DESC = '\n===='+open(os.path.join(PATH, 'README.rst'), 'r').read().split('====', 1)[-1]

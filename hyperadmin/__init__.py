@@ -1,4 +1,4 @@
-VERSION = (0, 8, 2, 'beta', 0)
+VERSION = (0, 9, 0, 'rc', 0)
 
 def get_version(version=None, include_sub=True):
     """Derives a PEP386-compliant version number from VERSION."""
