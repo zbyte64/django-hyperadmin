@@ -6,8 +6,8 @@ HTTP_HEADER = 'API_KEY'
 GET_VARIABLE = '_API_KEY'
 
 class APIKeyMixin(object):
-    def populate_session_data_from_request(self, request):
-        data = super(APIKeyMixin, self).populate_session_data_from_request(request)
+    def get_session_data_from_request(self, request):
+        data = super(APIKeyMixin, self).get_session_data_from_request(request)
         if HTTP_HEADER in request.META:
             key = request.META[HTTP_HEADER]
             user = authenticate(key)
