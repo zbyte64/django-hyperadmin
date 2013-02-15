@@ -22,7 +22,7 @@ class AuthResource(BaseResource):
         ])
         return endpoints
     
-    def api_permission_check(self, request):
+    def api_permission_check(self, api_request, endpoint):
         return None #resource is accessible to all
     
     def get_main_link_name(self):

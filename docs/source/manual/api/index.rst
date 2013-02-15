@@ -16,4 +16,6 @@ Internal API Reference
    mediatypes
    builtin_mediatypes
    states
+   sites
+   throttle
 

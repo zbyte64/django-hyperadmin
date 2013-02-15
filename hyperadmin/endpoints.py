@@ -384,8 +384,8 @@ class BaseEndpoint(LinkCollectorMixin, View):
         """
         return unicode(self)
     
-    def api_permission_check(self, api_request):
-        return self.site.api_permission_check(api_request)
+    def api_permission_check(self, api_request, endpoint):
+        return self.site.api_permission_check(api_request, endpoint)
     
     def generate_response(self, link):
         return self.api_request.generate_response(link=link, state=self.state)
@@ -605,7 +605,7 @@ class RootEndpoint(APIRequestBuilder, VirtualEndpoint):
     def get_endpoint_from_urlname(self, urlname):
         return self.endpoints_by_urlname[urlname]
     
-    def api_permission_check(self, api_request):
+    def api_permission_check(self, api_request, endpoint):
         """
         Return a link describing the authentication failure or return None if the request has sufficient permissions
         """
