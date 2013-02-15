@@ -57,6 +57,14 @@ class Wizard(BaseResource):
                 ret.append(endpoint)
         return ret
     
+    @property
+    def available_steps(self):
+        ret = list()
+        for endpoint in self.steps:
+            if endpoint.is_available():
+                ret.append(endpoint)
+        return ret
+    
     def step_index(self, slug):
         return self.endpoints.keyOrder.index(slug)
     
@@ -173,5 +181,9 @@ class MultiPartStep(StepProvider, Wizard):
         self.wizard.set_step_status(self.slug, 'complete')
         return self.wizard.next_step()
     
+    #CONSIDER: default should crawl up parents then site
     def expand_template_names(self, suffixes):
         return self.parent.expand_template_names(suffixes)
+    
+    def create_apirequest(self, **kwargs):
+        return self.parent.create_apirequest(**kwargs)

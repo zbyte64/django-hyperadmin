@@ -28,9 +28,8 @@ class StepList(ResourceEndpoint):
     
     def get_form_kwargs(self, **kwargs):
         available_steps = list()
-        for step in self.wizard.steps:
-            if step.status == 'incomplete':
-                available_steps.append((step.slug, step.get_prompt()))
+        for step in self.wizard.available_steps:
+            available_steps.append((step.slug, step.get_prompt()))
         params = {
             'available_steps': available_steps
         }
@@ -62,6 +61,9 @@ class StepProvider(object):
     @property
     def status(self):
         return self.wizard.step_statuses[self.slug]
+    
+    def is_available(self):
+        return self.is_active() and self.status in ('incomplete', 'skipped', 'complete')
     
     def get_extra_status_info(self):
         submitted_data = self.wizard.get_step_data(self.slug)

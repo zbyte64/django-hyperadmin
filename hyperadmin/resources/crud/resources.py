@@ -124,4 +124,12 @@ class CRUDResource(BaseResource):
     
     def __unicode__(self):
         return u'CRUD Resource: %s/%s' % (self.app_name, self.resource_name)
-
+    
+    def get_form_kwargs(self, **kwargs):
+        '''
+        CRUD forms are assumed to operate on the active item.
+        This inserts the active instance into the form kwargs.
+        '''
+        if self.state.item:
+            kwargs.setdefault('instance', self.state.item.instance)
+        return super(CRUDResource, self).get_form_kwargs(**kwargs)

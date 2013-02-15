@@ -31,12 +31,27 @@ class BaseEndpoint(LinkCollectorMixin, View):
     endpoint_classes = []
     
     form_class = None
+    '''The default form class for links created by this endpoint'''
+    
+    item_form_class = None
+    '''The form class representing items from this endpoint. 
+    The form created is used for serialization of item.'''
+    
     resource_item_class = Item
     app_name = None
     base_url_name_suffix = None
+    '''The suffix to apply to the base url name when concating the base
+    name from the parent'''
+    
     base_url_name = None
+    '''Set the base url name instead of getting it from the parent'''
+    
     name_suffix = None
+    '''The suffix to add to the generated url name. This also used by
+    the parent endpoint to reference child endpoints'''
+    
     url_name = None
+    '''Set the url name of the endpoint instead of generating one'''
     
     def __init__(self, **kwargs):
         self._init_kwargs = dict(kwargs)
@@ -307,7 +322,13 @@ class BaseEndpoint(LinkCollectorMixin, View):
     def get_form_class(self):
         return self.form_class
     
-    def get_form_kwargs(self, item=None, **kwargs):
+    def get_form_kwargs(self, **kwargs):
+        return kwargs
+    
+    def get_item_form_class(self):
+        return self.item_form_class or self.get_form_class()
+    
+    def get_item_form_kwargs(self, item=None, **kwargs):
         """
         :rtype: dict
         """
@@ -624,6 +645,14 @@ class Endpoint(GlobalSiteMixin, EndpointViewMixin, BaseEndpoint):
         """
         name = self.prototype_method_map.get(method)
         return self.link_prototypes.get(name)
+    
+    def get_link_kwargs(self, **kwargs):
+        form_kwargs = kwargs.get('form_kwargs', None) or {}
+        form_kwargs = self.get_form_kwargs(**form_kwargs)
+        kwargs['form_kwargs'] = form_kwargs
+        if self.state.item:
+            kwargs['item'] = self.state.item
+        return kwargs
     
     def get_available_links(self):
         """
