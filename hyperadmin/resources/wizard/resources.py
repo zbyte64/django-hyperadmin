@@ -69,7 +69,7 @@ class Wizard(BaseResource):
         return self.endpoints.keyOrder.index(slug)
     
     def get_instances(self):
-        return self.steps
+        return self.available_steps
     
     def get_item_url(self, item):
         return item.instance.get_url()
@@ -142,6 +142,12 @@ class Wizard(BaseResource):
     
     def done(self, submissions):
         raise NotImplementedError
+    
+    def get_current_step_links(self):
+        links = self.create_link_collection()
+        step = self.get_next_step()
+        links.add_link(step, link_factor='LN')
+        return links
 
 class MultiPartStep(StepProvider, Wizard):
     #main form is step control from wizard
@@ -160,7 +166,9 @@ class MultiPartStep(StepProvider, Wizard):
     
     def can_skip(self):
         for endpoint in self.steps:
-            if not endpoint.can_skip() and endpoint.status != 'complete':
+            if (endpoint.is_active() and
+                not endpoint.can_skip() and
+                endpoint.status != 'complete'):
                 return False
         return True
     
@@ -180,6 +188,14 @@ class MultiPartStep(StepProvider, Wizard):
         self.wizard.set_step_data(self.slug, submissions)
         self.wizard.set_step_status(self.slug, 'complete')
         return self.wizard.next_step()
+    
+    def get_current_step_links(self):
+        if self.can_skip():
+            links = self.create_link_collection()
+            for step in self.available_steps:
+                links.add_link(step, link_factor='LN')
+            return links
+        return super(MultiPartStep, self).get_current_step_links()
     
     #CONSIDER: default should crawl up parents then site
     def expand_template_names(self, suffixes):
