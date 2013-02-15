@@ -1,6 +1,10 @@
 from django.test.client import RequestFactory
 from django.core.urlresolvers import RegexURLResolver
 
+from hyperadmin.apirequests import NamespaceAPIRequest
+from hyperadmin.endpoints import RootEndpoint
+
+
 class MockSession(dict):
     def flush(self):
         pass
@@ -30,3 +34,17 @@ class GenericURLResolver(RegexURLResolver):
     
     def __repr__(self):
         return '<%s (%s:%s) %s>' % (self.__class__.__name__, self.app_name, self.namespace, self.regex.pattern)
+
+class URLReverseMixin(object):
+    def patch_reverse(self, resolver):
+        def cls_reverse(slf, name, *args, **kwargs):
+            return resolver.reverse(name, *args, **kwargs)
+        
+        self._orignal_request_reverse = NamespaceAPIRequest.reverse
+        self._orignal_root_reverse = RootEndpoint.reverse
+        NamespaceAPIRequest.reverse = cls_reverse
+        RootEndpoint.reverse = cls_reverse
+    
+    def unpatch_reverse(self):
+        NamespaceAPIRequest.reverse = self._orignal_request_reverse
+        RootEndpoint.reverse = self._orignal_root_reverse

@@ -34,22 +34,22 @@ class BaseResourceSite(RootEndpoint):
     
     def post_register(self):
         super(BaseResourceSite, self).post_register()
-        self.directory_resource = self.create_directory_resource()
+        self.directory_resource = self.create_directory_resource(base_url_name_suffix='admin')
     
     def get_directory_resource_kwargs(self, **kwargs):
         kwargs.setdefault('resource_name', self.name)
+        #kwargs.setdefault('parent', self)
         return self.get_resource_kwargs(**kwargs)
     
-    def create_directory_resource(self):
-        return self.directory_resource_class(**self.get_directory_resource_kwargs())
+    def create_directory_resource(self, **kwargs):
+        params = self.get_directory_resource_kwargs(**kwargs)
+        return self.directory_resource_class(**params)
     
-    def get_urls(self):
-        urlpatterns = self.get_extra_urls()
-        urlpatterns += self.directory_resource.get_urls()
-        return urlpatterns
+    def get_children_endpoints(self):
+        return [self.directory_resource]
     
-    def get_link(self, **kwargs):
-        return self.directory_resource.get_link(**kwargs)
+    def get_index_endpoint(self):
+        return self.directory_resource
     
     def get_resource_kwargs(self, **kwargs):
         params = {'site': self,
@@ -119,8 +119,13 @@ class BaseResourceSite(RootEndpoint):
         return None
 
 class ResourceSite(BaseResourceSite):
+    '''
+    A Resource Site that is suited for administrative purposes. By 
+    default the user must be a staff user.
+    '''
     auth_resource_class = AuthResource
     name = 'hyperadmin'
+    base_url_name_suffix = 'admin'
     
     def post_register(self):
         super(ResourceSite, self).post_register()
@@ -131,17 +136,17 @@ class ResourceSite(BaseResourceSite):
         return self.directory_resource.resource_adaptor
     
     def register(self, model_or_iterable, admin_class, **options):
-        if isinstance(model_or_iterable, collections.Iterable):
+        if isinstance(model_or_iterable, collections.Iterable) and not isinstance(model_or_iterable, basestring):
             resources = list()
             for model in model_or_iterable:
                 resources.append(self.register(model, admin_class, **options))
             return resources
         model = model_or_iterable
+        app_name = options.pop('app_name')
+        app_resource = self.register_application(app_name)
+        options.setdefault('parent', app_resource)
         kwargs = self.get_resource_kwargs(resource_adaptor=model, **options)
         resource = admin_class(**kwargs)
-        app_name = resource.app_name
-        resource.parent = self.register_application(app_name)
-        resource._init_kwargs['parent'] = resource.parent
         self.applications[app_name].register_resource(resource)
         self.registry[model] = resource
         return resource
@@ -187,10 +192,23 @@ class ResourceSite(BaseResourceSite):
             media_resource_class = StorageResource
         if static_resource_class is None:
             static_resource_class = StorageResource
-        self.register(media_storage, media_resource_class, resource_name='media')
-        self.register(static_storage, static_resource_class, resource_name='static')
+        app_name = '-storages'
+        self.register(media_storage, media_resource_class, resource_name='media', app_name=app_name)
+        self.register(static_storage, static_resource_class, resource_name='static', app_name=app_name)
 
+class GlobalSite(BaseResourceSite):
+    '''
+    A Resource Site that is meant for globally registering endpoints 
+    without needing to explicitly create a Resource Site.
+    '''
+    name = 'apisite'
+    
+    def get_resolver(self):
+        from django.core.urlresolvers import get_resolver
+        return get_resolver(None)
 
 site = ResourceSite()
 site.register_builtin_media_types()
 
+global_site = GlobalSite()
+global_site.register_builtin_media_types()

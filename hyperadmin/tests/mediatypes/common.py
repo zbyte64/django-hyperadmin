@@ -16,5 +16,5 @@ class MediaTypeTestCase(ResourceTestCase):
         pass
     
     def register_resource(self):
-        self.site.register(ContentType, ModelResource)
+        self.site.register(ContentType, ModelResource, app_name='auth')
         return self.site.registry[ContentType]

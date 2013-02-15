@@ -1,4 +1,4 @@
-from django.conf.urls.defaults import url, patterns
+from django.conf.urls.defaults import url, patterns, include
 from django.core.urlresolvers import reverse
 from django.views.generic import View
 from django.utils.datastructures import MultiValueDict
@@ -31,16 +31,39 @@ class BaseEndpoint(LinkCollectorMixin, View):
     endpoint_classes = []
     
     form_class = None
+    '''The default form class for links created by this endpoint'''
+    
+    item_form_class = None
+    '''The form class representing items from this endpoint. 
+    The form created is used for serialization of item.'''
+    
     resource_item_class = Item
+    app_name = None
+    base_url_name_suffix = None
+    '''The suffix to apply to the base url name when concating the base
+    name from the parent'''
+    
+    base_url_name = None
+    '''Set the base url name instead of getting it from the parent'''
+    
+    name_suffix = None
+    '''The suffix to add to the generated url name. This also used by
+    the parent endpoint to reference child endpoints'''
+    
+    url_name = None
+    '''Set the url name of the endpoint instead of generating one'''
     
     def __init__(self, **kwargs):
-        self._init_kwargs = kwargs
+        self._init_kwargs = dict(kwargs)
         self.links = self.get_link_collector()
         super(BaseEndpoint, self).__init__(**kwargs)
         
+        self._registered = False
         self.post_register()
+        self._registered = True
     
     def post_register(self):
+        assert not self._registered
         if self.api_request:
             self.api_request.record_endpoint(self)
         else:
@@ -51,7 +74,7 @@ class BaseEndpoint(LinkCollectorMixin, View):
         return self._site.get_logger()
     
     def get_site(self):
-        if self.api_request:
+        if self._registered and self.api_request:
             return self.api_request.get_site()
         return self._site
     
@@ -63,14 +86,26 @@ class BaseEndpoint(LinkCollectorMixin, View):
     def get_parent(self):
         if getattr(self, '_parent', None) is None:
             return None
-        if self.api_request:
+        if self._registered and self.api_request:
             return self.api_request.get_endpoint(self._parent.get_url_name())
         return self._parent
     
     def set_parent(self, parent):
+        assert parent != self
         self._parent = parent
     
     parent = property(get_parent, set_parent)
+    
+    def get_endpoint_kwargs(self, **kwargs):
+        '''
+        Consult for creating child endpoints
+        '''
+        kwargs.setdefault('parent', self)
+        kwargs.setdefault('site', self.site)
+        kwargs.setdefault('api_request', self.api_request)
+        #if self.parent:
+        #    kwargs = self.parent.get_endpoint_kwargs(**kwargs)
+        return kwargs
     
     def get_common_state(self):
         return None
@@ -146,14 +181,49 @@ class BaseEndpoint(LinkCollectorMixin, View):
     
     #urls
     
+    def get_base_url_name_suffix(self):
+        assert self.base_url_name_suffix is not None, '%s has not set base_url_name_suffix' % self
+        return self.base_url_name_suffix
+    
+    def get_base_url_name_prefix(self):
+        if self.parent:
+            return self.parent.get_base_url_name()
+        return ''
+    
     def get_base_url_name(self):
-        raise NotImplementedError
+        '''
+        Returns the base url name to be used by our name and the name of
+        our children endpoints
+        Return self.base_url_name if set otherwise return the concat of
+        self.get_base_url_name_prefix() and self.get_base_url_name_suffix()
+        '''
+        if self.base_url_name is not None:
+            base = self.base_url_name
+        else:
+            base = self.get_base_url_name_prefix() + self.get_base_url_name_suffix() 
+        if base and not base.endswith('_'):
+            base += '_'
+        return base
+    
+    def get_name_suffix(self):
+        return self.name_suffix
     
     def get_url_name(self):
-        raise NotImplementedError
+        '''
+        Returns the url name that will address this endpoint
+        Return self.url_name is set otherwise return the result of 
+        concatting self.get_base_url_name() and self.get_name_suffx()
+        '''
+        if self.url_name is not None:
+            return self.url_name
+        assert self.get_base_url_name() != '_'
+        return self.get_base_url_name() + self.get_name_suffix()
     
     def get_url(self, **kwargs):
         return self.reverse(self.get_url_name(), **kwargs)
+    
+    def get_url_suffix(self):
+        return ''
     
     def create_link_collection(self):
         """
@@ -252,7 +322,13 @@ class BaseEndpoint(LinkCollectorMixin, View):
     def get_form_class(self):
         return self.form_class
     
-    def get_form_kwargs(self, item=None, **kwargs):
+    def get_form_kwargs(self, **kwargs):
+        return kwargs
+    
+    def get_item_form_class(self):
+        return self.item_form_class or self.get_form_class()
+    
+    def get_item_form_kwargs(self, item=None, **kwargs):
         """
         :rtype: dict
         """
@@ -283,11 +359,9 @@ class BaseEndpoint(LinkCollectorMixin, View):
         item_link = Link(**link_kwargs)
         return item_link
     
-    #TODO review if this is needed anymore
     def get_main_link_name(self):
         raise NotImplementedError
     
-    #TODO review if this is needed anymore
     def get_main_link_prototype(self):
         return self.link_prototypes[self.get_main_link_name()]
     
@@ -310,7 +384,6 @@ class BaseEndpoint(LinkCollectorMixin, View):
         """
         return unicode(self)
     
-    #TODO deprecate this, replace with api_request.api_permission_check()
     def api_permission_check(self, api_request):
         return self.site.api_permission_check(api_request)
     
@@ -319,16 +392,133 @@ class BaseEndpoint(LinkCollectorMixin, View):
     
     def generate_options_response(self, links):
         return self.api_request.generate_options_response(links=links, state=self.state)
+    
+    def create_apirequest(self, **kwargs):
+        return self.site.create_apirequest(**kwargs)
+    
+    def expand_template_names(self, suffixes):
+        return self.site.expand_template_names(suffixes)
+    
+    def generate_api_response(self, api_request):
+        """
+        :rtype: Link or HttpResponse
+        """
+        raise NotImplementedError
 
-class RootEndpoint(BaseEndpoint):
+class VirtualEndpoint(BaseEndpoint):
+    '''
+    A type of endpoint that does not define any active endpoints itself
+    but references other endpoints.
+    '''
+    name_suffix = 'virtual'
+    
+    def get_children_endpoints(self):
+        return []
+    
+    def get_urls(self):
+        urlpatterns = self.get_extra_urls()
+        urls = [endpoint.get_url_object() for endpoint in self.get_children_endpoints()]
+        urlpatterns += patterns('', *urls)
+        return urlpatterns
+    
+    def get_extra_urls(self):
+        return patterns('',)
+    
+    def urls(self):
+        return self.get_urls(), self.app_name, None
+    urls = property(urls)
+    
+    def dynamic_urls(self):
+        return self, self.app_name, None
+    
+    @property
+    def urlpatterns(self):
+        return self.get_urls()
+    
+    def get_url_object(self):
+        return url(self.get_url_suffix(), include(self.urls))
+    
+    def create_link_prototypes(self):
+        '''
+        Inludes the link prototypes created by the children endpoints
+        '''
+        link_prototypes = super(VirtualEndpoint, self).create_link_prototypes()
+        
+        for endpoint in self.get_children_endpoints():
+            link_prototypes.update(endpoint.link_prototypes)
+        
+        return link_prototypes
+    
+    def get_index_endpoint(self):
+        raise NotImplementedError
+    
+    def get_main_link_name(self):
+        return self.get_index_endpoint().get_main_link_name()
+    
+    def generate_api_response(self, api_request):
+        """
+        Calls the index endpoint and returns it's api response
+        :rtype: Link or HttpResponse
+        """
+        endpoint = self.get_index_endpoint().fork(api_request=api_request)
+        return endpoint.generate_api_response(api_request)
+
+class GlobalSiteMixin(object):
+    '''
+    Endpoints inheriting this class will default to the global site if
+    no site is passed in.
+    '''
+    global_endpoint = False
+    
+    def __init__(self, **kwargs):
+        if 'site' not in kwargs:
+            from hyperadmin.sites import global_site
+            kwargs.setdefault('site', global_site)
+            self.global_endpoint = True
+        super(GlobalSiteMixin, self).__init__(**kwargs)
+    
+    def urls(self):
+        if self.global_endpoint:
+            return self.get_urls(), self.app_name, self.site.namespace
+        return self.get_urls(), self.app_name, None
+    urls = property(urls)
+
+class APIRequestBuilder(object):
+    apirequest_class = HTTPAPIRequest
+    
+    def get_api_request_kwargs(self, **kwargs):
+        params = {'site':self.site}
+        params.update(kwargs)
+        return params
+    
+    def create_apirequest(self, request, url_args, url_kwargs):
+        kwargs = self.get_api_request_kwargs(request=request, url_args=url_args, url_kwargs=url_kwargs)
+        api_request = self.apirequest_class(**kwargs)
+        api_request.populate_session_data_from_request(request)
+        if self.global_state is not None:
+            api_request.session_state.update(self.global_state)
+        return api_request
+
+class RootEndpoint(APIRequestBuilder, VirtualEndpoint):
     """
     The top endpoint of a hypermedia aware site
     
     Child endpoints bind to this and this endpoint is used to mount in urls.py
     """
     namespace = None
+    '''The namespace of this endpoint, will be autogenerated if none is supplied'''
+    
     media_types = None
+    '''Dictionary of supported media types'''
+    
     apirequest_class = DEFAULT_API_REQUEST_CLASS
+    '''The api request class to use for incomming django requests'''
+    
+    template_paths = None
+    '''List of template paths to use for template name resolution'''
+    
+    base_url_name = ''
+    name_suffix = 'virtualroot'
     
     def __init__(self, **kwargs):
         kwargs.setdefault('media_types', dict())
@@ -336,7 +526,12 @@ class RootEndpoint(BaseEndpoint):
         self.endpoints_by_urlname = dict()
         super(RootEndpoint, self).__init__(**kwargs)
     
-    def get_url_name(self):
+    @property
+    def link_prototypes(self):
+        return self.get_index_endpoint().link_prototypes
+    
+    @property
+    def parent(self):
         return None
     
     def get_logger(self):
@@ -356,19 +551,6 @@ class RootEndpoint(BaseEndpoint):
         ret = super(RootEndpoint, self).fork(**kwargs)
         ret.endpoints_by_urlname.update(self.endpoints_by_urlname)
         return ret
-    
-    def get_urls(self):
-        #TODO this goes into standalone endpoint...
-        urlpatterns = self.get_extra_urls()
-        urlpatterns += patterns('', self.get_url_object())
-        return urlpatterns
-    
-    @property
-    def urlpatterns(self):
-        return self.get_urls()
-    
-    def get_extra_urls(self):
-        return patterns('',)
     
     def urls(self):
         return self, None, self.namespace
@@ -391,39 +573,27 @@ class RootEndpoint(BaseEndpoint):
         url_parts = urlparse.urlparse(url)
         path = url_parts.path
         from django.core.urlresolvers import Resolver404
-        from hyperadmin.apirequests import InternalAPIRequest
+        from hyperadmin.apirequests import NamespaceAPIRequest
         try:
             match = self.get_resolver().resolve(path)
         except Resolver404 as notfound:
-            assert False
+            self.get_logger().exception('Could not resolve %s' % url)
+            assert False, str(notfound)
         params = {
-            'site': self,
+            'api_request': self.api_request,
             'path': path,
             'full_path': url,
             'url_kwargs': match.kwargs,
             'url_args': match.args,
-            'params': MultiValueDict(urlparse.parse_qs(url_parts.query))
+            'params': MultiValueDict(urlparse.parse_qs(url_parts.query)),
         }
         params.update(request_params)
-        api_request = InternalAPIRequest(**params)
+        api_request = NamespaceAPIRequest(**params)
         
         return match.func.endpoint.fork(api_request=api_request)
     
     def register_media_type(self, media_type, media_type_handler):
         self.media_types[media_type] = media_type_handler
-    
-    def get_api_request_kwargs(self, **kwargs):
-        params = {'site':self}
-        params.update(kwargs)
-        return params
-    
-    def create_apirequest(self, request, url_args, url_kwargs):
-        kwargs = self.get_api_request_kwargs(request=request, url_args=url_args, url_kwargs=url_kwargs)
-        api_request = self.apirequest_class(**kwargs)
-        api_request.populate_session_data_from_request(request)
-        if self.global_state is not None:
-            api_request.session_state.update(self.global_state)
-        return api_request
     
     def record_endpoint(self, endpoint, url_name=None):
         if url_name is None:
@@ -432,7 +602,7 @@ class RootEndpoint(BaseEndpoint):
             self.endpoints_by_urlname[url_name] = endpoint
         else:
             original = self.endpoints_by_urlname[url_name]
-            self.get_logger().debug('Double registration at site level on %s by %s, original: %s' % (url_name, endpoint, original))
+            #self.get_logger().debug('Double registration at site level on %s by %s, original: %s' % (url_name, endpoint, original))
     
     def get_endpoint_from_urlname(self, urlname):
         return self.endpoints_by_urlname[urlname]
@@ -442,13 +612,32 @@ class RootEndpoint(BaseEndpoint):
         Return a link describing the authentication failure or return None if the request has sufficient permissions
         """
         return None
+    
+    def get_template_paths(self):
+        if self.template_paths:
+            return self.template_paths
+        return [self.namespace]
+    
+    def expand_template_names(self, suffixes):
+        '''
+        Maps a list of template names to the template paths belonging to
+        the site
+        :param suffixes: List of strings
+        :rtype: List of strings
+        '''
+        template_names = list()
+        for path in self.get_template_paths():
+            for template_name in suffixes:
+                template_names.append('/'.join([path, template_name]))
+        template_names.extend(suffixes)
+        return template_names
 
-class Endpoint(EndpointViewMixin, BaseEndpoint):
+class Endpoint(GlobalSiteMixin, EndpointViewMixin, BaseEndpoint):
     """
     Endpoint class that contains link prototypes and maps HTTP requests to those links.
     """
-    name_suffix = None
     url_suffix = None
+    base_url_name_suffix = ''
     
     prototype_method_map = {}
     
@@ -459,6 +648,14 @@ class Endpoint(EndpointViewMixin, BaseEndpoint):
         """
         name = self.prototype_method_map.get(method)
         return self.link_prototypes.get(name)
+    
+    def get_link_kwargs(self, **kwargs):
+        form_kwargs = kwargs.get('form_kwargs', None) or {}
+        form_kwargs = self.get_form_kwargs(**form_kwargs)
+        kwargs['form_kwargs'] = form_kwargs
+        if self.state.item:
+            kwargs['item'] = self.state.item
+        return kwargs
     
     def get_available_links(self):
         """
@@ -474,28 +671,23 @@ class Endpoint(EndpointViewMixin, BaseEndpoint):
                 methods[method] = link
         return methods
     
-    def get_name_suffix(self):
-        return self.name_suffix
-    
-    def get_url_name(self):
-        return self.get_base_url_name() + self.get_name_suffix()
-    
     def get_url_suffix(self):
         return self.url_suffix
     
-    def get_view_kwargs(self):
+    def get_view_kwargs(self, **kwargs):
         """
         :rtype: dict
         """
-        return {}
+        params = dict(self._init_kwargs)
+        params.update(kwargs)
+        return params
     
     def get_view(self, **kwargs):
         """
         :rtype: view callable
         """
-        params = self.get_view_kwargs()
-        params.update(self._init_kwargs)
-        params.update(kwargs)
+        #TODO should this be get_endpoint_kwargs?
+        params = self.get_view_kwargs(**kwargs)
         view = type(self).as_view(**params)
         #allow for retreiving the endpoint from url patterns
         view.endpoint = self
@@ -506,7 +698,6 @@ class Endpoint(EndpointViewMixin, BaseEndpoint):
         view = self.get_view()
         return url(self.get_url_suffix(), view, name=self.get_url_name(),)
     
-    #TODO review if this is needed anymore
     def get_main_link_name(self):
         return self.get_link_prototype_for_method('GET').name
 

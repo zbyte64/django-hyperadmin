@@ -40,7 +40,7 @@ class APIRequest(object):
         
         :rtype: string
         """
-        val = self.META.get('HTTP_ACCEPT', '')
+        val = self.META.get('HTTP_ACCEPT', self.META.get('CONTENT_TYPE', ''))
         media_types = self.media_types.keys()
         if not media_types:
             return val
@@ -110,9 +110,9 @@ class APIRequest(object):
         urlname = endpoint.get_url_name()
         if urlname not in self.endpoint_state['endpoints']:
             self.endpoint_state['endpoints'][urlname] = endpoint
-        else:
-            original = self.endpoint_state['endpoints'][urlname]
-            self.site.get_logger().debug('Double registration at api request level on %s by %s, original: %s' % (urlname, endpoint, original))
+        #else:
+        #    original = self.endpoint_state['endpoints'][urlname]
+        #    self.site.get_logger().debug('Double registration at api request level on %s by %s, original: %s' % (urlname, endpoint, original))
     
     def get_link_prototypes(self, endpoint):
         """
@@ -136,7 +136,6 @@ class APIRequest(object):
         if 'site' not in self.endpoint_state:
             bound_site = self.site.fork(api_request=self)
             self.endpoint_state['site'] = bound_site
-            bound_site.post_register()
         return self.endpoint_state['site']
     
     def generate_response(self, link, state):
@@ -181,6 +180,9 @@ class InternalAPIRequest(APIRequest):
     
     def get_full_path(self):
         return self.full_path
+    
+    def get_django_request(self):
+        return self.request
 
 class HTTPAPIRequest(APIRequest):
     """
@@ -224,7 +226,7 @@ class HTTPAPIRequest(APIRequest):
             self._params = self.request.GET.copy()
         return self._params
     
-    def populate_session_data_from_request(self, request):
+    def get_session_data_from_request(self, request):
         #TODO consult site object
         data = {'endpoints': {},
                 'resources': {},
@@ -233,9 +235,12 @@ class HTTPAPIRequest(APIRequest):
                 'extra_get_params': self.get_passthrough_params(request),}
         if hasattr(request, 'user'):
             data['auth'] = request.user
+        return data
+    
+    def populate_session_data_from_request(self, request):
+        data = self.get_session_data_from_request(request)
         self.session_state.update(data)
         #TODO set response type & request type
-        return data
     
     def patched_meta(self, request):
         meta = dict(request.META)
@@ -254,17 +259,17 @@ class HTTPAPIRequest(APIRequest):
 class NamespaceAPIRequest(InternalAPIRequest):
     def __init__(self, api_request, path='/', url_args=[], url_kwargs={}, **kwargs):
         self.original_api_request = api_request
+        kwargs.setdefault('full_path', self.original_api_request.get_full_path())
         super(NamespaceAPIRequest, self).__init__(api_request.site, path, url_args, url_kwargs, **kwargs)
         self.site = api_request.site.fork(api_request=self)
         self.session_state = State(substates=[api_request.session_state])
     
-    def get_full_path(self):
-        #TODO
-        return self.original_api_request.get_full_path()
-    
     @property
     def user(self):
         return self.original_api_request.user
+    
+    def get_django_request(self):
+        return self.original_api_request.get_django_request()
 
 class Namespace(object):
     """

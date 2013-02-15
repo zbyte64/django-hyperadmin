@@ -36,9 +36,16 @@ class Html5MediaType(MediaType):
         if 'STATIC_URL' not in context and getattr(settings, 'STATIC_URL', None):
             context['STATIC_URL'] = getattr(settings, 'STATIC_URL')
         
+        if hasattr(state['endpoint'], 'get_context_data'):
+            context = state['endpoint'].get_context_data(**context)
+        
         return context
     
     def get_template_names(self, state):
+        if hasattr(state['endpoint'], 'get_template_names'):
+            names = state['endpoint'].get_template_names()
+            if names: return names
+        
         params = {
             'base': self.template_dir_name,
             'endpoint_class': state['endpoint_class'],

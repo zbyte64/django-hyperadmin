@@ -10,12 +10,6 @@ class ResourceEndpoint(Endpoint):
     def create_link_collection(self):
         return LinkCollection(endpoint=self.resource)
     
-    def get_view_kwargs(self):
-        return self.resource.get_view_kwargs()
-    
-    def get_base_url_name(self):
-        return self._parent.get_base_url_name()
-    
     def get_resource_item(self, instance, **kwargs):
         kwargs.setdefault('endpoint', self)
         return self.resource.get_resource_item(instance, **kwargs)
@@ -40,17 +34,13 @@ class ResourceEndpoint(Endpoint):
         return self.form_class or self.resource.get_form_class()
     
     def get_form_kwargs(self, **kwargs):
-        if self.common_state.item:
-            kwargs['item'] = self.common_state.item
         return self.resource.get_form_kwargs(**kwargs)
     
-    def get_link_kwargs(self, **kwargs):
-        form_kwargs = kwargs.get('form_kwargs', None) or {}
-        form_kwargs = self.get_form_kwargs(**form_kwargs)
-        kwargs['form_kwargs'] = form_kwargs
-        if self.common_state.item:
-            kwargs['item'] = self.common_state.item
-        return kwargs
+    def get_item_form_class(self):
+        return self.item_form_class or self.resource.get_item_form_class()
+    
+    def get_item_form_kwargs(self, **kwargs):
+        return self.resource.get_item_form_kwargs(**kwargs)
     
     def get_namespaces(self):
         return self.resource.get_namespaces()
@@ -68,4 +58,9 @@ class ResourceEndpoint(Endpoint):
     
     def api_permission_check(self, api_request):
         return self.resource.api_permission_check(api_request)
-
+    
+    def create_apirequest(self, **kwargs):
+        return self.resource.create_apirequest(**kwargs)
+    
+    def expand_template_names(self, suffixes):
+        return self.resource.expand_template_names(suffixes)

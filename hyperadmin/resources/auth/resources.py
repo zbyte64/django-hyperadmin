@@ -27,3 +27,6 @@ class AuthResource(BaseResource):
     
     def get_main_link_name(self):
         return 'login'
+    
+    def get_index_endpoint(self):
+        return self.endpoints['login']

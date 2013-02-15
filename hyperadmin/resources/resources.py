@@ -2,7 +2,7 @@ from django import forms
 from django.conf.urls.defaults import patterns
 from django.utils.datastructures import SortedDict
 
-from hyperadmin.endpoints import BaseEndpoint
+from hyperadmin.endpoints import VirtualEndpoint, GlobalSiteMixin
 from hyperadmin.resources.hyperobjects import ResourceItem
 
 
@@ -11,10 +11,11 @@ class EmptyForm(forms.Form):
         self.instance = kwargs.pop('instance', None)
         super(EmptyForm, self).__init__(**kwargs)
 
-class BaseResource(BaseEndpoint):
+class BaseResource(GlobalSiteMixin, VirtualEndpoint):
     resource_class = '' #hint to the client how this resource is used
     form_class = EmptyForm
     resource_item_class = ResourceItem
+    name_suffix = 'resource'
     
     resource_adaptor = None
     
@@ -64,19 +65,10 @@ class BaseResource(BaseEndpoint):
     def get_prompt(self):
         return self.resource_name
     
-    def get_base_url_name(self):
-        if self.app_name:
-            return '%s_%s_' % (self.app_name, self.resource_name)
-        else:
-            return '%s_' % self.resource_name
-    
-    def create_link_prototypes(self):
-        link_prototypes = super(BaseResource, self).create_link_prototypes()
-        
-        for endpoint in self.endpoints.itervalues():
-            link_prototypes.update(endpoint.link_prototypes)
-        
-        return link_prototypes
+    def get_base_url_name_suffix(self):
+        if self.base_url_name_suffix is None:
+            return self.resource_name
+        return self.base_url_name_suffix
     
     def register_endpoints(self):
         self.endpoints = SortedDict()
@@ -88,12 +80,6 @@ class BaseResource(BaseEndpoint):
         endpoint = endpoint_cls(**kwargs)
         self.endpoints[endpoint.get_name_suffix()] = endpoint
     
-    def get_endpoint_kwargs(self, **kwargs):
-        kwargs.setdefault('parent', self)
-        kwargs.setdefault('site', self._site)
-        kwargs.setdefault('api_request', self.api_request)
-        return kwargs
-    
     def get_view_endpoints(self):
         """
         Returns a list of tuples containing
@@ -101,24 +87,8 @@ class BaseResource(BaseEndpoint):
         """
         return []
     
-    def get_view_kwargs(self):
-        """
-        :rtype: dict
-        """
-        return {}
-    
-    def get_urls(self):
-        urlpatterns = self.get_extra_urls()
-        urls = [endpoint.get_url_object() for endpoint in self.endpoints.itervalues()]
-        urlpatterns += patterns('', *urls)
-        return urlpatterns
-    
-    def get_extra_urls(self):
-        return patterns('',)
-    
-    def urls(self):
-        return self.get_urls(), self.app_name, None
-    urls = property(urls)
+    def get_children_endpoints(self):
+        return self.endpoints.values()
     
     def reverse(self, name, *args, **kwargs):
         return self.site.reverse(name, *args, **kwargs)
@@ -159,15 +129,12 @@ class BaseResource(BaseEndpoint):
     def get_resource_link_item(self):
         return None
     
-    def get_url_name(self):
-        return self.get_base_url_name() + 'resource'
-    
-    def get_main_link_name(self):
-        return 'list'
+    def get_index_endpoint(self):
+        return self.endpoints['list']
     
     def get_breadcrumb(self):
         bread = self.create_link_collection()
-        bread.add_link('list', rel='breadcrumb', link_factor='LO', prompt=self.get_prompt())
+        bread.add_link(self.get_index_endpoint(), rel='breadcrumb', link_factor='LO', prompt=self.get_prompt())
         return bread
     
     def get_breadcrumbs(self):

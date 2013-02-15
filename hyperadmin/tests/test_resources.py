@@ -11,7 +11,7 @@ from hyperadmin.sites import ResourceSite
 from hyperadmin.apirequests import InternalAPIRequest, NamespaceAPIRequest
 from hyperadmin.endpoints import RootEndpoint
 
-from common import GenericURLResolver, SuperUserRequestFactory
+from common import GenericURLResolver, SuperUserRequestFactory, URLReverseMixin
 
 from mock import MagicMock
 
@@ -27,7 +27,7 @@ class UserResource(ModelResource):
     date_hierarchy = 'date_joined'
     search_fields = ['email', 'username']
 
-class ResourceTestCase(unittest.TestCase):
+class ResourceTestCase(URLReverseMixin, unittest.TestCase):
     def setUp(self):
         self.site = ResourceSite()
         self.site.register_builtin_media_types()
@@ -39,25 +39,10 @@ class ResourceTestCase(unittest.TestCase):
         
         self.resolver = GenericURLResolver(r'^', self.site.get_urls())
         
-        def reverse(name, *args, **kwargs):
-            ret = self.resolver.reverse(name, *args, **kwargs)
-            return ret
-        self.reverse = reverse
-        
-        def cls_reverse(slf, name, *args, **kwargs):
-            return self.resolver.reverse(name, *args, **kwargs)
-        
-        original_fork = self.site.fork
-        
-        def fork(**kwargs):
-            ret = original_fork(**kwargs)
-            ret.reverse = reverse
-            return ret
-        
-        self.site.fork = fork
-        NamespaceAPIRequest.reverse = cls_reverse
-        RootEndpoint.reverse = cls_reverse
-        self.site.reverse = reverse
+        self.patch_reverse(self.resolver)
+    
+    def tearDown(self):
+        self.unpatch_reverse()
     
     def get_api_request(self, **kwargs):
         kwargs.setdefault('site', self.site)
@@ -66,7 +51,6 @@ class ResourceTestCase(unittest.TestCase):
         kwargs.setdefault('method', 'GET')
         kwargs.setdefault('payload', {})
         kwargs.setdefault('request', self.factory.get('/'))
-        kwargs.setdefault('reverse', self.reverse)
         api_request = InternalAPIRequest(**kwargs)
         
         api_request.generate_response = MagicMock(return_value=HttpResponse())
@@ -78,8 +62,12 @@ class ResourceTestCase(unittest.TestCase):
 
 class ModelResourceTestCase(ResourceTestCase):
     def register_resource(self):
-        self.site.register(User, UserResource)
+        self.site.register(User, UserResource, app_name='auth')
         return self.site.registry[User]
+    
+    def test_get_url_name(self):
+        urlname = self.resource.get_url_name()
+        self.assertEqual(urlname, 'admin_auth_user_resource')
     
     def test_get_list(self):
         api_request = self.get_api_request()
@@ -165,7 +153,7 @@ class InlineModelResourceTestCase(ResourceTestCase):
         self.user.groups.add(self.test_group)
     
     def register_resource(self):
-        self.site.register(User, UserResource)
+        self.site.register(User, UserResource, app_name='auth')
         self.user_resource = self.site.registry[User]
         return self.user_resource.inline_instances[0]
     
@@ -253,7 +241,7 @@ class InlineModelResourceTestCase(ResourceTestCase):
 
 class SiteResourceTestCase(ResourceTestCase):
     def register_resource(self):
-        self.site.register(User, ModelResource)
+        self.site.register(User, ModelResource, app_name='auth')
         return self.site.directory_resource
     
     '''
@@ -274,12 +262,19 @@ class SiteResourceTestCase(ResourceTestCase):
         link = call_kwargs['link']
         state = call_kwargs['state']
         
-        #with state.push_session(self.popped_states):
         self.assertTrue(state.get_resource_items())
+    
+    def test_url_stability_after_fork(self):
+        api_request = self.get_api_request()
+        bound_site = self.site.fork(api_request=api_request)
+        print self.site.get_urls()
+        print api_request.get_site().get_urls()
+        self.assertEqual(str(self.site.get_urls()), str(bound_site.get_urls()))
+        self.assertEqual(str(self.site.get_urls()), str(api_request.get_site().get_urls()))
 
 class ApplicationResourceTestCase(ResourceTestCase):
     def register_resource(self):
-        self.site.register(User, ModelResource)
+        self.site.register(User, ModelResource, app_name='auth')
         return self.site.applications['auth']
     
     def test_get_list(self):
@@ -291,7 +286,6 @@ class ApplicationResourceTestCase(ResourceTestCase):
         link = call_kwargs['link']
         state = call_kwargs['state']
         
-        #with state.push_session(self.popped_states):
         self.assertTrue(state.get_resource_items())
 
 class StorageResourceTestCase(ResourceTestCase):

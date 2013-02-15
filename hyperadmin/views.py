@@ -24,6 +24,16 @@ class EndpointViewMixin(ConditionalAccessMixin):
     global_state = None
     cacheable = False
     submit_methods = ['POST', 'PUT', 'DELETE']
+    template_name = None
+    
+    def get_template_names(self):
+        if self.template_name:
+            if isinstance(self.template_name, basestring):
+                template_names = [self.template_name]
+            else:
+                template_names = self.template_name
+            return self.expand_template_names(template_names)
+        return None
     
     def get_request_form_kwargs(self):
         return self.api_request.payload
@@ -39,7 +49,7 @@ class EndpointViewMixin(ConditionalAccessMixin):
         :rtype: HttpResponse
         """
         assert not self.api_request
-        api_request = self.site.create_apirequest(request=request, url_args=args, url_kwargs=kwargs)
+        api_request = self.create_apirequest(request=request, url_args=args, url_kwargs=kwargs)
         endpoint = api_request.get_endpoint(self.get_url_name())
         return endpoint.dispatch_api(api_request)
     

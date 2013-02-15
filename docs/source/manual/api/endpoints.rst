@@ -16,6 +16,7 @@ BaseEndpoint
 RootEndpoint
 ============
 .. autoclass:: RootEndpoint
+   :show-inheritance:
    :members:
    :undoc-members:
 
@@ -23,5 +24,6 @@ Endpoint
 ========
 
 .. autoclass:: Endpoint
+   :show-inheritance:
    :members:
    :undoc-members:
