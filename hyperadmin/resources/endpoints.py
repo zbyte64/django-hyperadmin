@@ -64,3 +64,7 @@ class ResourceEndpoint(Endpoint):
     
     def expand_template_names(self, suffixes):
         return self.resource.expand_template_names(suffixes)
+    
+    def get_context_data(self, **kwargs):
+        return self.resource.get_context_data(**kwargs)
+

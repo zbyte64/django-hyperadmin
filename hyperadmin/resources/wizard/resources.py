@@ -148,6 +148,10 @@ class Wizard(BaseResource):
         step = self.get_next_step()
         links.add_link(step, link_factor='LN')
         return links
+    
+    def get_context_data(self, **kwargs):
+        kwargs.setdefault('wizard', self)
+        return super(Wizard, self).get_context_data(**kwargs)
 
 class MultiPartStep(StepProvider, Wizard):
     #main form is step control from wizard

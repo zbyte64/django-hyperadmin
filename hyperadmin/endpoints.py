@@ -399,6 +399,9 @@ class BaseEndpoint(LinkCollectorMixin, View):
     def expand_template_names(self, suffixes):
         return self.site.expand_template_names(suffixes)
     
+    def get_context_data(self, **kwargs):
+        return self.site.get_context_data(**kwargs)
+    
     def generate_api_response(self, api_request):
         """
         :rtype: Link or HttpResponse
@@ -629,6 +632,9 @@ class RootEndpoint(APIRequestBuilder, VirtualEndpoint):
                 template_names.append('/'.join([path, template_name]))
         template_names.extend(suffixes)
         return template_names
+    
+    def get_context_data(self, **kwargs):
+        return kwargs
 
 class Endpoint(GlobalSiteMixin, EndpointViewMixin, BaseEndpoint):
     """
@@ -648,9 +654,7 @@ class Endpoint(GlobalSiteMixin, EndpointViewMixin, BaseEndpoint):
         return self.link_prototypes.get(name)
     
     def get_link_kwargs(self, **kwargs):
-        form_kwargs = kwargs.get('form_kwargs', None) or {}
-        form_kwargs = self.get_form_kwargs(**form_kwargs)
-        kwargs['form_kwargs'] = form_kwargs
+        kwargs.setdefault('endpoint', self)
         if self.state.item:
             kwargs['item'] = self.state.item
         return kwargs

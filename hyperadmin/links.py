@@ -242,7 +242,7 @@ class Link(object):
             'link': self,
         }
         params.update(kwargs)
-        return params
+        return self.endpoint.get_context_data(**params)
     
     def get_template_names(self):
         if isinstance(self.template_name, basestring):
@@ -407,15 +407,14 @@ class LinkPrototype(object):
         """
         :rtype: dict
         """
+        assert self.endpoint.state, 'link creation must come from a dispatched endpoint'
         params = dict(self.link_kwargs)
         params.setdefault('description', self.get_link_description())
-        params.setdefault('endpoint', self.endpoint)
         params.update(kwargs)
         if params.pop('use_request_url', False):
-            params['url'] = self.endpoint.api_request.get_full_path()
+            params['url'] = self.api_request.get_full_path()
         params['form_kwargs'] = self.get_form_kwargs(**params.get('form_kwargs', {}))
-        assert self.endpoint.state, 'link creation must come from a dispatched endpoint'
-        return params
+        return self.endpoint.get_link_kwargs(**params)
     
     def get_link_class(self):
         return Link
