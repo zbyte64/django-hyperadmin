@@ -20,8 +20,10 @@ Features
 * Index classes define search and filter capabilities through forms
 * Autoloads basic functionality from admin site
 * Inline support
-* Internal resource representation based on hfactor, forms and endpoints
 * Clients packaged seperately
+* Throttling
+* API key authentication
+* Wizard workflows
 
 Supported Media Formats:
 

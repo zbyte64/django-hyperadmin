@@ -35,7 +35,8 @@ class DjangoModelAdminLoader(object):
                 continue
             resource_class = self.generate_resource(admin_model)
             try:
-                resource = self.root_endpoint.register(model, resource_class)
+                app_name = model._meta.app_label
+                resource = self.root_endpoint.register(model, resource_class, app_name=app_name)
                 self.register_inlines(admin_model, resource)
             except Exception as error:
                 self.get_logger().exception('Could not autoload: %s' % admin_model)

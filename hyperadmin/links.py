@@ -1,6 +1,7 @@
 from copy import copy
 
 from django.http import QueryDict
+from django.template.loader import render_to_string
 
 
 class Link(object):
@@ -8,9 +9,9 @@ class Link(object):
     A link in the broad hypermedia sense
     """
     def __init__(self, url, endpoint, method='GET', prompt=None, description=None,
-                form=None, form_class=None, form_kwargs=None, on_submit=None,
+                form=None, form_class=None, form_kwargs=None, on_submit=None, errors=None,
                 link_factor=None, include_form_params_in_url=False,
-                mimetype=None, descriptors=None,
+                mimetype=None, descriptors=None, template_name='link.html',
                 cu_headers=None, cr_headers=None, **cl_headers):
         """
         
@@ -25,6 +26,7 @@ class Link(object):
         :param form_kwargs: keyword args to be passed into form class for instanting the form
         :param on_submit: a callback that is passed this link and submit_kwargs and returns a link representing the result
         :param mimetype: indicates the mimetype of the link. Useful for creating the proper embedded link tag.
+        :param template_name: The name of the template to use for rendering
         """
         self._url = url
         self._method = str(method).upper() #CM
@@ -39,9 +41,11 @@ class Link(object):
         self.cl_headers = cl_headers
         self.prompt = prompt
         self.description = description
+        self.template_name = template_name
         self.cu_headers = cu_headers
         self.cr_headers = cr_headers
         self.on_submit = on_submit
+        self._errors = errors
     
     @property
     def api_request(self):
@@ -193,10 +197,11 @@ class Link(object):
         Returns the validation errors belonging to the form
         """
         if self.is_simple_link:
-            return None
+            return self._errors
         if self.form_class:
-            return self.form.errors
-        return None
+            #TODO merge with self._errors
+            return self.form.errors or self._errors
+        return self._errors
     
     def submit(self, **kwargs):
         '''
@@ -218,10 +223,8 @@ class Link(object):
         '''
         params = {
             'url': self.get_absolute_url(),
-            'user': self.api_request.user,
         }
-        #TODO self.site has broken urlpatterns
-        endpoint = self.api_request.site.call_endpoint(**params)
+        endpoint = self.site.call_endpoint(**params)
         return endpoint.generate_api_response(endpoint.api_request)
     
     def clone(self, **kwargs):
@@ -233,6 +236,35 @@ class Link(object):
     
     def __repr__(self):
         return '<%s LF:%s Prompt:"%s" %s>' % (type(self), self.get_link_factor(), self.prompt, self.get_absolute_url())
+    
+    def get_context_data(self, **kwargs):
+        params = {
+            'link': self,
+        }
+        params.update(kwargs)
+        return self.endpoint.get_context_data(**params)
+    
+    def get_template_names(self):
+        if isinstance(self.template_name, basestring):
+            template_names = [self.template_name]
+        else:
+            template_names = self.template_name
+        return self.expand_template_names(template_names)
+    
+    def expand_template_names(self, suffixes):
+        return self.endpoint.expand_template_names(suffixes)
+    
+    def get_context_instance(self):
+        #TODO request context?
+        return None
+    
+    def render(self, **kwargs):
+        context = self.get_context_data(**kwargs)
+        template_name = self.get_template_names()
+        return render_to_string(template_name,
+                                context,
+                                context_instance=self.get_context_instance())
+        
 
 class LinkCollection(list):
     def __init__(self, endpoint):
@@ -247,6 +279,9 @@ class LinkCollection(list):
         Adds the specified link from the resource.
         This will only add the link if it exists and the person is allowed to view it.
         """
+        from hyperadmin.endpoints import BaseEndpoint
+        if isinstance(link_name, BaseEndpoint):
+            link_name = link_name.get_main_link_name()
         if link_name not in self.link_prototypes:
             return False
         endpoint_link = self.link_prototypes[link_name]
@@ -372,15 +407,14 @@ class LinkPrototype(object):
         """
         :rtype: dict
         """
+        assert self.endpoint.state, 'link creation must come from a dispatched endpoint'
         params = dict(self.link_kwargs)
         params.setdefault('description', self.get_link_description())
-        params.setdefault('endpoint', self.endpoint)
         params.update(kwargs)
         if params.pop('use_request_url', False):
-            params['url'] = self.endpoint.api_request.get_full_path()
+            params['url'] = self.api_request.get_full_path()
         params['form_kwargs'] = self.get_form_kwargs(**params.get('form_kwargs', {}))
-        assert self.endpoint.state, 'link creation must come from a dispatched endpoint'
-        return params
+        return self.endpoint.get_link_kwargs(**params)
     
     def get_link_class(self):
         return Link

@@ -2,6 +2,16 @@
 Release Notes
 =============
 
+0.9.0
+=====
+
+* Added `hyperadmin.contrib.apikey` for key based authentication
+* Allow endpoints to be directly mounted in urls with global site object
+* Added `Wizard` resource for wizard workflows
+* URL names are now fully dynamic
+* Endpoints may now specify template and context for html rendering
+* Added throttling
+
 
 0.8.2
 =====

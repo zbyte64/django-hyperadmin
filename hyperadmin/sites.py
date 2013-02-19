@@ -3,6 +3,7 @@ from django.utils.datastructures import SortedDict
 from hyperadmin.endpoints import RootEndpoint
 from hyperadmin.resources.directory import ResourceDirectory
 from hyperadmin.resources.auth import AuthResource
+from hyperadmin.throttle import Throttle
 
 import collections
 
@@ -25,6 +26,7 @@ class Registry(dict):
 
 class BaseResourceSite(RootEndpoint):
     directory_resource_class = ResourceDirectory
+    throttle = Throttle(throttle_at=1200)
     name = 'hyperadmin'
     
     def __init__(self, **kwargs):
@@ -34,22 +36,22 @@ class BaseResourceSite(RootEndpoint):
     
     def post_register(self):
         super(BaseResourceSite, self).post_register()
-        self.directory_resource = self.create_directory_resource()
+        self.directory_resource = self.create_directory_resource(base_url_name_suffix=self.base_url_name_suffix)
     
     def get_directory_resource_kwargs(self, **kwargs):
         kwargs.setdefault('resource_name', self.name)
+        #kwargs.setdefault('parent', self)
         return self.get_resource_kwargs(**kwargs)
     
-    def create_directory_resource(self):
-        return self.directory_resource_class(**self.get_directory_resource_kwargs())
+    def create_directory_resource(self, **kwargs):
+        params = self.get_directory_resource_kwargs(**kwargs)
+        return self.directory_resource_class(**params)
     
-    def get_urls(self):
-        urlpatterns = self.get_extra_urls()
-        urlpatterns += self.directory_resource.get_urls()
-        return urlpatterns
+    def get_children_endpoints(self):
+        return [self.directory_resource]
     
-    def get_link(self, **kwargs):
-        return self.directory_resource.get_link(**kwargs)
+    def get_index_endpoint(self):
+        return self.directory_resource
     
     def get_resource_kwargs(self, **kwargs):
         params = {'site': self,
@@ -97,7 +99,7 @@ class BaseResourceSite(RootEndpoint):
         return 'text'
     
     def get_media_resource_urlname(self):
-        return '-storages_media_resource'
+        return '%s_-storages_media_resource' % self.base_url_name_suffix
     
     def get_media_resource(self):
         urlname = self.get_media_resource_urlname()
@@ -117,10 +119,21 @@ class BaseResourceSite(RootEndpoint):
         if isinstance(field, FileField):
             return self.get_media_resource().link_prototypes['upload'].get_url()
         return None
+    
+    def api_permission_check(self, api_request, endpoint):
+        response = self.throttle.throttle_check(api_request, endpoint)
+        if response:
+            return response
+        return super(BaseResourceSite, self).api_permission_check(api_request, endpoint)
 
 class ResourceSite(BaseResourceSite):
+    '''
+    A Resource Site that is suited for administrative purposes. By 
+    default the user must be a staff user.
+    '''
     auth_resource_class = AuthResource
     name = 'hyperadmin'
+    base_url_name_suffix = 'admin'
     
     def post_register(self):
         super(ResourceSite, self).post_register()
@@ -131,17 +144,17 @@ class ResourceSite(BaseResourceSite):
         return self.directory_resource.resource_adaptor
     
     def register(self, model_or_iterable, admin_class, **options):
-        if isinstance(model_or_iterable, collections.Iterable):
+        if isinstance(model_or_iterable, collections.Iterable) and not isinstance(model_or_iterable, basestring):
             resources = list()
             for model in model_or_iterable:
                 resources.append(self.register(model, admin_class, **options))
             return resources
         model = model_or_iterable
+        app_name = options.pop('app_name')
+        app_resource = self.register_application(app_name)
+        options.setdefault('parent', app_resource)
         kwargs = self.get_resource_kwargs(resource_adaptor=model, **options)
         resource = admin_class(**kwargs)
-        app_name = resource.app_name
-        resource.parent = self.register_application(app_name)
-        resource._init_kwargs['parent'] = resource.parent
         self.applications[app_name].register_resource(resource)
         self.registry[model] = resource
         return resource
@@ -158,12 +171,13 @@ class ResourceSite(BaseResourceSite):
         auth_resource = api_request.get_endpoint(self.auth_resource.get_url_name())
         return auth_resource.get_link(**kwargs)
     
-    def api_permission_check(self, api_request):
+    def api_permission_check(self, api_request, endpoint):
         user = api_request.user
         if not user.is_authenticated():
             return self.get_login_link(api_request, prompt='Login Required')
         if not user.is_staff:
             return self.get_login_link(api_request, prompt='Unauthorized', http_status=401)
+        return super(ResourceSite, self).api_permission_check(api_request, endpoint)
     
     def get_actions(self, request):
         return SortedDict()
@@ -187,10 +201,23 @@ class ResourceSite(BaseResourceSite):
             media_resource_class = StorageResource
         if static_resource_class is None:
             static_resource_class = StorageResource
-        self.register(media_storage, media_resource_class, resource_name='media')
-        self.register(static_storage, static_resource_class, resource_name='static')
+        app_name = '-storages'
+        self.register(media_storage, media_resource_class, resource_name='media', app_name=app_name)
+        self.register(static_storage, static_resource_class, resource_name='static', app_name=app_name)
 
+class GlobalSite(BaseResourceSite):
+    '''
+    A Resource Site that is meant for globally registering endpoints 
+    without needing to explicitly create a Resource Site.
+    '''
+    name = 'apisite'
+    
+    def get_resolver(self):
+        from django.core.urlresolvers import get_resolver
+        return get_resolver(None)
 
 site = ResourceSite()
 site.register_builtin_media_types()
 
+global_site = GlobalSite()
+global_site.register_builtin_media_types()

@@ -1,12 +1,16 @@
 #!/usr/bin/env python
-
+import os
 try:
     from setuptools import setup, find_packages
 except ImportError:
     from distutils.core import setup, find_packages
 
-VERSION = '0.8.2'
-LONG_DESC = '\n===='+open('README.rst', 'r').read().split('====', 1)[-1]
+VERSION = '0.9.0'
+PATH = os.path.dirname(os.path.abspath(__file__))
+try:
+    LONG_DESC = '\n===='+open(os.path.join(PATH, 'README.rst'), 'r').read().split('====', 1)[-1]
+except IOError: #happens when using tox
+    LONG_DESC = ''
 
 setup(name='django-hyperadmin',
       version=VERSION,
@@ -33,7 +37,7 @@ setup(name='django-hyperadmin',
       packages=find_packages(exclude=['tests']),
       test_suite='tests.runtests.runtests',
       tests_require=(
-        'pep8==1.3.1',
+        'pep8',
         'coverage',
         'django',
         'Mock',

@@ -12,5 +12,6 @@ Resources
    directory
    auth
    storages
+   wizard
 
 

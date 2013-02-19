@@ -26,11 +26,11 @@ class Item(LinkCollectorMixin):
     def get_form_class(self):
         if self.form_class is not None:
             return self.form_class
-        return self.endpoint.get_form_class()
+        return self.endpoint.get_item_form_class()
     
     def get_form_kwargs(self, **kwargs):
         kwargs['item'] = self
-        return self.endpoint.get_form_kwargs(**kwargs)
+        return self.endpoint.get_item_form_kwargs(**kwargs)
     
     def get_form(self, **form_kwargs):
         form_cls = self.get_form_class()

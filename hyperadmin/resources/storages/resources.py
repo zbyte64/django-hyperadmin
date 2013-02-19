@@ -78,8 +78,13 @@ class StorageResource(CRUDResource):
         instances = [BoundFile(self.storage, file_name) for file_name in files]
         return instances
     
-    def get_form_kwargs(self, item=None, **kwargs):
-        kwargs = super(StorageResource, self).get_form_kwargs(item, **kwargs)
+    def get_item_form_kwargs(self, item=None, **kwargs):
+        kwargs = super(StorageResource, self).get_item_form_kwargs(item, **kwargs)
+        kwargs['storage'] = self.storage
+        return kwargs
+    
+    def get_form_kwargs(self, **kwargs):
+        kwargs = super(StorageResource, self).get_form_kwargs(**kwargs)
         kwargs['storage'] = self.storage
         return kwargs
     
