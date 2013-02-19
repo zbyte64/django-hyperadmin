@@ -458,6 +458,9 @@ class VirtualEndpoint(BaseEndpoint):
     def get_main_link_name(self):
         return self.get_index_endpoint().get_main_link_name()
     
+    def get_url(self, **kwargs):
+        return self.get_index_endpoint().get_url(**kwargs)
+    
     def generate_api_response(self, api_request):
         """
         Calls the index endpoint and returns it's api response
