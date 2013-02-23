@@ -44,10 +44,9 @@ class UpdateLinkPrototype(LinkPrototype):
         return self.resource.has_change_permission(item=kwargs.get('item', None))
     
     def get_link_kwargs(self, **kwargs):
-        item = kwargs['item']
-        
         kwargs = super(UpdateLinkPrototype, self).get_link_kwargs(**kwargs)
-        
+
+        item = kwargs['item']
         link_kwargs = {'url':self.get_url(item=item),
                        'on_submit':self.handle_submission,
                        'method':'POST',
@@ -65,10 +64,9 @@ class DeleteLinkPrototype(LinkPrototype):
         return self.resource.has_delete_permission(item=kwargs.get('item', None))
     
     def get_link_kwargs(self, **kwargs):
-        item = kwargs['item']
-        
         kwargs = super(DeleteLinkPrototype, self).get_link_kwargs(**kwargs)
         
+        item = kwargs['item']
         link_kwargs = {'url':self.get_url(item=item),
                        'on_submit':self.handle_submission,
                        'method':'POST',
