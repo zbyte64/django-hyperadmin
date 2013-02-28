@@ -19,18 +19,18 @@ class CRUDResource(BaseResource):
     
     form_class = None
     
-    list_endpoint_class = ListEndpoint
-    create_endpoint_class = CreateEndpoint
-    detail_endpoint_class = DetailEndpoint
-    delete_endpoint_class = DeleteEndpoint
+    list_endpoint = (ListEndpoint, {})
+    create_endpoint = (CreateEndpoint, {})
+    detail_endpoint = (DetailEndpoint, {})
+    delete_endpoint = (DeleteEndpoint, {})
     
     def get_view_endpoints(self):
         endpoints = super(CRUDResource, self).get_view_endpoints()
         endpoints.extend([
-            (self.list_endpoint_class, {}),
-            (self.create_endpoint_class, {}),
-            (self.detail_endpoint_class, {}),
-            (self.delete_endpoint_class, {}),
+            self.list_endpoint,
+            self.create_endpoint,
+            self.detail_endpoint,
+            self.delete_endpoint,
         ])
         return endpoints
     

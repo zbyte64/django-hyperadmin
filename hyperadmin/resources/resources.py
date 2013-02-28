@@ -20,7 +20,12 @@ class BaseResource(GlobalSiteMixin, VirtualEndpoint):
     
     def __init__(self, **kwargs):
         assert 'resource_adaptor' in kwargs
+        self._installed_endpoints = SortedDict()
         super(BaseResource, self).__init__(**kwargs)
+    
+    def fork(self, **kwargs):
+        kwargs.setdefault('_installed_endpoints', self._installed_endpoints)
+        return super(BaseResource, self).fork(**kwargs)
     
     @property
     def resource(self):
@@ -72,12 +77,20 @@ class BaseResource(GlobalSiteMixin, VirtualEndpoint):
     def register_endpoints(self):
         self.endpoints = SortedDict()
         for endpoint_cls, kwargs in self.get_view_endpoints():
-            self.register_endpoint(endpoint_cls, **kwargs)
+            self._register_endpoint(endpoint_cls, **kwargs)
+        for key, endpoint in self._installed_endpoints.iteritems():
+            self.endpoints[key] = self.fork(**self.get_endpoint_kwargs())
     
     def register_endpoint(self, endpoint_cls, **kwargs):
+        endpoint = self._register_endpoint(endpoint_cls, **kwargs)
+        self._installed_endpoints[endpoint.get_name_suffix()] = endpoint
+        return endpoint
+    
+    def _register_endpoint(self, endpoint_cls, **kwargs):
         kwargs = self.get_endpoint_kwargs(**kwargs)
         endpoint = endpoint_cls(**kwargs)
         self.endpoints[endpoint.get_name_suffix()] = endpoint
+        return endpoint
     
     def get_view_endpoints(self):
         """

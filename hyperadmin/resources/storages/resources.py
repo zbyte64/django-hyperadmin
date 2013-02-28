@@ -39,8 +39,8 @@ class StorageResource(CRUDResource):
     #resource_adaptor = storage object
     form_class = UploadForm
     upload_link_form_class = UploadLinkForm
-    list_endpoint_class = ListEndpoint
-    create_upload_endpoint_class = CreateUploadEndpoint
+    list_endpoint = (ListEndpoint, {})
+    create_upload_endpoint = (CreateUploadEndpoint, {})
     
     def __init__(self, **kwargs):
         kwargs.setdefault('app_name', '-storages')
@@ -55,9 +55,7 @@ class StorageResource(CRUDResource):
     
     def get_view_endpoints(self):
         endpoints = super(StorageResource, self).get_view_endpoints()
-        endpoints.extend([
-            (self.create_upload_endpoint_class, {}),
-        ])
+        endpoints.append(self.create_upload_endpoint)
         return endpoints
     
     def get_indexes(self):

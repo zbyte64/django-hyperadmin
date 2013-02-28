@@ -167,10 +167,10 @@ class BaseModelResource(CRUDResource):
         return AdminForm
 
 class ModelResource(BaseModelResource):
-    list_endpoint_class = ListEndpoint
-    create_endpoint_class = CreateEndpoint
-    detail_endpoint_class = DetailEndpoint
-    delete_endpoint_class = DeleteEndpoint
+    list_endpoint = (ListEndpoint, {'index_name':'filter'})
+    create_endpoint = (CreateEndpoint, {})
+    detail_endpoint = (DetailEndpoint, {})
+    delete_endpoint = (DeleteEndpoint, {})
     
     def post_register(self):
         super(ModelResource, self).post_register()
@@ -187,13 +187,6 @@ class ModelResource(BaseModelResource):
     
     def register_inline(self, inline_cls):
         self.inline_instances.append(inline_cls(parent=self, api_request=self.api_request))
-    
-    def register_endpoint(self, endpoint_cls, **kwargs):
-        #TODO find a better strategy for injecting the index name for list endpoints
-        #perhaps list_endpoint could be a tuple of class and kwargs
-        if endpoint_cls == self.list_endpoint_class:
-            kwargs.setdefault('index_name', 'filter')
-        return super(ModelResource, self).register_endpoint(endpoint_cls, **kwargs)
     
     def get_urls(self):
         urlpatterns = super(ModelResource, self).get_urls()
@@ -223,10 +216,10 @@ class InlineModelResource(BaseModelResource):
     fk_name = None
     rel_name = None
     
-    list_endpoint_class = InlineListEndpoint
-    create_endpoint_class = InlineCreateEndpoint
-    detail_endpoint_class = InlineDetailEndpoint
-    delete_endpoint_class = InlineDeleteEndpoint
+    list_endpoint = (InlineListEndpoint, {})
+    create_endpoint = (InlineCreateEndpoint, {})
+    detail_endpoint = (InlineDetailEndpoint, {})
+    delete_endpoint = (InlineDeleteEndpoint, {})
     
     def __init__(self, parent, **kwargs):
         kwargs['site'] = parent.site
