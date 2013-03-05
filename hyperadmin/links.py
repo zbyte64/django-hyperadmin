@@ -281,7 +281,11 @@ class LinkCollection(list):
         """
         from hyperadmin.endpoints import BaseEndpoint
         if isinstance(link_name, BaseEndpoint):
-            link_name = link_name.get_main_link_name()
+            try:
+                link_name = link_name.get_main_link_name()
+            #TODO raise an explicit error: LinkNotAvailable
+            except AttributeError:
+                return False
         if link_name not in self.link_prototypes:
             return False
         endpoint_link = self.link_prototypes[link_name]
