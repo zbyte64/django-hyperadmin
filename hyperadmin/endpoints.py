@@ -3,7 +3,7 @@ from django.core.urlresolvers import reverse
 from django.views.generic import View
 from django.utils.datastructures import MultiValueDict
 
-from hyperadmin.links import Link, LinkCollection, LinkCollectorMixin
+from hyperadmin.links import Link, LinkCollection, LinkCollectorMixin, LinkNotAvailable
 from hyperadmin.app_settings import DEFAULT_API_REQUEST_CLASS
 from hyperadmin.hyperobjects import Item
 from hyperadmin.states import EndpointState
@@ -316,9 +316,6 @@ class BaseEndpoint(LinkCollectorMixin, View):
         instances = self.get_instances()
         return [self.get_resource_item(instance) for instance in instances]
     
-    def get_item_url(self, item):
-        raise NotImplementedError
-    
     def get_form_class(self):
         return self.form_class
     
@@ -349,7 +346,9 @@ class BaseEndpoint(LinkCollectorMixin, View):
         """
         return {}
     
-    #TODO review if this is needed anymore
+    def get_item_url(self, item):
+        raise NotImplementedError
+    
     def get_item_link(self, item, **kwargs):
         link_kwargs = {'url':item.get_absolute_url(),
                        'endpoint':self,
@@ -363,7 +362,10 @@ class BaseEndpoint(LinkCollectorMixin, View):
         raise NotImplementedError
     
     def get_main_link_prototype(self):
-        return self.link_prototypes[self.get_main_link_name()]
+        link_name = self.get_main_link_name()
+        if link_name in self.link_prototypes:
+            return self.link_prototypes[link_name]
+        raise LinkNotAvailable, 'Link unavailable: %s' % link_name
     
     def get_link(self, **kwargs):
         link_kwargs = {'rel':'self',

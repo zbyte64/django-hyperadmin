@@ -264,7 +264,9 @@ class Link(object):
         return render_to_string(template_name,
                                 context,
                                 context_instance=self.get_context_instance())
-        
+
+class LinkNotAvailable(Exception):
+    pass
 
 class LinkCollection(list):
     def __init__(self, endpoint):
@@ -283,8 +285,7 @@ class LinkCollection(list):
         if isinstance(link_name, BaseEndpoint):
             try:
                 link_name = link_name.get_main_link_name()
-            #TODO raise an explicit error: LinkNotAvailable
-            except AttributeError:
+            except LinkNotAvailable:
                 return False
         if link_name not in self.link_prototypes:
             return False
