@@ -11,7 +11,7 @@ class ListLinkPrototype(LinkPrototype):
     """
     def get_link_kwargs(self, **kwargs):
         link_kwargs = {'url':self.get_url(),
-                       'prompt':'list',
+                       'prompt':'List %s' % self.resource.get_prompt(),
                        'rel':'list',}
         link_kwargs.update(kwargs)
         return super(ListLinkPrototype, self).get_link_kwargs(**link_kwargs)
@@ -30,12 +30,29 @@ class CreateLinkPrototype(LinkPrototype):
                        'on_submit':self.handle_submission,
                        'method':'POST',
                        'form_class': self.get_form_class(),
-                       'prompt':'create',
+                       'prompt':'Create %s' % self.resource.get_prompt(),
                        'rel':'create',}
         link_kwargs.update(kwargs)
         return super(CreateLinkPrototype, self).get_link_kwargs(**link_kwargs)
 
-#TODO consider: Update vs Detail link
+class DetailLinkPrototype(LinkPrototype):
+    """
+    Display Resource Item
+    """
+    def show_link(self, **kwargs):
+        #TODO view permsions on links
+        return True
+    
+    def get_link_kwargs(self, **kwargs):
+        kwargs = super(DetailLinkPrototype, self).get_link_kwargs(**kwargs)
+
+        item = kwargs['item']
+        link_kwargs = {'url':self.get_url(item=item),
+                       'prompt':item.get_prompt(),
+                       'rel':'detail',}
+        link_kwargs.update(kwargs)
+        return super(DetailLinkPrototype, self).get_link_kwargs(**link_kwargs)
+
 class UpdateLinkPrototype(LinkPrototype):
     """
     Update Resource Item
@@ -51,7 +68,7 @@ class UpdateLinkPrototype(LinkPrototype):
                        'on_submit':self.handle_submission,
                        'method':'POST',
                        'form_class': item.get_form_class(),
-                       'prompt':'update',
+                       'prompt':'Update %s' % item.get_prompt(),
                        'rel':'update',}
         link_kwargs.update(kwargs)
         return super(UpdateLinkPrototype, self).get_link_kwargs(**link_kwargs)
@@ -70,7 +87,7 @@ class DeleteLinkPrototype(LinkPrototype):
         link_kwargs = {'url':self.get_url(item=item),
                        'on_submit':self.handle_submission,
                        'method':'POST',
-                       'prompt':'delete',
+                       'prompt':'Delete %s' % item.get_prompt(),
                        'rel':'delete',}
         link_kwargs.update(kwargs)
         return super(DeleteLinkPrototype, self).get_link_kwargs(**link_kwargs)
@@ -227,17 +244,30 @@ class DetailEndpoint(DetailMixin, ResourceEndpoint):
     
     prototype_method_map = {
         'GET': 'update',
+        #'GET': 'detail',
         'POST': 'update',
         'PUT': 'rest-update',
         'DELETE': 'rest-delete',
     }
     
     update_prototype = UpdateLinkPrototype
+    detail_prototype = DetailLinkPrototype
     delete_prototype = DeleteLinkPrototype
+    
+    def get_link_prototype_for_method(self, method):
+        """
+        Returns a detail link based on whether a client can edit or view the objects
+        """
+        if method == 'GET' and not self.resource.has_change_permission():
+            name = 'detail'
+        else:
+            name = self.prototype_method_map.get(method)
+        return self.link_prototypes.get(name)
     
     def get_link_prototypes(self):
         return [
             (self.update_prototype, {'name':'update'}),
+            (self.detail_prototype, {'name':'detail'}),
             (self.update_prototype, {'name':'rest-update', 'link_kwargs':{'method':'PUT'}}),
             (self.delete_prototype, {'name':'rest-delete', 'link_kwargs':{'method':'DELETE'}}),
         ]
@@ -249,7 +279,7 @@ class DetailEndpoint(DetailMixin, ResourceEndpoint):
     
     def get_breadcrumbs(self):
         breadcrumbs = super(DetailEndpoint, self).get_breadcrumbs()
-        breadcrumbs.add_link('update', item=self.common_state.item, rel='breadcrumb', link_factor='LO')
+        breadcrumbs.add_link('detail', item=self.common_state.item, rel='breadcrumb', link_factor='LO')
         return breadcrumbs
 
 class DeleteEndpoint(DetailMixin, ResourceEndpoint):

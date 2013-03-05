@@ -648,6 +648,9 @@ class Endpoint(GlobalSiteMixin, EndpointViewMixin, BaseEndpoint):
     
     prototype_method_map = {}
     
+    def get_available_methods(self):
+        return self.prototype_method_map.keys()
+    
     def get_link_prototype_for_method(self, method):
         """
         Return the link prototype representing the action for the method
@@ -667,7 +670,7 @@ class Endpoint(GlobalSiteMixin, EndpointViewMixin, BaseEndpoint):
         Returns a dictionary mapping available HTTP methods to a link
         """
         methods = dict()
-        for method, link_name in self.prototype_method_map.iteritems():
+        for method in self.get_available_methods():
             proto = self.get_link_prototype_for_method(method)
             if proto and proto.show_link():
                 kwargs = {'use_request_url':True}

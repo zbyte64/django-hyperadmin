@@ -103,6 +103,7 @@ class BaseModelResource(CRUDResource):
         return indexes
     
     def lookup_allowed(self, lookup, value):
+        '''Currently unused'''
         return True #TODO
     
     def get_queryset(self):

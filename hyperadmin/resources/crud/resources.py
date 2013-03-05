@@ -29,8 +29,8 @@ class CRUDResource(BaseResource):
         endpoints.extend([
             self.list_endpoint,
             self.create_endpoint,
-            self.detail_endpoint,
             self.delete_endpoint,
+            self.detail_endpoint,
         ])
         return endpoints
     
@@ -39,6 +39,12 @@ class CRUDResource(BaseResource):
     
     def get_item_url(self, item):
         return self.link_prototypes['update'].get_url(item=item)
+    
+    def has_permission(self, perm, **kwargs):
+        func_name = 'has_%s_permission' % perm
+        if hasattr(self, func_name):
+            return getattr(self, func_name)(**kwargs)
+        return False
     
     def has_add_permission(self):
         return True
