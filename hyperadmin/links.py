@@ -265,6 +265,7 @@ class Link(object):
                                 context,
                                 context_instance=self.get_context_instance())
 
+#CONSIDER: should we sublcass: django.core.urlresolvers.NoReverseMatch
 class LinkNotAvailable(Exception):
     pass
 
