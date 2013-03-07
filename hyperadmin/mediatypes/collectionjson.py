@@ -111,7 +111,7 @@ class CollectionJSON(MediaType):
     
     def serialize(self, content_type, link, state):
         if self.detect_redirect(link):
-            return self.handle_redirect(link)
+            return self.handle_redirect(link, content_type)
         data = self.prepare_collection(link, state)
         content = json.dumps({"collection":data}, cls=LazyEncoder)
         assert content_type in self.recognized_media_types, "%s not in %s" % (content_type, self.recognized_media_types)

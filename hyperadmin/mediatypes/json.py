@@ -26,7 +26,7 @@ class JSON(MediaType):
     
     def serialize(self, content_type, link, state):
         if self.detect_redirect(link):
-            return self.handle_redirect(link)
+            return self.handle_redirect(link, content_type)
         data = self.get_payload(link, state)
         content = json.dumps(data, cls=DjangoJSONEncoder)
         return http.HttpResponse(content, content_type)
@@ -53,6 +53,8 @@ class JSONP(JSON):
         return self.api_request.params['callback']
     
     def serialize(self, content_type, link, state):
+        if self.detect_redirect(link):
+            return self.handle_redirect(link, content_type)
         data = self.get_payload(link, state)
         content = json.dumps(data, cls=DjangoJSONEncoder)
         callback = self.get_jsonp_callback()

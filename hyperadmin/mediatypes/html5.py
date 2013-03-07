@@ -64,7 +64,7 @@ class Html5MediaType(MediaType):
     
     def serialize(self, content_type, link, state):
         if self.detect_redirect(link):
-            return self.handle_redirect(link)
+            return self.handle_redirect(link, content_type)
         context = self.get_context_data(link=link, state=state)
         
         response = self.response_class(request=self.get_django_request(), template=self.get_template_names(state), context=context)

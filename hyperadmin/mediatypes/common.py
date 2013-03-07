@@ -22,13 +22,13 @@ class MediaType(object):
     def get_django_request(self):
         return self.api_request.get_django_request()
     
-    #TODO
-    def handle_redirect(self, link):
+    def handle_redirect(self, link, content_type):
         if self.api_request.method != 'GET':
-            response = http.HttpResponse(link.get_absolute_url(), status=303)
+            response = http.HttpResponse(link.get_absolute_url(), status=303, content_type=content_type)
             response['Location'] = link.get_absolute_url()
         else:
             response = http.HttpResponseRedirect(link.get_absolute_url())
+            response['Content-Type'] = content_type
         return response
     
     def detect_redirect(self, link):
