@@ -1,7 +1,7 @@
-from django.core.serializers.json import DjangoJSONEncoder
 from django.utils import simplejson as json
 from django import http
 
+from hyperadmin.mediatypes.encoders import HyperadminJSONEncoder
 from hyperadmin.mediatypes.common import MediaType
 from hyperadmin.links import Link
 
@@ -28,7 +28,7 @@ class JSON(MediaType):
         if self.detect_redirect(link):
             return self.handle_redirect(link, content_type)
         data = self.get_payload(link, state)
-        content = json.dumps(data, cls=DjangoJSONEncoder)
+        content = json.dumps(data, cls=HyperadminJSONEncoder)
         return http.HttpResponse(content, content_type)
     
     def deserialize(self, request):
@@ -56,7 +56,7 @@ class JSONP(JSON):
         if self.detect_redirect(link):
             return self.handle_redirect(link, content_type)
         data = self.get_payload(link, state)
-        content = json.dumps(data, cls=DjangoJSONEncoder)
+        content = json.dumps(data, cls=HyperadminJSONEncoder)
         callback = self.get_jsonp_callback()
         return http.HttpResponse(u'%s(%s)' % (callback, content), content_type)
 

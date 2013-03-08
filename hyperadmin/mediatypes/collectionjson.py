@@ -1,21 +1,10 @@
-from django.utils.functional import Promise
-try:
-    from django.utils.encoding import force_text
-except ImportError:
-    from django.utils.encoding import force_unicode as force_text
-from django.core.serializers.json import DjangoJSONEncoder
 from django.utils import simplejson as json
 from django import http
 
+from hyperadmin.mediatypes.encoders import HyperadminJSONEncoder, force_text
 from hyperadmin.mediatypes.common import MediaType
 from hyperadmin.links import Link
 
-
-class LazyEncoder(DjangoJSONEncoder):
-    def default(self, obj):
-        if isinstance(obj, Promise):
-            return force_text(obj)
-        return super(LazyEncoder, self).default(obj)
 
 class CollectionJSON(MediaType):
     recognized_media_types = [
@@ -114,7 +103,7 @@ class CollectionJSON(MediaType):
         if self.detect_redirect(link):
             return self.handle_redirect(link, content_type)
         data = self.prepare_collection(link, state)
-        content = json.dumps({"collection":data}, cls=LazyEncoder)
+        content = json.dumps({"collection":data}, cls=HyperadminJSONEncoder)
         assert content_type in self.recognized_media_types, "%s not in %s" % (content_type, self.recognized_media_types)
         return http.HttpResponse(content, content_type)
     
@@ -122,7 +111,7 @@ class CollectionJSON(MediaType):
         methods = dict()
         for method, link in links.iteritems():
             methods[method] = {'collection':self.prepare_link(link)}
-        content = json.dumps(methods, cls=LazyEncoder)
+        content = json.dumps(methods, cls=HyperadminJSONEncoder)
         allow = ','.join(links.iterkeys())
         response = http.HttpResponse(content, content_type)
         response['Allow'] = allow
