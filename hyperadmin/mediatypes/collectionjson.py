@@ -19,7 +19,8 @@ class LazyEncoder(DjangoJSONEncoder):
 
 class CollectionJSON(MediaType):
     recognized_media_types = [
-        'application/vnd.Collection+JSON'
+        'application/vnd.Collection+JSON',
+        'application/vnd.collection+json',
     ]
     
     def prepare_field_value(self, val):
@@ -138,8 +139,9 @@ class CollectionJSON(MediaType):
         form_data = dict()
         files = dict()
         for field in data:
+            f_type = field.get('type', 'text')
             form_data[field['name']] = field['value']
-            if field['type'] == 'file' and field['value']:
+            if f_type == 'file' and field['value']:
                 #TODO storage lookup could be done better
                 storage = self.site.applications['-storages'].resource_adaptor['media'].resource_adaptor
                 files[field['name']] = storage.open(field['value'])
