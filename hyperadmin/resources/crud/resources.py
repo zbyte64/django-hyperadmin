@@ -55,6 +55,27 @@ class CRUDResource(BaseResource):
     def has_delete_permission(self, item=None):
         return True
     
+    def on_add_success(self, item):
+        '''
+        Called when an item has been successfully created.
+        May return a link.
+        '''
+        return None
+    
+    def on_change_success(self, item):
+        '''
+        Called when an item has been successfully changed.
+        May return a link.
+        '''
+        return None
+    
+    def on_delete_success(self, item):
+        '''
+        Called when an item has been successfully deleted.
+        May return a link.
+        '''
+        return None
+    
     def get_indexes(self):
         return {'primary':PrimaryIndex('primary', self)}
     

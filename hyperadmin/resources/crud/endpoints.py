@@ -34,6 +34,9 @@ class CreateLinkPrototype(LinkPrototype):
                        'rel':'create',}
         link_kwargs.update(kwargs)
         return super(CreateLinkPrototype, self).get_link_kwargs(**link_kwargs)
+    
+    def on_success(self, item):
+        return self.resource.on_add_success(item) or super(CreateLinkPrototype, self).on_success(item)
 
 class DetailLinkPrototype(LinkPrototype):
     """
@@ -72,6 +75,9 @@ class UpdateLinkPrototype(LinkPrototype):
                        'rel':'update',}
         link_kwargs.update(kwargs)
         return super(UpdateLinkPrototype, self).get_link_kwargs(**link_kwargs)
+    
+    def on_success(self, item):
+        return self.resource.on_change_success(item) or super(UpdateLinkPrototype, self).on_success(item)
 
 class DeleteLinkPrototype(LinkPrototype):
     """
@@ -93,9 +99,13 @@ class DeleteLinkPrototype(LinkPrototype):
         return super(DeleteLinkPrototype, self).get_link_kwargs(**link_kwargs)
     
     def handle_submission(self, link, submit_kwargs):
-        instance = self.resource.state.item.instance
+        item = self.resource.state.item
+        instance = item.instance
         instance.delete()
-        return self.on_success()
+        return self.on_success(item)
+    
+    def on_success(self, item):
+        return self.resource.on_delete_success(item) or super(DeleteLinkPrototype, self).on_success()
 
 class IndexMixin(object):
     index_name = 'primary'
