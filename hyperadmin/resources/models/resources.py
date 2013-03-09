@@ -108,22 +108,22 @@ class BaseModelResource(CRUDResource):
     
     def get_queryset(self):
         queryset = self.resource_adaptor.objects.all()
-        if not self.has_change_permission():
+        if not self.has_update_permission(): #TODO has_list_permission?
             queryset = queryset.none()
         return queryset
     
-    def has_add_permission(self):
+    def has_create_permission(self):
         user = self.api_request.user
         if self.opts.auto_created:
             # We're checking the rights to an auto-created intermediate model,
             # which doesn't have its own individual permissions. The user needs
             # to have the change permission for the related model in order to
             # be able to do anything with the intermediate model.
-            return self.has_change_permission()
+            return self.has_update_permission()
         return user.has_perm(
             self.opts.app_label + '.' + self.opts.get_add_permission())
 
-    def has_change_permission(self, item=None):
+    def has_update_permission(self, item=None):
         user = self.api_request.user
         
         if item:
@@ -149,7 +149,7 @@ class BaseModelResource(CRUDResource):
             # which doesn't have its own individual permissions. The user needs
             # to have the change permission for the related model in order to
             # be able to do anything with the intermediate model.
-            return self.has_change_permission(item)
+            return self.has_update_permission(item)
         return user.has_perm(
             self.opts.app_label + '.' + self.opts.get_delete_permission())
         
@@ -240,7 +240,7 @@ class InlineModelResource(BaseModelResource):
     def get_queryset(self, parent):
         queryset = self.resource_adaptor.objects.all()
         queryset = queryset.filter(**{self.fk.name:parent})
-        if not self.has_change_permission():
+        if not self.has_update_permission():
             queryset = queryset.none()
         return queryset
     

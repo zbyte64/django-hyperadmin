@@ -21,7 +21,7 @@ class CreateLinkPrototype(LinkPrototype):
     Create Resource Item
     """
     def show_link(self, **kwargs):
-        return self.resource.has_add_permission()
+        return self.resource.has_create_permission()
     
     def get_link_kwargs(self, **kwargs):
         kwargs = super(CreateLinkPrototype, self).get_link_kwargs(**kwargs)
@@ -36,7 +36,7 @@ class CreateLinkPrototype(LinkPrototype):
         return super(CreateLinkPrototype, self).get_link_kwargs(**link_kwargs)
     
     def on_success(self, item):
-        return self.resource.on_add_success(item) or super(CreateLinkPrototype, self).on_success(item)
+        return self.resource.on_create_success(item) or super(CreateLinkPrototype, self).on_success(item)
 
 class DetailLinkPrototype(LinkPrototype):
     """
@@ -61,7 +61,7 @@ class UpdateLinkPrototype(LinkPrototype):
     Update Resource Item
     """
     def show_link(self, **kwargs):
-        return self.resource.has_change_permission(item=kwargs.get('item', None))
+        return self.resource.has_update_permission(item=kwargs.get('item', None))
     
     def get_link_kwargs(self, **kwargs):
         kwargs = super(UpdateLinkPrototype, self).get_link_kwargs(**kwargs)
@@ -77,7 +77,7 @@ class UpdateLinkPrototype(LinkPrototype):
         return super(UpdateLinkPrototype, self).get_link_kwargs(**link_kwargs)
     
     def on_success(self, item):
-        return self.resource.on_change_success(item) or super(UpdateLinkPrototype, self).on_success(item)
+        return self.resource.on_update_success(item) or super(UpdateLinkPrototype, self).on_success(item)
 
 class DeleteLinkPrototype(LinkPrototype):
     """
@@ -268,7 +268,7 @@ class DetailEndpoint(DetailMixin, ResourceEndpoint):
         """
         Returns a detail link based on whether a client can edit or view the objects
         """
-        if method == 'GET' and not self.resource.has_change_permission():
+        if method == 'GET' and not self.resource.has_update_permission():
             name = 'detail'
         else:
             name = self.prototype_method_map.get(method)

@@ -46,25 +46,25 @@ class CRUDResource(BaseResource):
             return getattr(self, func_name)(**kwargs)
         return False
     
-    def has_add_permission(self):
+    def has_create_permission(self):
         return True
     
-    def has_change_permission(self, item=None):
+    def has_update_permission(self, item=None):
         return True
     
     def has_delete_permission(self, item=None):
         return True
     
-    def on_add_success(self, item):
+    def on_create_success(self, item):
         '''
         Called when an item has been successfully created.
         May return a link.
         '''
         return None
     
-    def on_change_success(self, item):
+    def on_update_success(self, item):
         '''
-        Called when an item has been successfully changed.
+        Called when an item has been successfully updated.
         May return a link.
         '''
         return None
