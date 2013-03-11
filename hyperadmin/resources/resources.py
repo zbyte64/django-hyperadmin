@@ -3,6 +3,7 @@ from django.utils.datastructures import SortedDict
 
 from hyperadmin.endpoints import VirtualEndpoint, GlobalSiteMixin
 from hyperadmin.resources.hyperobjects import ResourceItem
+from hyperadmin.signals import resource_event
 
 
 class EmptyForm(forms.Form):
@@ -17,6 +18,7 @@ class BaseResource(GlobalSiteMixin, VirtualEndpoint):
     name_suffix = 'resource'
     
     resource_adaptor = None
+    '''The object representing the resource connection. Typically passed in during construction'''
     
     def __init__(self, **kwargs):
         assert 'resource_adaptor' in kwargs
@@ -156,3 +158,12 @@ class BaseResource(GlobalSiteMixin, VirtualEndpoint):
     
     def get_paginator_kwargs(self):
         return {}
+    
+    def emit_event(self, event, item_list=None):
+        """
+        Fires of the `resource_event` signal
+        """
+        sender = '%s!%s' % (self.get_url_name(), event)
+        if item_list is None:
+            item_list = self.get_resource_items()
+        resource_event.send(sender=sender, resource=self, event=event, item_list=item_list)

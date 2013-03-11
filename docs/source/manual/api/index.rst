@@ -18,4 +18,5 @@ Internal API Reference
    states
    sites
    throttle
+   signals
 

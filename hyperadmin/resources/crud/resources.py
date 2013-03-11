@@ -58,22 +58,28 @@ class CRUDResource(BaseResource):
     def on_create_success(self, item):
         '''
         Called when an item has been successfully created.
+        Fires off the create event.
         May return a link.
         '''
+        self.emit_event(event='create', item_list=[item])
         return None
     
     def on_update_success(self, item):
         '''
         Called when an item has been successfully updated.
+        Fires off the update event.
         May return a link.
         '''
+        self.emit_event(event='update', item_list=[item])
         return None
     
     def on_delete_success(self, item):
         '''
         Called when an item has been successfully deleted.
+        Fires off the delete event.
         May return a link.
         '''
+        self.emit_event(event='delete', item_list=[item])
         return None
     
     def get_indexes(self):

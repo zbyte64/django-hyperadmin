@@ -8,6 +8,7 @@ from hyperadmin.app_settings import DEFAULT_API_REQUEST_CLASS
 from hyperadmin.hyperobjects import Item
 from hyperadmin.states import EndpointState
 from hyperadmin.views import EndpointViewMixin
+from hyperadmin.signals import endpoint_event
 
 import logging
 import urlparse
@@ -17,18 +18,6 @@ class BaseEndpoint(LinkCollectorMixin, View):
     """
     Represents an API Endpoint
     """
-    api_request = None
-    
-    state = None #for this particular endpoint
-    #TODO find a better name for "common_state"
-    #common_state = None #shared by endpoints of the same resource
-    
-    global_state = None #for overiding the global state while processing
-    
-    state_class = EndpointState
-    
-    endpoint_class = None #descriptor of the endpoint
-    endpoint_classes = []
     
     form_class = None
     '''The default form class for links created by this endpoint'''
@@ -37,8 +26,13 @@ class BaseEndpoint(LinkCollectorMixin, View):
     '''The form class representing items from this endpoint. 
     The form created is used for serialization of item.'''
     
+    state_class = EndpointState
+    
     resource_item_class = Item
+    
     app_name = None
+    '''The slug that identifies the application of this endpoint. Typically set by the site object.'''
+    
     base_url_name_suffix = None
     '''The suffix to apply to the base url name when concating the base
     name from the parent'''
@@ -52,6 +46,22 @@ class BaseEndpoint(LinkCollectorMixin, View):
     
     url_name = None
     '''Set the url name of the endpoint instead of generating one'''
+    
+    global_state = None
+    '''Dictionary for overiding particular values in the state'''
+    
+    endpoint_class = None
+    '''A slug identifying the primary role of the endpoint'''
+    
+    endpoint_classes = []
+    '''A list of slugs identifying the various roles or functions of the endpoint'''
+    
+    #generated items:
+    api_request = None
+    '''The api request responsible for the endpoint. Generated automatically.'''
+    
+    state = None
+    '''The state responsible for the endpoint. Generated automatically.'''
     
     def __init__(self, **kwargs):
         self._init_kwargs = dict(kwargs)
@@ -409,6 +419,15 @@ class BaseEndpoint(LinkCollectorMixin, View):
         :rtype: Link or HttpResponse
         """
         raise NotImplementedError
+    
+    def emit_event(self, event, item_list=None):
+        """
+        Fires of the `endpoint_event` signal
+        """
+        sender = '%s!%s' % (self.get_url_name(), event)
+        if item_list is None:
+            item_list = self.get_resource_items()
+        return endpoint_event.send(sender=sender, endpoint=self, event=event, item_list=item_list)
 
 class VirtualEndpoint(BaseEndpoint):
     '''
