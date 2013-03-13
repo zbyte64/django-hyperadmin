@@ -13,6 +13,7 @@ class ResourceDirectory(BaseResource):
     
     def __init__(self, **kwargs):
         kwargs.setdefault('resource_adaptor', dict())
+        
         super(ResourceDirectory, self).__init__(**kwargs)
     
     def get_view_endpoints(self):
@@ -30,7 +31,7 @@ class ResourceDirectory(BaseResource):
     
     def register_resource(self, resource, key=None):
         if key is None:
-            key = resource.get_resource_name()
+            key = resource.get_resource_slug()
         self.resource_adaptor[key] = resource
     
     def fork(self, **kwargs):

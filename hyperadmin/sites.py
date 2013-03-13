@@ -164,7 +164,7 @@ class ResourceSite(BaseResourceSite):
             if app_class is None:
                 app_class = self.directory_resource_class
             app_resource = self.register_endpoint(app_class, app_name=self.name, resource_name=app_name)
-            self.applications[app_name] = app_resource
+            assert app_name in self.applications
         return self.applications[app_name]
     
     def get_login_link(self, api_request, **kwargs):

@@ -1,5 +1,6 @@
 from django import forms
 from django.utils.datastructures import SortedDict
+from django.template.defaultfilters import slugify
 
 from hyperadmin.endpoints import VirtualEndpoint, GlobalSiteMixin
 from hyperadmin.resources.hyperobjects import ResourceItem
@@ -68,12 +69,30 @@ class BaseResource(GlobalSiteMixin, VirtualEndpoint):
     
     resource_name = property(_get_resource_name, _set_resource_name, None, 'Set or get the name of the resource')
     
+    
+    def get_resource_slug(self):
+        """
+        Return the slug of this resource.
+        Provides the return value of the `resource_slug` property.
+        """
+        if hasattr(self, '_resource_slug'):
+            return self._resource_slug
+        return slugify(self.get_resource_name())
+    
+    def _get_resource_slug(self):
+        return self.get_resource_slug()
+    
+    def _set_resource_slug(self, slug):
+        self._resource_slug = slug
+    
+    resource_slug = property(_get_resource_slug, _set_resource_slug, None, 'Set or get the slug of the resource')
+    
     def get_prompt(self):
         return self.resource_name
     
     def get_base_url_name_suffix(self):
         if self.base_url_name_suffix is None:
-            return self.resource_name
+            return self.resource_slug
         return self.base_url_name_suffix
     
     def register_endpoints(self):
