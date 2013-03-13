@@ -10,7 +10,7 @@ Visiting the api endpoint in a browser will let you browse the various hyberobje
 Django Template Client
 ----------------------
 
-https://github.com/zbyte64/django-hyperadmin-client
+https://github.com/webcube/django-hyperadmin-client
 
 Uses django templates to render an admin interface. Responsive design out of the box.
 
@@ -34,7 +34,7 @@ Provides basic bindings to the Backbone API.
 Dockit CMS
 ----------
 
-https://github.com/zbyte64/django-dockitcms (endpoints branch)
+https://github.com/webcube/django-dockitcms
 
 A dynamic API builder with a public HTML (template driven) client.
 
