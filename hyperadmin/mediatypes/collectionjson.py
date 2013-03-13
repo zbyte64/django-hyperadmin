@@ -123,6 +123,8 @@ class CollectionJSON(MediaType):
             payload = request.body
         else:
             payload = request.raw_post_data
+        if not payload:
+            return {}
         data = json.loads(payload)
         data = data['data']
         form_data = dict()
