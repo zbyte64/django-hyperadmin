@@ -22,6 +22,12 @@ Table of Contents
    release_notes
 
 
+Help & Feedback
+===============
+
+We have a mailing list for general discussion and help: http://groups.google.com/group/django-hyperadmin/
+
+
 Indices and tables
 ==================
 
