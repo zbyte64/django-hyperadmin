@@ -18,7 +18,8 @@ class ModelIndex(Index):
         field = self.get_primary_field()
         from django.db import models
         if isinstance(field, (models.IntegerField, models.AutoField)):
-            return [r'(?P<{pk}>\d+)'.format(**param_map)]
+            #TODO detect if positive integers only
+            return [r'(?P<{pk}>(-){0,1}\d+)'.format(**param_map)]
         return [r'(?P<{pk}>[\w\d\-]+)'.format(**param_map)]
     
     def get_paginator_kwargs(self):
