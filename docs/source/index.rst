@@ -20,6 +20,7 @@ Table of Contents
    manual/content_types
    manual/other_resources
    manual/api/index
+   manual/contributing
    release_notes
 
 
