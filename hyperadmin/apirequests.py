@@ -249,9 +249,6 @@ class HTTPAPIRequest(APIRequest):
         for src, dst in self.get_to_meta_map.iteritems():
             if src in request.GET:
                 val = request.GET[src]
-                #if we are passing content types from the url
-                if dst in ('HTTP_ACCEPT', 'CONTENT_TYPE'):
-                    val = val.replace(' ', '+')
                 meta[dst] = val
         return meta
     

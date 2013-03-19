@@ -13,6 +13,7 @@ Table of Contents
    :maxdepth: 2
 
    manual/installation
+   manual/introduction
    manual/authentication
    manual/clients
    manual/wizards

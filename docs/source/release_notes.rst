@@ -2,6 +2,18 @@
 Release Notes
 =============
 
+0.10.0
+======
+
+* Added resource slug
+* Added signals & events
+* Added exception: LinkNotAvailable
+* Added HyperadminJSONENcoder
+* Added Detail Link, used when user does not have edit permissions
+* Preserve requested content type on response
+* Standardized CRUD verbage
+* Fixed handling of negative primary keys
+
 0.9.0
 =====
 
