@@ -53,6 +53,15 @@ class EndpointViewMixin(ConditionalAccessMixin):
         endpoint = api_request.get_endpoint(self.get_url_name())
         return endpoint.dispatch_api(api_request)
     
+    def internal_dispatch(self, **kwargs):
+        '''
+        Can be called directly to execute an API call. kwargs are passed to the intenral api request.
+        '''
+        assert not self.api_request
+        api_request = self.create_internal_apirequest(**kwargs)
+        endpoint = api_request.get_endpoint(self.get_url_name())
+        return endpoint.dispatch_api(api_request)
+    
     def dispatch_api(self, api_request):
         '''
         Execute the api request

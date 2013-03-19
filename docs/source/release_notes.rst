@@ -5,6 +5,8 @@ Release Notes
 0.10.0
 ======
 
+* Added endpoint method, internal_dispatch, for quick internal api calls
+* Added `hyperadmin.get_api`
 * Added resource slug
 * Added signals & events
 * Added exception: LinkNotAvailable

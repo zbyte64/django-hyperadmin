@@ -179,12 +179,25 @@ class InternalAPIRequest(APIRequest):
         kwargs.setdefault('full_path', path)
         for key, val in kwargs.iteritems():
             setattr(self, key, val)
+        self.session_state.update(self.get_session_data())
     
     def get_full_path(self):
         return self.full_path
     
     def get_django_request(self):
         return self.request
+    
+    def get_session_data(self):
+        data = {'endpoints': {},
+                'resources': {},
+                #'request': request,
+                'meta': {
+                    'CONTENT_TYPE':'application/json',
+                },
+                'extra_get_params':{},}
+        if hasattr(self, 'user'):
+            data['auth'] = self.user
+        return data
 
 class HTTPAPIRequest(APIRequest):
     """

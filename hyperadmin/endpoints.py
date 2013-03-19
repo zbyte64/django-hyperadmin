@@ -5,6 +5,7 @@ from django.utils.datastructures import MultiValueDict
 
 from hyperadmin.links import Link, LinkCollection, LinkCollectorMixin, LinkNotAvailable
 from hyperadmin.app_settings import DEFAULT_API_REQUEST_CLASS
+from hyperadmin.apirequests import InternalAPIRequest
 from hyperadmin.hyperobjects import Item
 from hyperadmin.states import EndpointState
 from hyperadmin.views import EndpointViewMixin
@@ -405,6 +406,9 @@ class BaseEndpoint(LinkCollectorMixin, View):
     def generate_options_response(self, links):
         return self.api_request.generate_options_response(links=links, state=self.state)
     
+    def create_internal_apirequest(self, **kwargs):
+        return self.site.create_internal_apirequest(**kwargs)
+    
     def create_apirequest(self, **kwargs):
         return self.site.create_apirequest(**kwargs)
     
@@ -514,6 +518,9 @@ class APIRequestBuilder(object):
     apirequest_class = DEFAULT_API_REQUEST_CLASS
     '''The api request class to use for incomming django requests'''
     
+    internal_apirequest_class = InternalAPIRequest
+    '''The api request class to use for internal api calls'''
+    
     def get_api_request_kwargs(self, **kwargs):
         params = {'site':self.site}
         params.update(kwargs)
@@ -523,6 +530,32 @@ class APIRequestBuilder(object):
         kwargs = self.get_api_request_kwargs(request=request, url_args=url_args, url_kwargs=url_kwargs)
         api_request = self.apirequest_class(**kwargs)
         api_request.populate_session_data_from_request(request)
+        if self.global_state is not None:
+            api_request.session_state.update(self.global_state)
+        return api_request
+    
+    def get_internal_api_user(self):
+        '''
+        Returns an authenticated anonymous user with superuser powers
+        '''
+        from django.contrib.auth.models import AnonymousUser
+        class SuperAnonymousUser(AnonymousUser):
+            is_staff = True
+            is_superuser = True
+            
+            def has_perm(self, perm, obj=None):
+                return True
+            
+            def is_authenticated(self):
+                return True
+        
+        return SuperAnonymousUser()
+    
+    def create_internal_apirequest(self, **kwargs):
+        #kwargs.setdefault('request', MockedRequest)
+        kwargs.setdefault('user', self.get_internal_api_user())
+        kwargs = self.get_api_request_kwargs(**kwargs)
+        api_request = self.internal_apirequest_class(**kwargs)
         if self.global_state is not None:
             api_request.session_state.update(self.global_state)
         return api_request

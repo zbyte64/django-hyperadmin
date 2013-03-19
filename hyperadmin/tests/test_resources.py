@@ -110,6 +110,23 @@ class ModelResourceTestCase(ResourceTestCase):
         links = state.item.links.get_item_outbound_links()
         self.assertTrue(links, 'outbound links are empty')
     
+    def test_negative_primary_key(self):
+        instance = User.objects.create(pk=-1, username='anonymous', email='nowhere@nowhere.com')
+        api_request = self.get_api_request(url_kwargs={'pk':instance.pk})
+        endpoint = self.resource.endpoints['detail'].fork(api_request=api_request)
+        response = endpoint.dispatch_api(api_request)
+        
+        call_kwargs = api_request.generate_response.call_args[1]
+        link = call_kwargs['link']
+        state = call_kwargs['state']
+        
+        self.assertEqual(len(state.get_resource_items()), 1)
+    
+    def test_internal_dispatch(self):
+        instance = self.user
+        response = self.resource.endpoints['detail'].internal_dispatch(url_kwargs={'pk':instance.pk})
+        print response
+    
     def test_post_list(self):
         update_data = {
             'username': 'normaluser',

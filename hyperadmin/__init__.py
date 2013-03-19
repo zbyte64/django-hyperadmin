@@ -57,3 +57,15 @@ def autodiscover():
             # attempting to import it, otherwise we want it to bubble up.
             if module_has_submodule(mod, 'resources'):
                 raise
+
+def get_api(namespace):
+    '''
+    Returns the root endpoint matching the namespace
+    '''
+    from django.core.urlresolvers import get_resolver, get_urlconf
+    #there should be a better way to do this...
+    urlconf = get_urlconf()
+    resolver = get_resolver(urlconf)
+    result = resolver.namespace_dict[namespace]
+    return result[1].urlconf_name
+
