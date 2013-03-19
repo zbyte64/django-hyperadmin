@@ -192,7 +192,7 @@ class InternalAPIRequest(APIRequest):
                 'resources': {},
                 #'request': request,
                 'meta': {
-                    'CONTENT_TYPE':'application/json',
+                    'CONTENT_TYPE':'application/vnd.Collection.hyperadmin+JSON',
                 },
                 'extra_get_params':{},}
         if hasattr(self, 'user'):
