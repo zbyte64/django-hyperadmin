@@ -27,7 +27,7 @@ class BoundFile(object):
 
 class CreateUploadLinkPrototype(LinkPrototype):
     def show_link(self, **kwargs):
-        return self.resource.has_add_permission()
+        return self.resource.has_create_permission()
     
     def get_link_kwargs(self, **kwargs):
         form_kwargs = kwargs.pop('form_kwargs', None)
