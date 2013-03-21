@@ -2,6 +2,13 @@
 Release Notes
 =============
 
+0.9.1
+=====
+
+* Fixed handling of negative primary keys (#2)
+* improved order of operations in get link kwargs
+
+
 0.9.0
 =====
 
