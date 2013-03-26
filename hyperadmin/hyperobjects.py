@@ -65,6 +65,10 @@ class Item(LinkCollectorMixin):
         """
         return self.endpoint.get_item_namespaces(item=self)
     
-    def get_link(self):
-        return self.endpoint.get_item_link(item=self)
+    def get_link(self, **kwargs):
+        return self.endpoint.get_item_link(item=self, **kwargs)
+    
+    def get_outbound_link(self, **kwargs):
+        kwargs.setdefault('link_factor', 'LO')
+        return self.get_link(**kwargs)
 
