@@ -60,9 +60,13 @@ class StorageIndex(Index):
             link = self.get_link(**kwargs)
             links.append(link)
         for directory in self.dirs:
+            if self.path:
+                path = self.path + '/' + directory
+            else:
+                path = directory
             kwargs = {
-                'url':'./%s' % self.state.get_query_string({'path':directory}),
-                'prompt':directory,
+                'url':'./%s' % self.state.get_query_string({'path':path}),
+                'prompt':path,
                 'classes':['filter', 'directory'],
                 'rel':"filter",
                 'group':"directory",
