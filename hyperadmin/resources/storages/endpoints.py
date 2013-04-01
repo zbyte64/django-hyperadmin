@@ -1,4 +1,4 @@
-from hyperadmin.links import LinkPrototype
+from hyperadmin.links import LinkPrototype, Link
 from hyperadmin.resources.endpoints import ResourceEndpoint
 from hyperadmin.resources.crud.endpoints import ListEndpoint as BaseListEndpoint, CreateEndpoint, DetailEndpoint, DeleteEndpoint
 
@@ -45,7 +45,15 @@ class CreateUploadLinkPrototype(LinkPrototype):
         link_kwargs.update(kwargs)
         return super(CreateUploadLinkPrototype, self).get_link_kwargs(**link_kwargs)
     
+    def handle_submission(self, link, submit_kwargs):
+        form = link.get_form(**submit_kwargs)
+        if form.is_valid():
+            upload_link = form.save()
+            return self.on_success(upload_link)
+        return link.clone(form=form)
+    
     def on_success(self, link):
+        assert isinstance(link, Link)
         return link
 
 class ListEndpoint(BaseListEndpoint):

@@ -14,7 +14,7 @@ class IframeMediaType(MediaType):
     ]
     
     def get_response_type(self):
-        response_type = self.view.patched_meta.get('HTTP_ACCEPT', '')
+        response_type = self.api_request.META.get('HTTP_ACCEPT', '')
         effective_type = response_type.split(self.recognized_media_types[0], 1)[-1]
         return mimeparse.best_match(
             self.site.media_types.keys(),
@@ -34,7 +34,7 @@ class IframeMediaType(MediaType):
         content_type = self.get_response_type()
         response = media_type.serialize(content_type=content_type, link=link, state=state)
         context = {
-            'payload':response.content,
+            'payload':response.rendered_content,
             'content_type': content_type,
         }
         return context
@@ -60,7 +60,7 @@ class IframeMediaType(MediaType):
     
     def check_csrf(self, request):
         csrf_middleware = CsrfViewMiddleware()
-        response = csrf_middleware.process_view(request, self.deserialize, self.view.args, self.view.kwargs)
+        response = csrf_middleware.process_view(request, self.deserialize, [], {})
         if response is not None:
             assert False, 'csrf failed' #TODO APIException(response) or SuspiciousOperation ....
             raise response

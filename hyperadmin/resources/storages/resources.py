@@ -55,7 +55,7 @@ class StorageResource(CRUDResource):
     
     def get_view_endpoints(self):
         endpoints = super(StorageResource, self).get_view_endpoints()
-        endpoints.append(self.create_upload_endpoint)
+        endpoints.insert(0, self.create_upload_endpoint)
         return endpoints
     
     def get_indexes(self):
