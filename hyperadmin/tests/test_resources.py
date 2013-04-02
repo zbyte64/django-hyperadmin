@@ -208,12 +208,11 @@ class InlineModelResourceTestCase(ResourceTestCase):
         inline_items = namespace.state.get_resource_items()
         self.assertTrue(inline_items)
         item = inline_items[0]
-        inline_link = item.get_link()
+        inline_link = item.get_outbound_link()
         self.assertEqual(inline_link.get_link_factor(), 'LO')
         self.assertTrue(inline_link.get_absolute_url())
         
-        #TODO
-        edit_link = inline_link.submit()
+        edit_link = inline_link.follow()
         self.assertEqual(edit_link.method, 'POST', str(edit_link.endpoint))
     
     #TODO

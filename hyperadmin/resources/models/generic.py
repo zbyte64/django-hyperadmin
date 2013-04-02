@@ -31,7 +31,7 @@ class GenericInlineModelResource(InlineModelResource):
             self.ct_fk_field: parent.pk,
         })
         
-        if not self.has_change_permission():
+        if not self.has_create_permission():
             queryset = queryset.none()
         return queryset
     

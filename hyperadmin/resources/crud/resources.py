@@ -38,7 +38,14 @@ class CRUDResource(BaseResource):
         return self.link_prototypes['list'].get_url()
     
     def get_item_url(self, item):
-        return self.link_prototypes['update'].get_url(item=item)
+        if self.has_update_permission(item):
+            return self.link_prototypes['update'].get_url(item=item)
+        return self.link_prototypes['detail'].get_url(item=item)
+    
+    def get_item_link(self, item, **kwargs):
+        if self.has_update_permission(item):
+            return self.link_prototypes['update'].get_link(item=item, **kwargs)
+        return self.link_prototypes['detail'].get_link(item=item, **kwargs)
     
     def has_permission(self, perm, **kwargs):
         func_name = 'has_%s_permission' % perm
@@ -89,7 +96,7 @@ class CRUDResource(BaseResource):
         return self.get_primary_query()
     
     def get_item_breadcrumb(self, item):
-        return self.get_item_link(item, rel='breadcrumb')
+        return self.get_item_link(item, rel='breadcrumb', link_factor='LO')
     
     def get_list_resource_item_class(self):
         return self.list_resource_item_class

@@ -715,7 +715,7 @@ class Endpoint(GlobalSiteMixin, EndpointViewMixin, BaseEndpoint):
     
     def get_link_kwargs(self, **kwargs):
         kwargs.setdefault('endpoint', self)
-        if self.state.item:
+        if 'item' not in kwargs and self.state.item:
             kwargs['item'] = self.state.item
         return kwargs
     
