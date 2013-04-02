@@ -11,7 +11,7 @@ os.environ['DJANGO_SETTINGS_MODULE'] = 'tests.test_settings'
 # Bootstrap Django's settings.
 from django.conf import settings
 settings.DATABASES = {
-    'default': {'ENGINE': 'django.db.backends.sqlite3', 'NAME': ':memory;'}
+    'default': {'ENGINE': 'django.db.backends.sqlite3', 'NAME': ':memory:'}
 }
 settings.TEST_RUNNER = "django_nose.NoseTestSuiteRunner"
 settings.NOSE_PLUGINS = ['tests.noseplugins.TestDiscoveryPlugin']
