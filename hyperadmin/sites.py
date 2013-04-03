@@ -87,7 +87,10 @@ class BaseResourceSite(RootEndpoint):
     def get_html_type_from_field(self, field):
         #TODO fill this out, datetime, etc
         from django.forms import widgets
-        widget = field.field.widget
+        from django.forms import FileField
+        if hasattr(field, 'field'): #CONSIDER internally we use boundfield
+            field = field.field
+        widget = field.widget
         if isinstance(widget, widgets.Input):
             return widget.input_type
         if isinstance(widget, widgets.CheckboxInput):
@@ -95,6 +98,8 @@ class BaseResourceSite(RootEndpoint):
         if isinstance(widget, widgets.Select):
             #if widget.allow_multiple_selected
             return 'select'
+        if isinstance(field, FileField):
+            return 'file'
         self.get_logger().warning('Unhandled widget type: %s' % type(widget))
         return 'text'
     
