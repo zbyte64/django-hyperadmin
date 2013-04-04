@@ -167,9 +167,20 @@ class BaseModelResource(CRUDResource):
                 #TODO fields
         return AdminForm
     
-    def get_native_datatap(self, **kwargs):
+    def get_native_datatap_instream_from_items(self, items):
+        '''
+        Makes an instream of model instances
+        '''
+        return [item.instance for item in items]
+    
+    def get_native_datatap(self, instream=None, **kwargs):
+        '''
+        Returns a ModelDataTap suited for this resource
+        '''
         from datatap.datataps import ModelDataTap
-        return ModelDataTap(**kwargs)
+        if instream is None:
+            instream = [self.resource_adaptor]
+        return ModelDataTap(instream, **kwargs)
 
 class ModelResource(BaseModelResource):
     list_endpoint = (ListEndpoint, {'index_name':'filter'})

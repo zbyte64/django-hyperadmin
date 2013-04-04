@@ -446,14 +446,27 @@ class BaseEndpoint(LinkCollectorMixin, View):
             return self.get_native_datatap(**kwargs)
         elif isinstance(instream, (list, tuple)):
             #list of resource items; give primitives
-            native_instream = [item.instance for item in instream]
+            native_instream = self.get_native_datatap_instream_from_items(instream)
             return self.get_native_datatap(instream=native_instream, **kwargs)
         else:
             #read primitives from instream, return deserialized objects
             return self.get_native_datatap(instream=instream, **kwargs)
     
-    def get_native_datatap(self, **kwargs):
-        pass
+    def get_native_datatap_instream_from_items(self, items):
+        '''
+        Makes an instream of item forms
+        '''
+        return [item.form for item in items]
+    
+    def get_native_datatap(self, instream=None, **kwargs):
+        '''
+        Returns a datatap that can serialize the forms belonging to hypermedia items.
+        '''
+        from hyperadmin.datataps import HypermediaFormDataTap
+        #if there is no instream, read from the global resource items
+        if instream is None:
+            instream = self.get_resource_items()
+        return HypermediaFormDataTap(instream, **kwargs)
 
 class VirtualEndpoint(BaseEndpoint):
     '''
