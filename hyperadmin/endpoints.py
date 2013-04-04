@@ -308,6 +308,8 @@ class BaseEndpoint(LinkCollectorMixin, View):
         :rtype: resource item
         """
         kwargs.setdefault('endpoint', self)
+        #if 'datatap' not in kwargs:
+        #    kwargs['datatap'] = self.get_datatap()
         return self.get_resource_item_class()(instance=instance, **kwargs)
     
     def get_instances(self):
@@ -432,6 +434,26 @@ class BaseEndpoint(LinkCollectorMixin, View):
         if item_list is None:
             item_list = self.get_resource_items()
         return endpoint_event.send(sender=sender, endpoint=self, event=event, item_list=item_list)
+    
+    def get_datatap(self, instream=None, **kwargs):
+        '''
+        Returns a datatap that can serialize hypermedia items and deserialize to native instances
+        
+        :param instream: A list of resource items or a primitive datatap
+        '''
+        if instream is None:
+            #open for read; give primitives
+            return self.get_native_datatap(**kwargs)
+        elif isinstance(instream, (list, tuple)):
+            #list of resource items; give primitives
+            native_instream = [item.instance for item in instream]
+            return self.get_native_datatap(instream=native_instream, **kwargs)
+        else:
+            #read primitives from instream, return deserialized objects
+            return self.get_native_datatap(instream=instream, **kwargs)
+    
+    def get_native_datatap(self, **kwargs):
+        pass
 
 class VirtualEndpoint(BaseEndpoint):
     '''

@@ -166,6 +166,10 @@ class BaseModelResource(CRUDResource):
                 #TODO formfield overides
                 #TODO fields
         return AdminForm
+    
+    def get_native_datatap(self, **kwargs):
+        from datatap.datataps import ModelDataTap
+        return ModelDataTap(**kwargs)
 
 class ModelResource(BaseModelResource):
     list_endpoint = (ListEndpoint, {'index_name':'filter'})

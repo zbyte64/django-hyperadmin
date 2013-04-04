@@ -11,10 +11,11 @@ class Item(LinkCollectorMixin):
     form_class = None
     link_collector_class = ItemLinkCollectionProvider
     
-    def __init__(self, endpoint, instance):
+    def __init__(self, endpoint, instance, datatap=None):
         self.endpoint = endpoint
         self.instance = instance
         self.links = self.get_link_collector()
+        self.datatap = datatap
     
     @property
     def state(self):

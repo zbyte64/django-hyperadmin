@@ -13,6 +13,9 @@ class EmptyForm(forms.Form):
         super(EmptyForm, self).__init__(**kwargs)
 
 class BaseResource(GlobalSiteMixin, VirtualEndpoint):
+    '''
+    A collection of endpoints representing a particular service
+    '''
     resource_class = '' #hint to the client how this resource is used
     form_class = EmptyForm
     resource_item_class = ResourceItem
