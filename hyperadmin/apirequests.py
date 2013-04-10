@@ -9,7 +9,7 @@ class APIRequest(object):
     """
     An API Request
     """
-    def __init__(self, site, path, url_args, url_kwargs):
+    def __init__(self, site, path, url_args, url_kwargs, global_state=None):
         self.site = site
         self.path = path
         self.url_args = url_args
@@ -23,23 +23,25 @@ class APIRequest(object):
         self.endpoint_state = State()
         self.endpoint_state['endpoints'] = dict()
         self.endpoint_state['link_prototypes'] = dict()
+        if global_state is not None:
+            self.session_state.update(global_state)
         super(APIRequest, self).__init__()
-    
+
     def get_django_request(self):
         raise NotImplementedError
-    
+
     @property
     def META(self):
         return self.session_state['meta']
-    
+
     @property
     def media_types(self):
         return self.get_site().media_types
-    
+
     def get_response_type(self):
         """
         Returns the active response type to be used
-        
+
         :rtype: string
         """
         val = self.META.get('HTTP_ACCEPT', self.META.get('CONTENT_TYPE', ''))
@@ -47,11 +49,11 @@ class APIRequest(object):
         if not media_types:
             return val
         return mimeparse.best_match(media_types, val) or val
-    
+
     def get_request_type(self):
         """
         Returns the active request type to be used
-        
+
         :rtype: string
         """
         val = self.META.get('CONTENT_TYPE', self.META.get('HTTP_ACCEPT', ''))
@@ -59,11 +61,11 @@ class APIRequest(object):
         if not media_types:
             return val
         return mimeparse.best_match(media_types, val) or val
-    
+
     def get_request_media_type(self):
         """
         Returns the request media type to be used or raises an error
-        
+
         :raises ValueError: when the requested content type is unrecognized
         :rtype: string
         """
@@ -72,11 +74,11 @@ class APIRequest(object):
         if media_type_cls is None:
             raise ValueError('Unrecognized request content type "%s". Choices are: %s' % (content_type, self.media_types.keys()))
         return media_type_cls(self)
-    
+
     def get_response_media_type(self):
         """
         Returns the response media type to be used or raises an error
-        
+
         :raises ValueError: when the requested content type is unrecognized
         :rtype: string
         """
@@ -85,11 +87,11 @@ class APIRequest(object):
         if media_type_cls is None:
             raise ValueError('Unrecognized request content type "%s". Choices are: %s' % (content_type, self.media_types.keys()))
         return media_type_cls(self)
-    
+
     def get_endpoint(self, urlname):
         """
         Returns a bound endpoint matching the urlname
-        
+
         :param urlname: The urlname to find
         :type urlname: string
         :raises KeyError: when the urlname does not match any endpoints
@@ -101,11 +103,11 @@ class APIRequest(object):
             if bound_endpoint != self.endpoint_state['endpoints'][urlname]:
                 pass
         return self.endpoint_state['endpoints'][urlname]
-    
+
     def record_endpoint(self, endpoint):
         """
         Record the endpoint in our urlname cache
-        
+
         :param resource: Endpoint
         """
         assert endpoint.api_request == self
@@ -115,11 +117,11 @@ class APIRequest(object):
         #else:
         #    original = self.endpoint_state['endpoints'][urlname]
         #    self.site.get_logger().debug('Double registration at api request level on %s by %s, original: %s' % (urlname, endpoint, original))
-    
+
     def get_link_prototypes(self, endpoint):
         """
         Returns the link prototypes to be used by the endpint
-        
+
         :param endpoint: endpoint object
         :rtype: list of link prototypes
         """
@@ -128,22 +130,22 @@ class APIRequest(object):
             link_prototypes = endpoint.create_link_prototypes()
             self.endpoint_state['link_prototypes'][urlname] = link_prototypes
         return self.endpoint_state['link_prototypes'][urlname]
-    
+
     def get_site(self):
         """
         Returns the bound site
-        
+
         :rtype: SiteResource
         """
         if 'site' not in self.endpoint_state:
             bound_site = self.site.fork(api_request=self)
             self.endpoint_state['site'] = bound_site
         return self.endpoint_state['site']
-    
+
     def generate_response(self, link, state):
         """
         Returns a response generated from the response media type
-        
+
         :param link: The active link representing the endpoint's response
         :param state: The endpoint's state
         :rtype: [Http]Response
@@ -151,11 +153,11 @@ class APIRequest(object):
         media_type = self.get_response_media_type()
         response_type = self.get_response_type()
         return media_type.serialize(content_type=response_type, link=link, state=state)
-    
+
     def generate_options_response(self, links, state):
         """
         Returns an OPTIONS response generated from the response media type
-        
+
         :param links: dictionary mapping available HTTP methods to a link
         :param state: The endpoint's state
         :rtype: [Http]Response
@@ -163,7 +165,7 @@ class APIRequest(object):
         media_type = self.get_response_media_type()
         response_type = self.get_response_type()
         return media_type.options_serialize(content_type=response_type, links=links, state=state)
-    
+
     def reverse(self, name, *args, **kwargs):
         return self.get_site().reverse(name, *args, **kwargs)
 
@@ -180,13 +182,13 @@ class InternalAPIRequest(APIRequest):
         for key, val in kwargs.iteritems():
             setattr(self, key, val)
         self.session_state.update(self.get_session_data())
-    
+
     def get_full_path(self):
         return self.full_path
-    
+
     def get_django_request(self):
         return self.request
-    
+
     def get_session_data(self):
         data = {'endpoints': {},
                 'resources': {},
@@ -203,60 +205,61 @@ class HTTPAPIRequest(APIRequest):
     """
     Represents an API Request spawned from a Django HTTP Request
     """
-    
+
     get_to_meta_map = {
         '_HTTP_ACCEPT':'HTTP_ACCEPT',
         '_CONTENT_TYPE':'CONTENT_TYPE',
     }
-    
-    def __init__(self, site, request, url_args, url_kwargs):
+
+    def __init__(self, request, **kwargs):
         self.request = request
-        path = request.path
-        super(HTTPAPIRequest, self).__init__(site=site, path=path, url_args=url_args, url_kwargs=url_kwargs)
-    
+        kwargs.setdefault('path', request.path)
+        super(HTTPAPIRequest, self).__init__(**kwargs)
+        self.populate_session_data_from_request(request)
+
     @property
     def payload(self):
         if not hasattr(self, '_payload'):
             media_type = self.get_request_media_type()
             self._payload = media_type.deserialize()
         return self._payload
-    
+
     @property
     def method(self):
         return self.request.method
-    
+
     def get_django_request(self):
         return self.request
-    
+
     def get_full_path(self):
         return self.request.get_full_path()
-    
+
     @property
     def user(self):
         return self.session_state.get('auth', AnonymousUser())
-    
+
     @property
     def params(self):
         if not hasattr(self, '_params'):
             self._params = self.request.GET.copy()
         return self._params
-    
+
     def get_session_data_from_request(self, request):
         #TODO consult site object
         data = {'endpoints': {},
                 'resources': {},
                 'request': request,
                 'meta': self.patched_meta(request),
-                'extra_get_params': self.get_passthrough_params(request),}
+                'extra_get_params': self.get_passthrough_params(request), }
         if hasattr(request, 'user'):
             data['auth'] = request.user
         return data
-    
+
     def populate_session_data_from_request(self, request):
         data = self.get_session_data_from_request(request)
         self.session_state.update(data)
         #TODO set response type & request type
-    
+
     def patched_meta(self, request):
         meta = dict(request.META)
         for src, dst in self.get_to_meta_map.iteritems():
@@ -264,7 +267,7 @@ class HTTPAPIRequest(APIRequest):
                 val = request.GET[src]
                 meta[dst] = val
         return meta
-    
+
     def get_passthrough_params(self, request):
         pass_through_params = dict()
         for src, dst in self.get_to_meta_map.iteritems():
@@ -272,25 +275,28 @@ class HTTPAPIRequest(APIRequest):
                 pass_through_params[src] = request.GET[src]
         return pass_through_params
 
+
 class NamespaceAPIRequest(InternalAPIRequest):
-    def __init__(self, api_request, path='/', url_args=[], url_kwargs={}, **kwargs):
+    def __init__(self, api_request, **kwargs):
         self.original_api_request = api_request
         kwargs.setdefault('full_path', self.original_api_request.get_full_path())
-        super(NamespaceAPIRequest, self).__init__(api_request.site, path, url_args, url_kwargs, **kwargs)
+        kwargs.setdefault('site', api_request.site)
+        super(NamespaceAPIRequest, self).__init__(**kwargs)
         self.site = api_request.site.fork(api_request=self)
         self.session_state = State(substates=[api_request.session_state])
-    
+
     @property
     def user(self):
         return self.original_api_request.user
-    
+
     def get_django_request(self):
         return self.original_api_request.get_django_request()
+
 
 class Namespace(object):
     """
     Represents alternative data associated with the current api request
-    
+
     Namespaced data is provided by another resource through an internal api request
     """
     def __init__(self, name, endpoint, state_data={}):
@@ -300,19 +306,19 @@ class Namespace(object):
         self.endpoint = endpoint.fork(api_request=self.api_request)
         self.endpoint.state.update(state_data)
         self.api_request.endpoint_state['endpoints'][self.endpoint.get_url_name()] = self.endpoint
-    
+
     def get_namespaces(self):
         return dict()
-    
+
     def get_prompt(self):
         return self.endpoint.get_prompt()
-    
+
     @property
     def link(self):
         if not hasattr(self, '_link'):
             self._link = self.endpoint.get_link()
         return self._link
-    
+
     @property
     def state(self):
         return self.endpoint.state
