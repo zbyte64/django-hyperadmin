@@ -32,14 +32,16 @@ class DataTap(MediaType):
         #TODO response['X-Previous-Page'] = state.links(group='pagination', rel='previous')[0]
         return response
 
-    def deserialize(self, request):
-        #using a datatap means you must post as a list
-        request = self.get_django_request()
+    def get_datatap(self, request):
         if hasattr(request, 'body'):
             payload = request.body
         else:
             payload = request.raw_post_data
-        datatap = self.datatap_class(StreamDataTap(io.BytesIO(payload)))
+        return self.datatap_class(StreamDataTap(io.BytesIO(payload)))
+
+    def deserialize(self, request):
+        #CONSIDER: does using a datatap mean you must post as a list?
+        datatap = self.get_datatap(request)
         data = list(datatap)[0]
         return {'data': data,
                 'files': request.FILES, }
