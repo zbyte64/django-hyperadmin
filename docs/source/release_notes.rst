@@ -15,6 +15,10 @@ Release Notes
 * Preserve requested content type on response
 * Standardized CRUD verbage
 * Fixed handling of negative primary keys
+* Django 1.5 support
+* Integrated with django-datataps
+* Added Base64 file upload
+
 
 0.9.0
 =====
