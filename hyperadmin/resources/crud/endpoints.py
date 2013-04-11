@@ -140,7 +140,12 @@ class ListEndpoint(IndexMixin, ResourceEndpoint):
 
     def post(self, api_request):
         mt = api_request.get_request_media_type()
-        if hasattr(mt, 'get_datatap') and hasattr(api_request, 'get_django_request'):
+        has_perm = self.resource.has_create_permission() and self.resource.has_update_permission()
+        if (has_perm and
+            hasattr(mt, 'get_datatap') and
+            hasattr(api_request, 'get_django_request')):
+
+            #use the request payload as an instream for our resource's datatap
             request = api_request.get_django_request()
             instream = mt.get_datatap(request)
             datatap = self.get_datatap(instream=instream)
