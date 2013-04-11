@@ -2,6 +2,7 @@
 Release Notes
 =============
 
+
 0.10.0
 ======
 
@@ -18,6 +19,13 @@ Release Notes
 * Django 1.5 support
 * Integrated with django-datataps
 * Added Base64 file upload
+
+
+0.9.1
+=====
+
+* Fixed handling of negative primary keys (#2)
+* improved order of operations in get link kwargs
 
 
 0.9.0

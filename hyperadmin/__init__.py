@@ -1,5 +1,6 @@
 VERSION = (0, 10, 0, 'rc', 0)
 
+
 def get_version(version=None, include_sub=True):
     """Derives a PEP386-compliant version number from VERSION."""
     if version is None:
@@ -26,7 +27,7 @@ def get_version(version=None, include_sub=True):
     elif version[3] != 'final':
         mapping = {'alpha': 'a', 'beta': 'b', 'rc': 'c'}
         sub = mapping[version[3]] + str(version[4])
-    
+
     if include_sub:
         return main + sub
     else:
