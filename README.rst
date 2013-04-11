@@ -28,7 +28,7 @@ Features
 Supported Media Formats:
 
 * application/text-html, text/html - provides HTML responses
-* application/json - plain json serialization
+* application/json - plain json serialization, uses datataps
 * text/javascript - for jsonp
 * application/vnd.Collection+JSON
 * application/vnd.Collection.next+JSON
@@ -43,6 +43,7 @@ Requirements
 
 * Python 2.6 or later
 * Django 1.3 or later
+* django-datatap
 
 
 ===============

@@ -7,6 +7,7 @@ Requirements
 
 * Python 2.6 or later
 * Django 1.3 or later
+* django-datatap
 
 --------
 Settings

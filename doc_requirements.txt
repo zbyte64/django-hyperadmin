@@ -1,3 +1,4 @@
 mimeparse
 django>=1.4
+django-datatap
 

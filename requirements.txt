@@ -1,3 +1,3 @@
 mimeparse
 #django>=1.3
--e git+git://github.com/zbyte64/django-datatap.git#egg=django-datatap
+django-datatap

@@ -2,6 +2,12 @@
 Content Types
 =============
 
+Hyperadmin supports 3 different modes of content types:
+
+* HTML - renders a response using the django template engine
+* Hypermedia - renders a structured response representing a workflow and data (ie application/vnd.collection+json)
+* Datatap - renders and loads fixtures (ie application/json)
+
 Media Type Selection
 ====================
 
