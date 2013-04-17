@@ -46,6 +46,7 @@ setup(name='django-hyperadmin',
       ),
       install_requires=[
         'mimeparse',
+        'django-datatap',
       ],
       include_package_data = True,
       zip_safe = False,
