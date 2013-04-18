@@ -1,4 +1,6 @@
-from django.utils import simplejson as json
+from __future__ import absolute_import
+
+import json
 from django import http
 
 from hyperadmin.mediatypes.encoders import HyperadminJSONEncoder, force_text
